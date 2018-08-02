@@ -86,7 +86,7 @@ part of your test infrastructure for your web or mobile applications.
 
 Proxay is very similar to `yakbak`. There are couple of differences:
 
-- It's purely an HTTP server. You control it through HTTP as well (see [**Specifying a tape**](#Specifying-a-tape)).
+- It's purely an HTTP server. You control it through HTTP as well (see [**Specifying a tape**](#specifying-a-tape)).
 - It automatically replaces `host` headers so the backend doesn't reject mismatching requests.
 
 ### [`vcr`](https://github.com/vcr/vcr)
