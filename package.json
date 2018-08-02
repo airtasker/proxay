@@ -1,0 +1,35 @@
+{
+  "name": "proxay",
+  "version": "1.0.0",
+  "author": {
+    "name": "François Wouts",
+    "email": "f@zenc.io"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zenclabs/proxay"
+  },
+  "license": "MIT",
+  "scripts": {
+    "start": "ts-node src/cli.ts",
+    "start:hot": "ts-node-dev --respawn src/cli.ts",
+    "build": "rm -rf dist && tsc"
+  },
+  "bin": {
+    "proxay": "./dist/cli.js"
+  },
+  "dependencies": {
+    "chalk": "^2.4.1",
+    "commander": "^2.16.0",
+    "fs-extra": "^7.0.0",
+    "js-yaml": "^3.12.0"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^5.0.4",
+    "@types/js-yaml": "^3.11.2",
+    "@types/node": "^10.5.5",
+    "ts-node": "^7.0.0",
+    "ts-node-dev": "^1.0.0-pre.26",
+    "typescript": "^3.0.1"
+  }
+}
