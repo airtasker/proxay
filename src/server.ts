@@ -103,12 +103,12 @@ export class RecordReplayServer {
    */
   private handleProxayApi(
     requestPath: string,
-    requestBody: RequestBody,
+    requestBody: HttpBody,
     res: http.ServerResponse
   ) {
     // Sending a request to /__proxay/tape will pick a specific tape.
     if (requestPath === "/__proxay/tape") {
-      const json = requestBody.map(chunk => chunk.toString()).join("");
+      const json = Buffer.concat(requestBody).toString("utf8");
       let tape;
       try {
         tape = JSON.parse(json).tape;
@@ -215,7 +215,7 @@ export class RecordReplayServer {
     requestMethod: string,
     requestPath: string,
     _requestHeaders: Headers,
-    _requestBody: RequestBody
+    _requestBody: HttpBody
   ): TapeRecord | null {
     for (let i = 0; i < this.currentTapeRecords.length; i += 1) {
       const record = this.currentTapeRecords[i];
@@ -236,7 +236,7 @@ export class RecordReplayServer {
     requestMethod: string,
     requestPath: string,
     requestHeaders: Headers,
-    requestBody: RequestBody
+    requestBody: HttpBody
   ): Promise<TapeRecord> {
     if (!this.proxiedHost) {
       throw new Error("Missing proxied host");
@@ -264,9 +264,9 @@ export class RecordReplayServer {
       });
 
       const statusCode = response.statusCode || 200;
-      let responseBody = "";
+      let responseBody: HttpBody = [];
       response.on("data", chunk => {
-        responseBody += chunk.toString();
+        responseBody.push(ensureBuffer(chunk));
       });
       return new Promise<TapeRecord>(resolve => {
         response.on("end", () => {
@@ -274,15 +274,21 @@ export class RecordReplayServer {
             request: {
               method: requestMethod,
               path: requestPath,
-              body: requestBody.map(chunk => chunk.toString()).join(""),
-              headers: requestHeaders
+              headers: requestHeaders,
+              body: {
+                encoding: 'base64',
+                data: Buffer.concat(requestBody).toString("base64")
+              },
             },
             response: {
               status: {
                 code: statusCode
               },
               headers: response.headers,
-              body: responseBody
+              body: {
+                encoding: 'base64',
+                data: Buffer.concat(responseBody).toString("base64")
+              }
             }
           });
         });
@@ -319,18 +325,24 @@ export class RecordReplayServer {
         res.setHeader(headerName, headerValue);
       }
     });
-    res.end(record.response.body);
+    res.end(Buffer.from(record.response.body.data, record.response.body.encoding));
   }
 }
 
-function receiveRequestBody(req: http.ServerRequest): Promise<RequestBody> {
-  const requestChunks: RequestBody = [];
+function receiveRequestBody(req: http.ServerRequest): Promise<HttpBody> {
+  const requestChunks: HttpBody = [];
   req.on("data", chunk => {
-    requestChunks.push(chunk);
+    requestChunks.push(ensureBuffer(chunk));
   });
   return new Promise(resolve => {
     req.on("end", () => resolve(requestChunks));
   });
+}
+
+function ensureBuffer(stringOrBuffer: string | Buffer) {
+  return typeof stringOrBuffer === "string"
+    ? Buffer.from(stringOrBuffer, "utf8")
+    : stringOrBuffer;
 }
 
 function extractPath(url: string) {
@@ -350,15 +362,21 @@ export type TapeRecord = {
   request: {
     method: string;
     path: string;
-    body: string;
     headers: Headers;
+    body: {
+      encoding: 'base64',
+      data: string;
+    }
   };
   response: {
     status: {
       code: number;
     };
     headers: Headers;
-    body: string;
+    body: {
+      encoding: 'base64',
+      data: string;
+    }
   };
 };
 
@@ -372,9 +390,9 @@ export type Headers = {
 };
 
 /**
- * A request body going through Node.
+ * An HTTP body going through Node.
  */
-export type RequestBody = Array<string | Buffer>;
+export type HttpBody = Array<Buffer>;
 
 /**
  * Possible modes.
