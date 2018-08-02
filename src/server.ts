@@ -241,13 +241,15 @@ export class RecordReplayServer {
     if (!this.proxiedHost) {
       throw new Error("Missing proxied host");
     }
-    const [scheme, hostname] = this.proxiedHost.split("://");
+    const [scheme, hostnameWithPort] = this.proxiedHost.split("://");
+    const [hostname, port] = hostnameWithPort.split(":");
     try {
       const response = await new Promise<http.IncomingMessage>(resolve => {
-        const requestOptions = {
+        const requestOptions: http.RequestOptions = {
           hostname: hostname,
           method: requestMethod,
           path: requestPath,
+          port,
           headers: {
             ...requestHeaders,
             host: hostname
