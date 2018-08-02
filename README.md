@@ -72,7 +72,7 @@ backend.
 
 ## Comparison with alternatives
 
-### Comparison with [`node-replay`](https://github.com/assaf/node-replay)
+### [`node-replay`](https://github.com/assaf/node-replay)
 
 `node-replay` is an inspiration for Proxay.
 
@@ -82,19 +82,19 @@ with its own method. This means that you can only use `node-replay` when running
 Proxay is more versatile. It's "just a server". You can use it for anything you want, including as
 part of your test infrastructure for your web or mobile applications.
 
-### Comparison with [`yakbak`](https://github.com/flickr/yakbak)
+### [`yakbak`](https://github.com/flickr/yakbak)
 
 Proxay is very similar to `yakbak`. There are couple of differences:
 
 - It's purely an HTTP server. You control it through HTTP as well (see [**Specifying a tape**](#Specifying-a-tape)).
 - It automatically replaces `host` headers so the backend doesn't reject mismatching requests.
 
-### Comparison with [`vcr`](https://github.com/vcr/vcr)
+### [`vcr`](https://github.com/vcr/vcr)
 
 VCR is a Ruby gem with a similar approach to `node-replay`. Just like `node-replay`, it cannot be
 used as a general-purpose proxy. It can only be used to test Ruby software.
 
-### Comparison with [`MockServer`](https://github.com/jamesdbloom/mockserver)
+### [`MockServer`](https://github.com/jamesdbloom/mockserver)
 
 MockServer does a lot more things than Proxay.
 
