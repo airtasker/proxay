@@ -1,6 +1,6 @@
 # Proxay
 
-Proxay (pronounced "proksey") is a proxy server that helps you write faster tests.
+Proxay (pronounced "prokseï") is a proxy server that helps you write faster tests.
 
 Use Proxay as a layer between your frontend and its backend to record interactions and
 later replay them on demand.
@@ -84,10 +84,10 @@ part of your test infrastructure for your web or mobile applications.
 
 ### [`yakbak`](https://github.com/flickr/yakbak)
 
-Proxay is very similar to `yakbak`. There are couple of differences:
+Proxay is very similar to `yakbak`. There are a couple of differences:
 
-- It's purely an HTTP server. You control it through HTTP as well (see [**Specifying a tape**](#specifying-a-tape)).
-- It automatically replaces `host` headers so the backend doesn't reject mismatching requests.
+- Proxay is purely an HTTP server. You control it through HTTP as well (see [**Specifying a tape**](#specifying-a-tape)).
+- Proxay automatically replaces `host` headers so the backend doesn't reject mismatching requests.
 
 ### [`vcr`](https://github.com/vcr/vcr)
 
