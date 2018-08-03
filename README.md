@@ -29,6 +29,9 @@ proxay --mode record --host https://api.website.com --tapes tapes/
 proxay --mode replay --tapes tapes/
 ```
 
+You can also run several instances of Proxay simultaneously on different ports (for example to proxy
+multiple backends). Just pick a different port (e.g. `--port 3001`).
+
 ## Specifying a tape
 
 If you have several tests, you likely want to save recorded interactions into one tape per test,
