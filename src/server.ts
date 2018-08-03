@@ -179,7 +179,7 @@ export class RecordReplayServer {
    */
   private saveTapeToDisk() {
     const tapePath = this.getTapePath(this.currentTape);
-    fs.ensureDirSync(path.dirname(this.currentTape));
+    fs.ensureDirSync(path.dirname(tapePath));
     fs.writeFileSync(
       tapePath,
       yaml.safeDump({
