@@ -1,3 +1,4 @@
+import brotli from "brotli";
 import chalk from "chalk";
 import fs from "fs-extra";
 import http from "http";
@@ -241,6 +242,11 @@ export class RecordReplayServer {
     if (!this.proxiedHost) {
       throw new Error("Missing proxied host");
     }
+    const requestContentEncodingHeader = requestHeaders["content-encoding"];
+    const requestContentEncoding =
+      typeof requestContentEncodingHeader === "string"
+        ? requestContentEncodingHeader
+        : undefined;
     const [scheme, hostnameWithPort] = this.proxiedHost.split("://");
     const [hostname, port] = hostnameWithPort.split(":");
     try {
@@ -275,20 +281,20 @@ export class RecordReplayServer {
               method: requestMethod,
               path: requestPath,
               headers: requestHeaders,
-              body: {
-                encoding: 'base64',
-                data: Buffer.concat(requestBody).toString("base64")
-              },
+              body: serialiseBuffer(
+                Buffer.concat(requestBody),
+                requestContentEncoding
+              )
             },
             response: {
               status: {
                 code: statusCode
               },
               headers: response.headers,
-              body: {
-                encoding: 'base64',
-                data: Buffer.concat(responseBody).toString("base64")
-              }
+              body: serialiseBuffer(
+                Buffer.concat(responseBody),
+                response.headers["content-encoding"]
+              )
             }
           });
         });
@@ -325,7 +331,13 @@ export class RecordReplayServer {
         res.setHeader(headerName, headerValue);
       }
     });
-    res.end(Buffer.from(record.response.body.data, record.response.body.encoding));
+    const responseContentEncodingHeader =
+      record.response.headers["content-encoding"];
+    const responseContentEncoding =
+      typeof responseContentEncodingHeader === "string"
+        ? responseContentEncodingHeader
+        : undefined;
+    res.end(unserialiseBuffer(record.response.body, responseContentEncoding));
   }
 }
 
@@ -343,6 +355,67 @@ function ensureBuffer(stringOrBuffer: string | Buffer) {
   return typeof stringOrBuffer === "string"
     ? Buffer.from(stringOrBuffer, "utf8")
     : stringOrBuffer;
+}
+
+function serialiseBuffer(buffer: Buffer, encoding?: string): PersistedBuffer {
+  if (encoding === "br") {
+    buffer = Buffer.from(brotli.decompress(buffer));
+  }
+  const utf8Representation = buffer.toString("utf8");
+  try {
+    const data = JSON.parse(utf8Representation);
+    // If JSON parsing failed, then yay! We can store it as JSON.
+    return {
+      encoding: "json",
+      data
+    };
+  } catch {
+    try {
+      // Buffer isn't a JSON payload. Can it be safely stored in YAML?
+      const recreatedBuffer = Buffer.from(
+        yaml.safeLoad(yaml.safeDump(utf8Representation)),
+        "utf8"
+      );
+      if (Buffer.compare(buffer, recreatedBuffer) === 0) {
+        // Yes, we can store it in YAML.
+        return {
+          encoding: "utf8",
+          data: utf8Representation
+        };
+      }
+    } catch {
+      // Fall through.
+    }
+  }
+  // No luck. Fall back to Base64.
+  return {
+    encoding: "base64",
+    data: buffer.toString("base64")
+  };
+}
+
+function unserialiseBuffer(
+  persisted: PersistedBuffer,
+  encoding?: string
+): Buffer {
+  let buffer;
+  switch (persisted.encoding) {
+    case "base64":
+      buffer = Buffer.from(persisted.data, "base64");
+      break;
+    case "utf8":
+      buffer = Buffer.from(persisted.data, "utf8");
+      break;
+    case "json":
+      buffer = Buffer.from(JSON.stringify(persisted.data, null, 2), "utf8");
+      break;
+    default:
+      throw new Error(`Unsupported encoding!`);
+  }
+  if (encoding === "br") {
+    buffer = Buffer.from(brotli.compress(buffer));
+  }
+  return buffer;
 }
 
 function extractPath(url: string) {
@@ -363,20 +436,14 @@ export type TapeRecord = {
     method: string;
     path: string;
     headers: Headers;
-    body: {
-      encoding: 'base64',
-      data: string;
-    }
+    body: PersistedBuffer;
   };
   response: {
     status: {
       code: number;
     };
     headers: Headers;
-    body: {
-      encoding: 'base64',
-      data: string;
-    }
+    body: PersistedBuffer;
   };
 };
 
@@ -393,6 +460,23 @@ export type Headers = {
  * An HTTP body going through Node.
  */
 export type HttpBody = Array<Buffer>;
+
+/**
+ * A buffer that can be persisted in JSON.
+ */
+export type PersistedBuffer =
+  | {
+      encoding: "base64";
+      data: string;
+    }
+  | {
+      encoding: "utf8";
+      data: string;
+    }
+  | {
+      encoding: "json";
+      data: {};
+    };
 
 /**
  * Possible modes.
