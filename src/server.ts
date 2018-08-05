@@ -363,29 +363,20 @@ function serialiseBuffer(buffer: Buffer, encoding?: string): PersistedBuffer {
   }
   const utf8Representation = buffer.toString("utf8");
   try {
-    const data = JSON.parse(utf8Representation);
-    // If JSON parsing failed, then yay! We can store it as JSON.
-    return {
-      encoding: "json",
-      data
-    };
-  } catch {
-    try {
-      // Buffer isn't a JSON payload. Can it be safely stored in YAML?
-      const recreatedBuffer = Buffer.from(
-        yaml.safeLoad(yaml.safeDump(utf8Representation)),
-        "utf8"
-      );
-      if (Buffer.compare(buffer, recreatedBuffer) === 0) {
-        // Yes, we can store it in YAML.
-        return {
-          encoding: "utf8",
-          data: utf8Representation
-        };
-      }
-    } catch {
-      // Fall through.
+    // Can it be safely stored and recreated in YAML?
+    const recreatedBuffer = Buffer.from(
+      yaml.safeLoad(yaml.safeDump(utf8Representation)),
+      "utf8"
+    );
+    if (Buffer.compare(buffer, recreatedBuffer) === 0) {
+      // Yes, we can store it in YAML.
+      return {
+        encoding: "utf8",
+        data: utf8Representation
+      };
     }
+  } catch {
+    // Fall through.
   }
   // No luck. Fall back to Base64.
   return {
@@ -407,6 +398,7 @@ function unserialiseBuffer(
       buffer = Buffer.from(persisted.data, "utf8");
       break;
     case "json":
+      // Deprecated. Instead, we store JSON as utf8 so exact formatting is kept.
       buffer = Buffer.from(JSON.stringify(persisted.data, null, 2), "utf8");
       break;
     default:
@@ -474,6 +466,7 @@ export type PersistedBuffer =
       data: string;
     }
   | {
+      // Deprecated. Instead, we store JSON as utf8 so exact formatting is kept.
       encoding: "json";
       data: {};
     };
