@@ -1,3 +1,4 @@
+import assertNever from "assert-never";
 import brotli from "brotli";
 import chalk from "chalk";
 import fs from "fs-extra";
@@ -76,6 +77,15 @@ export class RecordReplayServer {
             this.addRecordToTape(record);
             console.log(`Recorded: ${req.method} ${requestPath}`);
             break;
+          case "passthrough":
+            record = await this.proxy(
+              req.method,
+              requestPath,
+              req.headers,
+              requestBody
+            );
+            console.log(`Proxied: ${req.method} ${requestPath}`);
+            break;
           default:
             throw assertNever(this.mode);
         }
@@ -150,6 +160,9 @@ export class RecordReplayServer {
         break;
       case "replay":
         this.currentTapeRecords = this.loadTapeFromDisk();
+        break;
+      case "passthrough":
+        // Do nothing.
         break;
       default:
         throw assertNever(this.mode);
@@ -479,7 +492,7 @@ export type PersistedBuffer =
 /**
  * Possible modes.
  */
-export type Mode = ReplayMode | RecordMode;
+export type Mode = ReplayMode | RecordMode | PassthroughMode;
 
 /**
  * Replays requests from tapes. Fails any unexpected requests.
@@ -490,3 +503,8 @@ export type ReplayMode = "replay";
  * Records requests. Ignores recorded tapes.
  */
 export type RecordMode = "record";
+
+/**
+ * Acts as a pass-through proxy. No recording occurs.
+ */
+export type PassthroughMode = "passthrough";

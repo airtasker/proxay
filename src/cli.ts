@@ -7,7 +7,7 @@ import { RecordReplayServer } from "./server";
 
 async function main(argv: string[]) {
   program
-    .option("-m, --mode <mode>", "Mode (record or replay)")
+    .option("-m, --mode <mode>", "Mode (record, replay or passthrough)")
     .option(
       "-t, --tapes <tapes-dir>",
       "Directory in which to record/replay tapes"
@@ -24,6 +24,7 @@ async function main(argv: string[]) {
   switch (mode) {
     case "record":
     case "replay":
+    case "passthrough":
       // Valid modes.
       break;
     default:
@@ -31,7 +32,7 @@ async function main(argv: string[]) {
       throw new Error(); // only used for TypeScript control flow
   }
 
-  if (!tapeDir) {
+  if (!tapeDir && mode !== "passthrough") {
     panic("Please specify a path to a tapes directory.");
   }
 
