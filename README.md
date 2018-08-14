@@ -1,5 +1,7 @@
 # Proxay
 
+[![CircleCI](https://circleci.com/gh/zenclabs/proxay.svg?style=svg)](https://circleci.com/gh/zenclabs/proxay)
+
 Proxay (pronounced "prokseï") is a proxy server that helps you write faster tests.
 
 Use Proxay as a layer between your frontend and its backend to record interactions and
