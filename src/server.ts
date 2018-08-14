@@ -234,7 +234,6 @@ export class RecordReplayServer {
    */
   private loadTapeFromDisk(): TapeRecord[] {
     const tapePath = this.getTapePath(this.currentTape);
-    console.log(tapePath);
     if (!fs.existsSync(tapePath)) {
       this.loggingEnabled &&
         console.warn(
