@@ -55,7 +55,8 @@ async function main(argv: string[]) {
   const server = new RecordReplayServer({
     mode,
     tapeDir,
-    host
+    host,
+    enableLogging: true
   });
   await server.start(port);
   console.log(chalk.green(`Proxying in ${mode} mode on port ${port}.`));

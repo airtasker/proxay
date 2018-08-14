@@ -18,21 +18,30 @@ export class RecordReplayServer {
   private proxiedHost?: string;
   private currentTapeRecords: TapeRecord[] = [];
   private currentTape!: string;
+  private loggingEnabled: boolean;
 
-  constructor(options: { mode: Mode; tapeDir: string; host?: string }) {
+  constructor(options: {
+    mode: Mode;
+    tapeDir: string;
+    host?: string;
+    enableLogging?: boolean;
+  }) {
     this.currentTapeRecords = [];
     this.mode = options.mode;
     this.tapeDir = options.tapeDir;
     this.proxiedHost = options.host;
+    this.loggingEnabled = options.enableLogging || false;
     this.loadTape(DEFAULT_TAPE);
 
     this.server = http.createServer(async (req, res) => {
       if (!req.url) {
-        console.error(chalk.red("Received a request without URL."));
+        this.loggingEnabled &&
+          console.error(chalk.red("Received a request without URL."));
         return;
       }
       if (!req.method) {
-        console.error(chalk.red("Received a request without HTTP method."));
+        this.loggingEnabled &&
+          console.error(chalk.red("Received a request without HTTP method."));
         return;
       }
 
@@ -56,15 +65,17 @@ export class RecordReplayServer {
             );
             if (record) {
               this.removeRecordFromTape(record);
-              console.log(`Replayed: ${req.method} ${requestPath}`);
+              this.loggingEnabled &&
+                console.log(`Replayed: ${req.method} ${requestPath}`);
             } else {
-              console.warn(
-                chalk.yellow(
-                  `Unexpected request ${
-                    req.method
-                  } ${requestPath} has no matching record in tapes.`
-                )
-              );
+              this.loggingEnabled &&
+                console.warn(
+                  chalk.yellow(
+                    `Unexpected request ${
+                      req.method
+                    } ${requestPath} has no matching record in tapes.`
+                  )
+                );
             }
             break;
           case "record":
@@ -75,7 +86,8 @@ export class RecordReplayServer {
               requestBody
             );
             this.addRecordToTape(record);
-            console.log(`Recorded: ${req.method} ${requestPath}`);
+            this.loggingEnabled &&
+              console.log(`Recorded: ${req.method} ${requestPath}`);
             break;
           case "passthrough":
             record = await this.proxy(
@@ -84,7 +96,8 @@ export class RecordReplayServer {
               req.headers,
               requestBody
             );
-            console.log(`Proxied: ${req.method} ${requestPath}`);
+            this.loggingEnabled &&
+              console.log(`Proxied: ${req.method} ${requestPath}`);
             break;
           default:
             throw assertNever(this.mode);
@@ -97,7 +110,7 @@ export class RecordReplayServer {
           res.end();
         }
       } catch (e) {
-        console.error(chalk.red("Unexpected error:"), e);
+        this.loggingEnabled && console.error(chalk.red("Unexpected error:"), e);
       }
     });
   }
@@ -107,6 +120,13 @@ export class RecordReplayServer {
    */
   async start(port: number) {
     await new Promise(resolve => this.server.listen(port, resolve));
+  }
+
+  /**
+   * Stops the server.
+   */
+  async stop() {
+    await new Promise(resolve => this.server.close(resolve));
   }
 
   /**
@@ -133,7 +153,7 @@ export class RecordReplayServer {
             .startsWith("../")
         ) {
           const errorMessage = `Invalid tape name: ${tape}`;
-          console.error(chalk.red(errorMessage));
+          this.loggingEnabled && console.error(chalk.red(errorMessage));
           res.statusCode = 403;
           res.end(errorMessage);
           return;
@@ -152,7 +172,8 @@ export class RecordReplayServer {
    */
   private loadTape(tapeName: string) {
     this.currentTape = tapeName;
-    console.log(chalk.blueBright(`Loaded tape: ${tapeName}`));
+    this.loggingEnabled &&
+      console.log(chalk.blueBright(`Loaded tape: ${tapeName}`));
     switch (this.mode) {
       case "record":
         this.currentTapeRecords = [];
@@ -214,7 +235,10 @@ export class RecordReplayServer {
   private loadTapeFromDisk(): TapeRecord[] {
     const tapePath = this.getTapePath(this.currentTape);
     if (!fs.existsSync(tapePath)) {
-      console.warn(chalk.yellow(`No tape found with name ${this.currentTape}`));
+      this.loggingEnabled &&
+        console.warn(
+          chalk.yellow(`No tape found with name ${this.currentTape}`)
+        );
       return [];
     }
     return yaml.safeLoad(fs.readFileSync(tapePath, "utf8")).http_interactions;
@@ -319,20 +343,22 @@ export class RecordReplayServer {
       });
     } catch (e) {
       if (e.code) {
-        console.error(
-          chalk.red(
-            `Could not proxy request ${requestMethod} ${requestPath} (${
-              e.code
-            })`
-          )
-        );
+        this.loggingEnabled &&
+          console.error(
+            chalk.red(
+              `Could not proxy request ${requestMethod} ${requestPath} (${
+                e.code
+              })`
+            )
+          );
       } else {
-        console.error(
-          chalk.red(
-            `Could not proxy request ${requestMethod} ${requestPath}`,
-            e
-          )
-        );
+        this.loggingEnabled &&
+          console.error(
+            chalk.red(
+              `Could not proxy request ${requestMethod} ${requestPath}`,
+              e
+            )
+          );
       }
       throw e;
     }
