@@ -77,7 +77,7 @@ export class RecordReplayServer {
             console.log(`Recorded: ${req.method} ${requestPath}`);
             break;
           default:
-            throw new Error(`Unsupported mode: ${this.mode}`);
+            throw assertNever(this.mode);
         }
 
         if (record) {
@@ -143,11 +143,16 @@ export class RecordReplayServer {
   private loadTape(tapeName: string) {
     this.currentTape = tapeName;
     console.log(chalk.blueBright(`Loaded tape: ${tapeName}`));
-    if (this.mode === "record") {
-      this.currentTapeRecords = [];
-      this.saveTapeToDisk();
-    } else {
-      this.currentTapeRecords = this.loadTapeFromDisk();
+    switch (this.mode) {
+      case "record":
+        this.currentTapeRecords = [];
+        this.saveTapeToDisk();
+        break;
+      case "replay":
+        this.currentTapeRecords = this.loadTapeFromDisk();
+        break;
+      default:
+        throw assertNever(this.mode);
     }
   }
 
