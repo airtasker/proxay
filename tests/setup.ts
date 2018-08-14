@@ -12,7 +12,8 @@ export function setupServers(mode: Mode) {
     proxyServer = new RecordReplayServer({
       mode,
       tapeDir: path.join(__dirname, "tapes", mode),
-      host: TEST_SERVER_HOST
+      host: TEST_SERVER_HOST,
+      enableLogging: true
     });
     await Promise.all([
       proxyServer.start(PROXAY_PORT),
