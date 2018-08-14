@@ -1,5 +1,5 @@
 import path from "path";
-import { Mode, RecordReplayServer } from "../src/server";
+import { Mode, RecordReplayServer } from "../server";
 import { PROXAY_PORT, TEST_SERVER_HOST, TEST_SERVER_PORT } from "./config";
 import { TestServer } from "./testserver";
 
