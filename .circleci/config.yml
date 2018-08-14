@@ -25,3 +25,7 @@ jobs:
       - run: yarn test
 
       - run: yarn build
+
+      - run: npm link
+
+      - run: proxay
