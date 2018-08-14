@@ -28,4 +28,4 @@ jobs:
 
       - run: sudo npm link
 
-      - run: proxay
+      - run: proxay -m record -h https://www.google.com -t tapes/
