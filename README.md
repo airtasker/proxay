@@ -7,9 +7,10 @@ Proxay (pronounced "prokseï") is a proxy server that helps you write faster tes
 Use Proxay as a layer between your frontend and its backend to record interactions and
 later replay them on demand.
 
-Proxay can operate in two modes:
+Proxay can operate in three modes:
 - **Record mode**: Proxies requests to the backend and records interactions as "tapes" on disk.
 - **Replay mode**: Replays requests from your "tapes" on disk (no backend necessary).
+- **Passthrough mode**: Proxies requests without persisting them (like a conventional proxy).
 
 ## Installing
 
@@ -29,6 +30,9 @@ proxay --mode record --host https://api.website.com --tapes tapes/
 
 # Replay mode (no proxying)
 proxay --mode replay --tapes tapes/
+
+# Passthrough mode mode (proxies requests without persisting)
+proxay --mode passthrough --host https://api.website.com
 ```
 
 You can also run several instances of Proxay simultaneously on different ports (for example to proxy
