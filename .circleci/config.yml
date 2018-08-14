@@ -26,6 +26,6 @@ jobs:
 
       - run: yarn build
 
-      - run: npm link
+      - run: sudo npm link
 
       - run: proxay
