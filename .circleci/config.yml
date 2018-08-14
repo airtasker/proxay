@@ -28,4 +28,11 @@ jobs:
 
       - run: sudo npm link
 
-      - run: proxay -m record -h https://www.google.com -t tapes/
+      - run: |
+          proxay -m record -h https://www.google.com -t tapes/ &
+          # Wait until it loads.
+          until (curl http://localhost:3000 2>&1 | grep Google &>/dev/null)
+          do
+            echo "Waiting until server ready..."
+            sleep 5
+          done
