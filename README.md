@@ -31,7 +31,7 @@ proxay --mode record --host https://api.website.com --tapes tapes/
 # Replay mode (no proxying)
 proxay --mode replay --tapes tapes/
 
-# Passthrough mode mode (proxies requests without persisting)
+# Passthrough mode (proxies requests without persisting)
 proxay --mode passthrough --host https://api.website.com
 ```
 
