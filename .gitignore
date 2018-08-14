@@ -1,5 +1,5 @@
 dist/
 node_modules/
-tapes/
+/tapes/
 yarn-error.log
 .DS_Store
