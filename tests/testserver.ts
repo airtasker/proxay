@@ -29,13 +29,13 @@ export class TestServer {
 
   constructor() {
     this.app = express();
-    this.app.get(SIMPLE_TEXT_PATH, (req, res) => {
+    this.app.get(SIMPLE_TEXT_PATH, (_req, res) => {
       res.send(SIMPLE_TEXT_RESPONSE);
     });
-    this.app.get(UTF8_PATH, (req, res) => {
+    this.app.get(UTF8_PATH, (_req, res) => {
       res.send(UTF8_RESPONSE);
     });
-    this.app.get(BINARY_PATH, (req, res) => {
+    this.app.get(BINARY_PATH, (_req, res) => {
       res.send(BINARY_RESPONSE);
     });
   }
