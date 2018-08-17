@@ -62,7 +62,6 @@ export class RecordReplayServer {
               requestBody
             );
             if (record) {
-              this.removeRecordFromTape(record);
               this.loggingEnabled &&
                 console.log(`Replayed: ${req.method} ${requestPath}`);
             } else {
@@ -132,12 +131,12 @@ export class RecordReplayServer {
    */
   private handleProxayApi(
     requestPath: string,
-    requestBody: HttpBody,
+    requestBody: Buffer,
     res: http.ServerResponse
   ) {
     // Sending a request to /__proxay/tape will pick a specific tape.
     if (requestPath === "/__proxay/tape") {
-      const json = Buffer.concat(requestBody).toString("utf8");
+      const json = requestBody.toString("utf8");
       let tape;
       try {
         tape = JSON.parse(json).tape;
@@ -198,15 +197,6 @@ export class RecordReplayServer {
   }
 
   /**
-   * Removes a specific record from the current tape, to make sure that
-   * subsequent requests don't replay the same record.
-   */
-  private removeRecordFromTape(record: TapeRecord) {
-    const index = this.currentTapeRecords.findIndex(r => r === record);
-    this.currentTapeRecords.splice(index, 1);
-  }
-
-  /**
    * Adds a new record to the current tape and saves to disk.
    */
   private addRecordToTape(record: TapeRecord) {
@@ -221,19 +211,33 @@ export class RecordReplayServer {
     requestMethod: string,
     requestPath: string,
     _requestHeaders: Headers,
-    _requestBody: HttpBody
+    requestBody: Buffer
   ): TapeRecord | null {
-    for (let i = 0; i < this.currentTapeRecords.length; i += 1) {
-      const record = this.currentTapeRecords[i];
-      if (
+    const potentialMatches = this.currentTapeRecords.filter(
+      record =>
         record.request.method === requestMethod &&
         pathWithoutQueryParameters(record.request.path) ===
           pathWithoutQueryParameters(requestPath)
-      ) {
-        return record;
-      }
-    }
-    return null;
+    );
+    const sameQueryParameters = potentialMatches.filter(
+      record => record.request.path === requestPath
+    );
+    const identicalBody = potentialMatches.filter(record =>
+      record.request.body.equals(requestBody)
+    );
+    const identicalBodyAndQueryParameters = potentialMatches.filter(
+      record =>
+        record.request.path === requestPath &&
+        record.request.body.equals(requestBody)
+    );
+    // Pick the best fit.
+    return (
+      identicalBodyAndQueryParameters[0] ||
+      identicalBody[0] ||
+      sameQueryParameters[0] ||
+      potentialMatches[0] ||
+      null
+    );
   }
 
   /**
@@ -243,7 +247,7 @@ export class RecordReplayServer {
     requestMethod: string,
     requestPath: string,
     requestHeaders: Headers,
-    requestBody: HttpBody
+    requestBody: Buffer
   ): Promise<TapeRecord> {
     if (!this.proxiedHost) {
       throw new Error("Missing proxied host");
@@ -266,34 +270,33 @@ export class RecordReplayServer {
           scheme === "http"
             ? http.request(requestOptions, resolve)
             : https.request(requestOptions, resolve);
-        requestBody.forEach(chunk => proxyRequest.write(chunk));
+        proxyRequest.write(requestBody);
         proxyRequest.end();
       });
 
       const statusCode = response.statusCode || 200;
-      let responseBody: HttpBody = [];
-      response.on("data", chunk => {
-        responseBody.push(ensureBuffer(chunk));
-      });
-      return new Promise<TapeRecord>(resolve => {
-        response.on("end", () => {
-          resolve({
-            request: {
-              method: requestMethod,
-              path: requestPath,
-              headers: requestHeaders,
-              body: Buffer.concat(requestBody)
-            },
-            response: {
-              status: {
-                code: statusCode
-              },
-              headers: response.headers,
-              body: Buffer.concat(responseBody)
-            }
-          });
+      let responseBody = await new Promise<Buffer>(resolve => {
+        let chunks: Buffer[] = [];
+        response.on("data", chunk => {
+          chunks.push(ensureBuffer(chunk));
         });
+        response.on("end", () => resolve(Buffer.concat(chunks)));
       });
+      return {
+        request: {
+          method: requestMethod,
+          path: requestPath,
+          headers: requestHeaders,
+          body: requestBody
+        },
+        response: {
+          status: {
+            code: statusCode
+          },
+          headers: response.headers,
+          body: responseBody
+        }
+      };
     } catch (e) {
       if (e.code) {
         this.loggingEnabled &&
@@ -332,13 +335,13 @@ export class RecordReplayServer {
   }
 }
 
-function receiveRequestBody(req: http.ServerRequest): Promise<HttpBody> {
-  const requestChunks: HttpBody = [];
+function receiveRequestBody(req: http.ServerRequest): Promise<Buffer> {
+  const requestChunks: Buffer[] = [];
   req.on("data", chunk => {
     requestChunks.push(ensureBuffer(chunk));
   });
   return new Promise(resolve => {
-    req.on("end", () => resolve(requestChunks));
+    req.on("end", () => resolve(Buffer.concat(requestChunks)));
   });
 }
 
@@ -370,11 +373,6 @@ function pathWithoutQueryParameters(path: string) {
 }
 
 const DEFAULT_TAPE = "default";
-
-/**
- * An HTTP body going through Node.
- */
-type HttpBody = Array<Buffer>;
 
 /**
  * Possible modes.
