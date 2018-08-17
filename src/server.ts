@@ -264,7 +264,8 @@ export class RecordReplayServer {
       const record = this.currentTapeRecords[i];
       if (
         record.request.method === requestMethod &&
-        extractPath(record.request.path) === extractPath(requestPath)
+        pathWithoutQueryParameters(record.request.path) ===
+          pathWithoutQueryParameters(requestPath)
       ) {
         return record;
       }
@@ -463,6 +464,10 @@ function extractPath(url: string) {
   } else {
     path = url;
   }
+  return path;
+}
+
+function pathWithoutQueryParameters(path: string) {
   const questionMarkPosition = path.indexOf("?");
   if (questionMarkPosition !== -1) {
     return path.substr(0, questionMarkPosition);
