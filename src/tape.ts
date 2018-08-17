@@ -1,0 +1,65 @@
+/**
+ * A record of a specific HTTP interaction (request + response).
+ */
+export type TapeRecord = {
+  request: {
+    method: string;
+    path: string;
+    headers: Headers;
+    body: Buffer;
+  };
+  response: {
+    status: {
+      code: number;
+    };
+    headers: Headers;
+    body: Buffer;
+  };
+};
+
+/**
+ * A persisted version of {@link TapeRecord}.
+ */
+export type PersistedTapeRecord = {
+  request: {
+    method: string;
+    path: string;
+    headers: Headers;
+    body: PersistedBuffer;
+  };
+  response: {
+    status: {
+      code: number;
+    };
+    headers: Headers;
+    body: PersistedBuffer;
+  };
+};
+
+/**
+ * A buffer that can be persisted in JSON.
+ */
+export type PersistedBuffer =
+  | {
+      encoding: "base64";
+      data: string;
+    }
+  | {
+      encoding: "utf8";
+      compression: CompressionAlgorithm;
+      data: string;
+    }
+  | {
+      // Deprecated. Instead, we store JSON as utf8 so exact formatting is kept.
+      encoding: "json";
+      data: {};
+    };
+
+export type CompressionAlgorithm = "br" | "none";
+
+/**
+ * Headers of a request or response.
+ */
+export type Headers = {
+  [headerName: string]: string | string[] | undefined;
+};

@@ -1,20 +1,18 @@
 import assertNever from "assert-never";
-import brotli from "brotli";
 import chalk from "chalk";
-import fs from "fs-extra";
 import http from "http";
 import https from "https";
-import yaml from "js-yaml";
-import path from "path";
+import { Persistence } from "./persistence";
+import { Headers, TapeRecord } from "./tape";
 
 /**
  * A server that proxies or replays requests depending on the mode.
  */
 export class RecordReplayServer {
   private server: http.Server;
+  private persistence: Persistence;
 
   private mode: Mode;
-  private tapeDir: string;
   private proxiedHost?: string;
   private currentTapeRecords: TapeRecord[] = [];
   private currentTape!: string;
@@ -28,9 +26,9 @@ export class RecordReplayServer {
   }) {
     this.currentTapeRecords = [];
     this.mode = options.mode;
-    this.tapeDir = options.tapeDir;
     this.proxiedHost = options.host;
     this.loggingEnabled = options.enableLogging || false;
+    this.persistence = new Persistence(options.tapeDir);
     this.loadTape(DEFAULT_TAPE);
 
     this.server = http.createServer(async (req, res) => {
@@ -147,11 +145,7 @@ export class RecordReplayServer {
         tape = null;
       }
       if (tape) {
-        if (
-          path
-            .relative(this.tapeDir, path.join(this.tapeDir, tape))
-            .startsWith("../")
-        ) {
+        if (!this.persistence.isTapeNameValid(tape)) {
           const errorMessage = `Invalid tape name: ${tape}`;
           this.loggingEnabled && console.error(chalk.red(errorMessage));
           res.statusCode = 403;
@@ -177,10 +171,16 @@ export class RecordReplayServer {
     switch (this.mode) {
       case "record":
         this.currentTapeRecords = [];
-        this.saveTapeToDisk();
+        this.persistence.saveTapeToDisk(this.currentTape, []);
         break;
       case "replay":
-        this.currentTapeRecords = this.loadTapeFromDisk();
+        try {
+          this.currentTapeRecords = this.persistence.loadTapeFromDisk(
+            this.currentTape
+          );
+        } catch (e) {
+          this.loggingEnabled && console.warn(chalk.yellow(e.message));
+        }
         break;
       case "passthrough":
         // Do nothing.
@@ -211,44 +211,7 @@ export class RecordReplayServer {
    */
   private addRecordToTape(record: TapeRecord) {
     this.currentTapeRecords.push(record);
-    this.saveTapeToDisk();
-  }
-
-  /**
-   * Saves the tape to disk.
-   */
-  private saveTapeToDisk() {
-    const tapePath = this.getTapePath(this.currentTape);
-    fs.ensureDirSync(path.dirname(tapePath));
-    fs.writeFileSync(
-      tapePath,
-      yaml.safeDump({
-        http_interactions: this.currentTapeRecords
-      }),
-      "utf8"
-    );
-  }
-
-  /**
-   * Loads the tape from disk.
-   */
-  private loadTapeFromDisk(): TapeRecord[] {
-    const tapePath = this.getTapePath(this.currentTape);
-    if (!fs.existsSync(tapePath)) {
-      this.loggingEnabled &&
-        console.warn(
-          chalk.yellow(`No tape found with name ${this.currentTape}`)
-        );
-      return [];
-    }
-    return yaml.safeLoad(fs.readFileSync(tapePath, "utf8")).http_interactions;
-  }
-
-  /**
-   * Returns the tape's path on disk.
-   */
-  private getTapePath(tapeName: string) {
-    return path.join(this.tapeDir, `${tapeName}.yml`);
+    this.persistence.saveTapeToDisk(this.currentTape, this.currentTapeRecords);
   }
 
   /**
@@ -285,11 +248,6 @@ export class RecordReplayServer {
     if (!this.proxiedHost) {
       throw new Error("Missing proxied host");
     }
-    const requestContentEncodingHeader = requestHeaders["content-encoding"];
-    const requestContentEncoding =
-      typeof requestContentEncodingHeader === "string"
-        ? requestContentEncodingHeader
-        : undefined;
     const [scheme, hostnameWithPort] = this.proxiedHost.split("://");
     const [hostname, port] = hostnameWithPort.split(":");
     try {
@@ -324,20 +282,14 @@ export class RecordReplayServer {
               method: requestMethod,
               path: requestPath,
               headers: requestHeaders,
-              body: serialiseBuffer(
-                Buffer.concat(requestBody),
-                requestContentEncoding
-              )
+              body: Buffer.concat(requestBody)
             },
             response: {
               status: {
                 code: statusCode
               },
               headers: response.headers,
-              body: serialiseBuffer(
-                Buffer.concat(responseBody),
-                response.headers["content-encoding"]
-              )
+              body: Buffer.concat(responseBody)
             }
           });
         });
@@ -376,13 +328,7 @@ export class RecordReplayServer {
         res.setHeader(headerName, headerValue);
       }
     });
-    const responseContentEncodingHeader =
-      record.response.headers["content-encoding"];
-    const responseContentEncoding =
-      typeof responseContentEncodingHeader === "string"
-        ? responseContentEncodingHeader
-        : undefined;
-    res.end(unserialiseBuffer(record.response.body, responseContentEncoding));
+    res.end(record.response.body);
   }
 }
 
@@ -400,59 +346,6 @@ function ensureBuffer(stringOrBuffer: string | Buffer) {
   return typeof stringOrBuffer === "string"
     ? Buffer.from(stringOrBuffer, "utf8")
     : stringOrBuffer;
-}
-
-function serialiseBuffer(buffer: Buffer, encoding?: string): PersistedBuffer {
-  if (encoding === "br") {
-    buffer = Buffer.from(brotli.decompress(buffer));
-  }
-  const utf8Representation = buffer.toString("utf8");
-  try {
-    // Can it be safely stored and recreated in YAML?
-    const recreatedBuffer = Buffer.from(
-      yaml.safeLoad(yaml.safeDump(utf8Representation)),
-      "utf8"
-    );
-    if (Buffer.compare(buffer, recreatedBuffer) === 0) {
-      // Yes, we can store it in YAML.
-      return {
-        encoding: "utf8",
-        data: utf8Representation
-      };
-    }
-  } catch {
-    // Fall through.
-  }
-  // No luck. Fall back to Base64.
-  return {
-    encoding: "base64",
-    data: buffer.toString("base64")
-  };
-}
-
-function unserialiseBuffer(
-  persisted: PersistedBuffer,
-  encoding?: string
-): Buffer {
-  let buffer;
-  switch (persisted.encoding) {
-    case "base64":
-      buffer = Buffer.from(persisted.data, "base64");
-      break;
-    case "utf8":
-      buffer = Buffer.from(persisted.data, "utf8");
-      break;
-    case "json":
-      // Deprecated. Instead, we store JSON as utf8 so exact formatting is kept.
-      buffer = Buffer.from(JSON.stringify(persisted.data, null, 2), "utf8");
-      break;
-    default:
-      throw new Error(`Unsupported encoding!`);
-  }
-  if (encoding === "br") {
-    buffer = Buffer.from(brotli.compress(buffer));
-  }
-  return buffer;
 }
 
 function extractPath(url: string) {
@@ -476,56 +369,12 @@ function pathWithoutQueryParameters(path: string) {
   }
 }
 
-/**
- * A record of a specific HTTP interaction (request + response).
- */
-export type TapeRecord = {
-  request: {
-    method: string;
-    path: string;
-    headers: Headers;
-    body: PersistedBuffer;
-  };
-  response: {
-    status: {
-      code: number;
-    };
-    headers: Headers;
-    body: PersistedBuffer;
-  };
-};
-
 const DEFAULT_TAPE = "default";
-
-/**
- * Headers of a request or response.
- */
-export type Headers = {
-  [headerName: string]: string | string[] | undefined;
-};
 
 /**
  * An HTTP body going through Node.
  */
-export type HttpBody = Array<Buffer>;
-
-/**
- * A buffer that can be persisted in JSON.
- */
-export type PersistedBuffer =
-  | {
-      encoding: "base64";
-      data: string;
-    }
-  | {
-      encoding: "utf8";
-      data: string;
-    }
-  | {
-      // Deprecated. Instead, we store JSON as utf8 so exact formatting is kept.
-      encoding: "json";
-      data: {};
-    };
+type HttpBody = Array<Buffer>;
 
 /**
  * Possible modes.
