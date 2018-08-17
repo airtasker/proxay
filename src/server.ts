@@ -264,7 +264,7 @@ export class RecordReplayServer {
       const record = this.currentTapeRecords[i];
       if (
         record.request.method === requestMethod &&
-        record.request.path === requestPath
+        extractPath(record.request.path) === extractPath(requestPath)
       ) {
         return record;
       }
