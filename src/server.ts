@@ -456,11 +456,18 @@ function unserialiseBuffer(
 
 function extractPath(url: string) {
   const schemePosition = url.indexOf("://");
+  let path;
   if (schemePosition !== -1) {
     const pathPosition = url.indexOf("/", schemePosition + 3);
-    return url.substr(pathPosition);
+    path = url.substr(pathPosition);
   } else {
-    return url;
+    path = url;
+  }
+  const questionMarkPosition = path.indexOf("?");
+  if (questionMarkPosition !== -1) {
+    return path.substr(0, questionMarkPosition);
+  } else {
+    return path;
   }
 }
 
