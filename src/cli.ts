@@ -16,12 +16,12 @@ async function main(argv: string[]) {
     .option("-p, --port <port>", "Local port to serve on", "3000")
     .parse(argv);
 
-  const mode: string = program.mode;
+  const initialMode: string = program.mode;
   const tapeDir: string = program.tapes;
   const host: string = program.host;
   const port = parseInt(program.port);
 
-  switch (mode) {
+  switch (initialMode) {
     case "record":
     case "replay":
     case "mimic":
@@ -33,18 +33,18 @@ async function main(argv: string[]) {
       throw new Error(); // only used for TypeScript control flow
   }
 
-  if (!tapeDir && mode !== "passthrough") {
+  if (!tapeDir && initialMode !== "passthrough") {
     panic("Please specify a path to a tapes directory.");
   }
 
-  if (mode === "replay" && !fs.existsSync(tapeDir)) {
+  if (initialMode === "replay" && !fs.existsSync(tapeDir)) {
     panic(
       `No tapes found at ${tapeDir}. Did you mean to start in record mode?`
     );
   }
 
   // Expect a host unless we're in replay mode.
-  if (mode !== "replay") {
+  if (initialMode !== "replay") {
     if (!host) {
       panic("Please specify a host.");
     }
@@ -54,13 +54,13 @@ async function main(argv: string[]) {
   }
 
   const server = new RecordReplayServer({
-    mode,
+    initialMode,
     tapeDir,
     host,
     enableLogging: true
   });
   await server.start(port);
-  console.log(chalk.green(`Proxying in ${mode} mode on port ${port}.`));
+  console.log(chalk.green(`Proxying in ${initialMode} mode on port ${port}.`));
 }
 
 function panic(message: string) {
