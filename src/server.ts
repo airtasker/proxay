@@ -86,6 +86,28 @@ export class RecordReplayServer {
             this.loggingEnabled &&
               console.log(`Recorded: ${req.method} ${requestPath}`);
             break;
+          case "mimic":
+            record = this.findRecord(
+              req.method,
+              requestPath,
+              req.headers,
+              requestBody
+            );
+            if (record) {
+              this.loggingEnabled &&
+                console.log(`Replayed: ${req.method} ${requestPath}`);
+            } else {
+              record = await this.proxy(
+                req.method,
+                requestPath,
+                req.headers,
+                requestBody
+              );
+              this.addRecordToTape(record);
+              this.loggingEnabled &&
+                console.log(`Recorded: ${req.method} ${requestPath}`);
+            }
+            break;
           case "passthrough":
             record = await this.proxy(
               req.method,
@@ -179,6 +201,16 @@ export class RecordReplayServer {
           );
         } catch (e) {
           this.loggingEnabled && console.warn(chalk.yellow(e.message));
+        }
+        break;
+      case "mimic":
+        try {
+          this.currentTapeRecords = this.persistence.loadTapeFromDisk(
+            this.currentTape
+          );
+        } catch (e) {
+          this.currentTapeRecords = [];
+          this.persistence.saveTapeToDisk(this.currentTape, []);
         }
         break;
       case "passthrough":
@@ -377,7 +409,7 @@ const DEFAULT_TAPE = "default";
 /**
  * Possible modes.
  */
-export type Mode = ReplayMode | RecordMode | PassthroughMode;
+export type Mode = ReplayMode | RecordMode | MimicMode | PassthroughMode;
 
 /**
  * Replays requests from tapes. Fails any unexpected requests.
@@ -388,6 +420,11 @@ export type ReplayMode = "replay";
  * Records requests. Ignores recorded tapes.
  */
 export type RecordMode = "record";
+
+/**
+ * Records requests the first time it encounters them, then replays them.
+ */
+export type MimicMode = "mimic";
 
 /**
  * Acts as a pass-through proxy. No recording occurs.

@@ -27,8 +27,14 @@ export class TestServer {
   private app: Express;
   private server?: http.Server;
 
+  requestCount = 0;
+
   constructor() {
     this.app = express();
+    this.app.use((_req, _res, next) => {
+      this.requestCount += 1;
+      next();
+    });
     this.app.get(SIMPLE_TEXT_PATH, (_req, res) => {
       res.send(SIMPLE_TEXT_RESPONSE);
     });
