@@ -1,4 +1,6 @@
 import axios from "axios";
+import fs from "fs";
+import path from "path";
 import { PROXAY_HOST } from "./config";
 import { setupServers } from "./setup";
 import {
@@ -11,6 +13,14 @@ import {
 } from "./testserver";
 
 describe("Mimic", () => {
+  beforeAll(() => {
+    // Delete the tape before running tests.
+    const tapePath = path.join(__dirname, "tapes", "mimic", "default.yml");
+    if (fs.existsSync(tapePath)) {
+      fs.unlinkSync(tapePath);
+    }
+  });
+
   const servers = setupServers("mimic");
 
   test("response: simple text", async () => {
