@@ -19,13 +19,13 @@ export class RecordReplayServer {
   private loggingEnabled: boolean;
 
   constructor(options: {
-    mode: Mode;
+    initialMode: Mode;
     tapeDir: string;
     host?: string;
     enableLogging?: boolean;
   }) {
     this.currentTapeRecords = [];
-    this.mode = options.mode;
+    this.mode = options.initialMode;
     this.proxiedHost = options.host;
     this.loggingEnabled = options.enableLogging || false;
     this.persistence = new Persistence(options.tapeDir);
@@ -156,14 +156,21 @@ export class RecordReplayServer {
     requestBody: Buffer,
     res: http.ServerResponse
   ) {
-    // Sending a request to /__proxay/tape will pick a specific tape.
+    // Sending a request to /__proxay/tape will pick a specific tape and/or a new mode.
     if (requestPath === "/__proxay/tape") {
       const json = requestBody.toString("utf8");
       let tape;
+      let mode;
       try {
-        tape = JSON.parse(json).tape;
+        const body = JSON.parse(json);
+        tape = body.tape || this.currentTape;
+        mode = body.mode || this.mode;
       } catch {
         tape = null;
+        mode = this.mode;
+      }
+      if (mode !== this.mode) {
+        this.mode = mode;
       }
       if (tape) {
         if (!this.persistence.isTapeNameValid(tape)) {

@@ -12,7 +12,7 @@ export function setupServers(mode: Mode) {
   beforeAll(async done => {
     servers.backend = new TestServer();
     servers.proxy = new RecordReplayServer({
-      mode,
+      initialMode: mode,
       tapeDir: path.join(__dirname, "tapes", mode),
       host: TEST_SERVER_HOST
     });
