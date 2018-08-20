@@ -44,6 +44,9 @@ export class TestServer {
     this.app.get(BINARY_PATH, (_req, res) => {
       res.send(BINARY_RESPONSE);
     });
+    this.app.get("/*", (req, res) => {
+      res.send(req.path);
+    });
   }
 
   /**

@@ -31,9 +31,15 @@ describe("Mimic", () => {
   });
 
   test("only records each request once", async () => {
-    expect(servers.backend.requestCount).toBe(3);
-    const response = await axios.get(`${PROXAY_HOST}${SIMPLE_TEXT_PATH}`);
-    expect(response.data).toBe(SIMPLE_TEXT_RESPONSE);
-    expect(servers.backend.requestCount).toBe(3); // Unchanged.
+    const requestCount = servers.backend.requestCount;
+    // First call will be recorded.
+    expect((await axios.get(`${PROXAY_HOST}/only-records`)).data).toBe(
+      "/only-records"
+    );
+    // Second call will be replayed.
+    expect((await axios.get(`${PROXAY_HOST}/only-records`)).data).toBe(
+      "/only-records"
+    );
+    expect(servers.backend.requestCount).toBe(requestCount + 1); // Unchanged.
   });
 });
