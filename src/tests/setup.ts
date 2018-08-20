@@ -3,7 +3,7 @@ import { Mode, RecordReplayServer } from "../server";
 import { PROXAY_PORT, TEST_SERVER_HOST, TEST_SERVER_PORT } from "./config";
 import { TestServer } from "./testserver";
 
-export function setupServers(mode: Mode) {
+export function setupServers(mode: Mode, tapeName: string = mode) {
   const servers = {} as {
     backend: TestServer;
     proxy: RecordReplayServer;
@@ -13,7 +13,7 @@ export function setupServers(mode: Mode) {
     servers.backend = new TestServer();
     servers.proxy = new RecordReplayServer({
       initialMode: mode,
-      tapeDir: path.join(__dirname, "tapes", mode),
+      tapeDir: path.join(__dirname, "tapes", tapeName),
       host: TEST_SERVER_HOST
     });
     await Promise.all([

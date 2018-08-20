@@ -3,7 +3,7 @@ import { PROXAY_HOST } from "./config";
 import { setupServers } from "./setup";
 
 describe("Switching tapes", () => {
-  const servers = setupServers("replay");
+  const servers = setupServers("replay", "switching-tapes");
 
   it("can switch between record and replay mode", async () => {
     // Start in record mode.
