@@ -24,6 +24,7 @@ async function main(argv: string[]) {
   switch (mode) {
     case "record":
     case "replay":
+    case "mimic":
     case "passthrough":
       // Valid modes.
       break;
