@@ -14,6 +14,7 @@ export class RecordReplayServer {
 
   private mode: Mode;
   private proxiedHost?: string;
+  private timeout: number;
   private currentTapeRecords: TapeRecord[] = [];
   private currentTape!: string;
   private loggingEnabled: boolean;
@@ -22,11 +23,13 @@ export class RecordReplayServer {
     initialMode: Mode;
     tapeDir: string;
     host?: string;
+    timeout?: number;
     enableLogging?: boolean;
   }) {
     this.currentTapeRecords = [];
     this.mode = options.initialMode;
     this.proxiedHost = options.host;
+    this.timeout = options.timeout || 5000;
     this.loggingEnabled = options.enableLogging || false;
     this.persistence = new Persistence(options.tapeDir);
     this.loadTape(DEFAULT_TAPE);
@@ -130,6 +133,8 @@ export class RecordReplayServer {
         }
       } catch (e) {
         this.loggingEnabled && console.error(chalk.red("Unexpected error:"), e);
+        res.statusCode = 500;
+        res.end();
       }
     });
   }
@@ -294,24 +299,28 @@ export class RecordReplayServer {
     const [scheme, hostnameWithPort] = this.proxiedHost.split("://");
     const [hostname, port] = hostnameWithPort.split(":");
     try {
-      const response = await new Promise<http.IncomingMessage>(resolve => {
-        const requestOptions: http.RequestOptions = {
-          hostname: hostname,
-          method: requestMethod,
-          path: requestPath,
-          port,
-          headers: {
-            ...requestHeaders,
-            host: hostname
-          }
-        };
-        const proxyRequest =
-          scheme === "http"
-            ? http.request(requestOptions, resolve)
-            : https.request(requestOptions, resolve);
-        proxyRequest.write(requestBody);
-        proxyRequest.end();
-      });
+      const response = await new Promise<http.IncomingMessage>(
+        (resolve, reject) => {
+          const requestOptions: http.RequestOptions = {
+            hostname: hostname,
+            method: requestMethod,
+            path: requestPath,
+            port,
+            headers: {
+              ...requestHeaders,
+              host: hostname
+            },
+            timeout: this.timeout
+          };
+          const proxyRequest =
+            scheme === "http"
+              ? http.request(requestOptions, resolve)
+              : https.request(requestOptions, resolve);
+          proxyRequest.on("error", reject);
+          proxyRequest.write(requestBody);
+          proxyRequest.end();
+        }
+      );
 
       const statusCode = response.statusCode || 200;
       let responseBody = await new Promise<Buffer>(resolve => {
