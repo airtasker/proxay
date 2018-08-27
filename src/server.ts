@@ -51,7 +51,7 @@ export class RecordReplayServer {
         const requestPath = extractPath(req.url);
 
         if (requestPath.startsWith("/__proxay/")) {
-          this.handleProxayApi(requestPath, requestBody, res);
+          this.handleProxayApi(req.method, requestPath, requestBody, res);
           return;
         }
 
@@ -157,12 +157,22 @@ export class RecordReplayServer {
    * Handles requests that are intended for Proxay itself.
    */
   private handleProxayApi(
+    requestMethod: string,
     requestPath: string,
     requestBody: Buffer,
     res: http.ServerResponse
   ) {
+    // Sending a request to /__proxay will return a 200 (so tests can identify whether
+    // their backend is Proxay or not).
+    if (requestMethod.toLowerCase() === "get" && requestPath === "/__proxay") {
+      res.end("Proxay!");
+    }
+
     // Sending a request to /__proxay/tape will pick a specific tape and/or a new mode.
-    if (requestPath === "/__proxay/tape") {
+    if (
+      requestMethod.toLowerCase() === "post" &&
+      requestPath === "/__proxay/tape"
+    ) {
       const json = requestBody.toString("utf8");
       let tape;
       let mode;
