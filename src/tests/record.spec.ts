@@ -29,4 +29,10 @@ describe("Record", () => {
     });
     expect(response.data).toEqual(BINARY_RESPONSE);
   });
+
+  test("can pick any tape", async () => {
+    await axios.post(`${PROXAY_HOST}/__proxay/tape`, {
+      tape: "new-tape"
+    });
+  });
 });

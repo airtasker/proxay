@@ -52,4 +52,10 @@ describe("Mimic", () => {
     );
     expect(servers.backend.requestCount).toBe(requestCount + 1); // Unchanged.
   });
+
+  test("can pick any tape", async () => {
+    await axios.post(`${PROXAY_HOST}/__proxay/tape`, {
+      tape: "new-tape"
+    });
+  });
 });
