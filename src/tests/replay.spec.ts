@@ -29,4 +29,20 @@ describe("Replay", () => {
     });
     expect(response.data).toEqual(BINARY_RESPONSE);
   });
+
+  test("can pick an existing tape", async () => {
+    await axios.post(`${PROXAY_HOST}/__proxay/tape`, {
+      tape: "existing-tape"
+    });
+  });
+
+  test("cannot pick a tape that does not exist", async () => {
+    expect(
+      axios.post(`${PROXAY_HOST}/__proxay/tape`, {
+        tape: "does-not-exist-tape"
+      })
+    ).rejects.toEqual({
+      error: "Request failed with status code 404"
+    });
+  });
 });

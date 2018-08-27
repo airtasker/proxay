@@ -185,8 +185,12 @@ export class RecordReplayServer {
           res.end(errorMessage);
           return;
         }
-        this.loadTape(tape);
-        res.end(`Updated tape: ${tape}`);
+        if (this.loadTape(tape)) {
+          res.end(`Updated tape: ${tape}`);
+        } else {
+          res.statusCode = 404;
+          res.end(`Missing tape: ${tape}`);
+        }
       } else {
         this.unloadTape();
         res.end(`Unloaded tape`);
@@ -196,8 +200,10 @@ export class RecordReplayServer {
 
   /**
    * Loads a specific tape into memory (erasing it in record mode).
+   *
+   * @returns Whether the tape was found or not (always true in record/mimic mode).
    */
-  private loadTape(tapeName: string) {
+  private loadTape(tapeName: string): boolean {
     this.currentTape = tapeName;
     this.loggingEnabled &&
       console.log(chalk.blueBright(`Loaded tape: ${tapeName}`));
@@ -205,16 +211,17 @@ export class RecordReplayServer {
       case "record":
         this.currentTapeRecords = [];
         this.persistence.saveTapeToDisk(this.currentTape, []);
-        break;
+        return true;
       case "replay":
         try {
           this.currentTapeRecords = this.persistence.loadTapeFromDisk(
             this.currentTape
           );
+          return true;
         } catch (e) {
           this.loggingEnabled && console.warn(chalk.yellow(e.message));
+          return false;
         }
-        break;
       case "mimic":
         try {
           this.currentTapeRecords = this.persistence.loadTapeFromDisk(
@@ -224,10 +231,10 @@ export class RecordReplayServer {
           this.currentTapeRecords = [];
           this.persistence.saveTapeToDisk(this.currentTape, []);
         }
-        break;
+        return true;
       case "passthrough":
         // Do nothing.
-        break;
+        return true;
       default:
         throw assertNever(this.mode);
     }
