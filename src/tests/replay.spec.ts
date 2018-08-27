@@ -37,12 +37,10 @@ describe("Replay", () => {
   });
 
   test("cannot pick a tape that does not exist", async () => {
-    expect(
+    await expect(
       axios.post(`${PROXAY_HOST}/__proxay/tape`, {
         tape: "does-not-exist-tape"
       })
-    ).rejects.toEqual({
-      error: "Request failed with status code 404"
-    });
+    ).rejects.toEqual(new Error("Request failed with status code 404"));
   });
 });
