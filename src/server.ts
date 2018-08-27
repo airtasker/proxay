@@ -49,8 +49,10 @@ export class RecordReplayServer {
       try {
         const requestBody = await receiveRequestBody(req);
         const requestPath = extractPath(req.url);
-
-        if (requestPath.startsWith("/__proxay/")) {
+        if (
+          requestPath === "/__proxay" ||
+          requestPath.startsWith("/__proxay/")
+        ) {
           this.handleProxayApi(req.method, requestPath, requestBody, res);
           return;
         }
