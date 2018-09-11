@@ -1,8 +1,9 @@
 import assertNever from "assert-never";
 import chalk from "chalk";
 import http from "http";
-import https from "https";
+import { ensureBuffer } from "./buffer";
 import { Persistence } from "./persistence";
+import { send } from "./sender";
 import { Headers, TapeRecord } from "./tape";
 
 /**
@@ -315,55 +316,15 @@ export class RecordReplayServer {
     if (!this.proxiedHost) {
       throw new Error("Missing proxied host");
     }
-    const [scheme, hostnameWithPort] = this.proxiedHost.split("://");
-    const [hostname, port] = hostnameWithPort.split(":");
     try {
-      const response = await new Promise<http.IncomingMessage>(
-        (resolve, reject) => {
-          const requestOptions: http.RequestOptions = {
-            hostname: hostname,
-            method: requestMethod,
-            path: requestPath,
-            port,
-            headers: {
-              ...requestHeaders,
-              host: hostname
-            },
-            timeout: this.timeout
-          };
-          const proxyRequest =
-            scheme === "http"
-              ? http.request(requestOptions, resolve)
-              : https.request(requestOptions, resolve);
-          proxyRequest.on("error", reject);
-          proxyRequest.write(requestBody);
-          proxyRequest.end();
-        }
+      return await send(
+        this.proxiedHost,
+        requestMethod,
+        requestPath,
+        requestHeaders,
+        requestBody,
+        this.timeout
       );
-
-      const statusCode = response.statusCode || 200;
-      let responseBody = await new Promise<Buffer>(resolve => {
-        let chunks: Buffer[] = [];
-        response.on("data", chunk => {
-          chunks.push(ensureBuffer(chunk));
-        });
-        response.on("end", () => resolve(Buffer.concat(chunks)));
-      });
-      return {
-        request: {
-          method: requestMethod,
-          path: requestPath,
-          headers: requestHeaders,
-          body: requestBody
-        },
-        response: {
-          status: {
-            code: statusCode
-          },
-          headers: response.headers,
-          body: responseBody
-        }
-      };
     } catch (e) {
       if (e.code) {
         this.loggingEnabled &&
@@ -410,12 +371,6 @@ function receiveRequestBody(req: http.ServerRequest): Promise<Buffer> {
   return new Promise(resolve => {
     req.on("end", () => resolve(Buffer.concat(requestChunks)));
   });
-}
-
-function ensureBuffer(stringOrBuffer: string | Buffer) {
-  return typeof stringOrBuffer === "string"
-    ? Buffer.from(stringOrBuffer, "utf8")
-    : stringOrBuffer;
 }
 
 function extractPath(url: string) {
