@@ -338,7 +338,7 @@ describe("Persistence", () => {
         },
         body: {
           encoding: "base64",
-          data: "H4sIAAAAAAAAE2MyUMqYzfiqhwmNBgCNSozuGAAAAA=="
+          data: "H4sIAAAAAAAAA2MyUMqYzfiqhwmNBgCNSozuGAAAAA=="
         }
       },
       response: {
@@ -350,7 +350,7 @@ describe("Persistence", () => {
         },
         body: {
           encoding: "base64",
-          data: "H4sIAAAAAAAAE+Mx+JnxX/H0Zh40GgB5ykTGGAAAAA=="
+          data: "H4sIAAAAAAAAA+Mx+JnxX/H0Zh40GgB5ykTGGAAAAA=="
         }
       }
     });
