@@ -55,7 +55,7 @@ export type PersistedBuffer =
       data: {};
     };
 
-export type CompressionAlgorithm = "br" | "none";
+export type CompressionAlgorithm = "br" | "gzip" | "none";
 
 /**
  * Headers of a request or response.

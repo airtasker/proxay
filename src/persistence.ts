@@ -2,6 +2,7 @@ import brotli from "brotli";
 import fs from "fs-extra";
 import yaml from "js-yaml";
 import path from "path";
+import { gunzipSync, gzipSync } from "zlib";
 import {
   CompressionAlgorithm,
   Headers,
@@ -104,6 +105,10 @@ export function serialiseBuffer(
     buffer = Buffer.from(brotli.decompress(buffer));
     compression = "br";
   }
+  if (contentEncoding === "gzip") {
+    buffer = gunzipSync(buffer);
+    compression = "gzip";
+  }
   const utf8Representation = buffer.toString("utf8");
   try {
     // Can it be safely stored and recreated in YAML?
@@ -147,6 +152,11 @@ function unserialiseBuffer(persisted: PersistedBuffer): Buffer {
         } else {
           throw new Error(`Brotli compression failed!`);
         }
+      }
+      if (persisted.compression === "gzip") {
+        // TODO: Find a workaround for the new compressed message not necessarily
+        // being identical to what was originally sent (update Content-Length?).
+        buffer = gzipSync(buffer);
       }
       break;
     default:
