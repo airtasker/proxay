@@ -66,18 +66,12 @@ export function persistTape(record: TapeRecord): PersistedTapeRecord {
       method: record.request.method,
       path: record.request.path,
       headers: record.request.headers,
-      body: serialiseBuffer(
-        record.request.body,
-        contentEncodingHeader(record.request.headers)
-      )
+      body: serialiseBuffer(record.request.body, record.request.headers)
     },
     response: {
       status: record.response.status,
       headers: record.response.headers,
-      body: serialiseBuffer(
-        record.response.body,
-        contentEncodingHeader(record.response.headers)
-      )
+      body: serialiseBuffer(record.response.body, record.response.headers)
     }
   };
 }
@@ -98,15 +92,12 @@ export function reviveTape(persistedRecord: PersistedTapeRecord): TapeRecord {
   };
 }
 
-function contentEncodingHeader(headers: Headers) {
-  const header = headers["content-encoding"];
-  return typeof header === "string" ? header : undefined;
-}
-
-function serialiseBuffer(
+export function serialiseBuffer(
   buffer: Buffer,
-  contentEncoding: string | undefined
+  headers: Headers
 ): PersistedBuffer {
+  const header = headers["content-encoding"];
+  const contentEncoding = typeof header === "string" ? header : undefined;
   let originalBuffer = buffer;
   let compression: CompressionAlgorithm = "none";
   if (contentEncoding === "br") {
