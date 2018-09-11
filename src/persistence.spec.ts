@@ -1,4 +1,5 @@
 import brotli from "brotli";
+import { gzipSync } from "zlib";
 import { persistTape, reviveTape } from "./persistence";
 
 // Note the repetition. This is necessary otherwise Brotli compression
@@ -70,6 +71,11 @@ const UTF8_RESPONSE_BROTLI = Buffer.from(
 );
 const BINARY_REQUEST_BROTLI = Buffer.from(brotli.compress(BINARY_REQUEST)!);
 const BINARY_RESPONSE_BROTLI = Buffer.from(brotli.compress(BINARY_RESPONSE)!);
+
+const UTF8_REQUEST_GZIP = gzipSync(Buffer.from(UTF8_REQUEST, "utf8"));
+const UTF8_RESPONSE_GZIP = gzipSync(Buffer.from(UTF8_RESPONSE, "utf8"));
+const BINARY_REQUEST_GZIP = gzipSync(BINARY_REQUEST);
+const BINARY_RESPONSE_GZIP = gzipSync(BINARY_RESPONSE);
 
 describe("Persistence", () => {
   it("persists utf-8", () => {
@@ -252,6 +258,104 @@ describe("Persistence", () => {
     });
   });
 
+  it("persists utf-8 encoded with gzip decompressed", () => {
+    expect(
+      persistTape({
+        request: {
+          method: "GET",
+          path: "/path",
+          headers: {
+            "content-encoding": "gzip"
+          },
+          body: UTF8_REQUEST_GZIP
+        },
+        response: {
+          status: {
+            code: 200
+          },
+          headers: {
+            "content-encoding": "gzip"
+          },
+          body: UTF8_RESPONSE_GZIP
+        }
+      })
+    ).toEqual({
+      request: {
+        method: "GET",
+        path: "/path",
+        headers: {
+          "content-encoding": "gzip"
+        },
+        body: {
+          encoding: "utf8",
+          data: UTF8_REQUEST,
+          compression: "gzip"
+        }
+      },
+      response: {
+        status: {
+          code: 200
+        },
+        headers: {
+          "content-encoding": "gzip"
+        },
+        body: {
+          encoding: "utf8",
+          data: UTF8_RESPONSE,
+          compression: "gzip"
+        }
+      }
+    });
+  });
+
+  it("persists binary encoded with gzip still compressed", () => {
+    expect(
+      persistTape({
+        request: {
+          method: "GET",
+          path: "/path",
+          headers: {
+            "content-encoding": "gzip"
+          },
+          body: BINARY_REQUEST_GZIP
+        },
+        response: {
+          status: {
+            code: 200
+          },
+          headers: {
+            "content-encoding": "gzip"
+          },
+          body: BINARY_RESPONSE_GZIP
+        }
+      })
+    ).toEqual({
+      request: {
+        method: "GET",
+        path: "/path",
+        headers: {
+          "content-encoding": "gzip"
+        },
+        body: {
+          encoding: "base64",
+          data: "H4sIAAAAAAAAA2MyUMqYzfiqhwmNBgCNSozuGAAAAA=="
+        }
+      },
+      response: {
+        status: {
+          code: 200
+        },
+        headers: {
+          "content-encoding": "gzip"
+        },
+        body: {
+          encoding: "base64",
+          data: "H4sIAAAAAAAAA+Mx+JnxX/H0Zh40GgB5ykTGGAAAAA=="
+        }
+      }
+    });
+  });
+
   it("reads utf-8", () => {
     expect(
       reviveTape({
@@ -372,6 +476,48 @@ describe("Persistence", () => {
         },
         headers: {},
         body: UTF8_RESPONSE_BROTLI
+      }
+    });
+  });
+
+  it("re-encodes gzip from utf-8", () => {
+    expect(
+      reviveTape({
+        request: {
+          method: "GET",
+          path: "/path",
+          headers: {},
+          body: {
+            encoding: "utf8",
+            data: UTF8_REQUEST,
+            compression: "gzip"
+          }
+        },
+        response: {
+          status: {
+            code: 200
+          },
+          headers: {},
+          body: {
+            encoding: "utf8",
+            data: UTF8_RESPONSE,
+            compression: "gzip"
+          }
+        }
+      })
+    ).toEqual({
+      request: {
+        method: "GET",
+        path: "/path",
+        headers: {},
+        body: UTF8_REQUEST_GZIP
+      },
+      response: {
+        status: {
+          code: 200
+        },
+        headers: {},
+        body: UTF8_RESPONSE_GZIP
       }
     });
   });
