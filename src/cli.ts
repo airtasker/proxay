@@ -16,7 +16,7 @@ async function main(argv: string[]) {
     .option("-p, --port <port>", "Local port to serve on", "3000")
     .parse(argv);
 
-  const initialMode: string = program.mode;
+  const initialMode: string = (program.mode || "").toLowerCase();
   const tapeDir: string = program.tapes;
   const host: string = program.host;
   const port = parseInt(program.port);
