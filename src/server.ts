@@ -1,8 +1,10 @@
 import assertNever from "assert-never";
 import chalk from "chalk";
+import { diff } from "deep-diff";
 import http from "http";
+import queryString from "query-string";
 import { ensureBuffer } from "./buffer";
-import { Persistence } from "./persistence";
+import { Persistence, serialiseBuffer } from "./persistence";
 import { send } from "./sender";
 import { Headers, TapeRecord } from "./tape";
 
@@ -274,7 +276,7 @@ export class RecordReplayServer {
   private findRecord(
     requestMethod: string,
     requestPath: string,
-    _requestHeaders: Headers,
+    requestHeaders: Headers,
     requestBody: Buffer
   ): TapeRecord | null {
     const potentialMatches = this.currentTapeRecords.filter(
@@ -283,25 +285,25 @@ export class RecordReplayServer {
         pathWithoutQueryParameters(record.request.path) ===
           pathWithoutQueryParameters(requestPath)
     );
-    const sameQueryParameters = potentialMatches.filter(
-      record => record.request.path === requestPath
-    );
-    const identicalBody = potentialMatches.filter(record =>
-      record.request.body.equals(requestBody)
-    );
-    const identicalBodyAndQueryParameters = potentialMatches.filter(
-      record =>
-        record.request.path === requestPath &&
-        record.request.body.equals(requestBody)
-    );
-    // Pick the best fit.
-    return (
-      identicalBodyAndQueryParameters[0] ||
-      identicalBody[0] ||
-      sameQueryParameters[0] ||
-      potentialMatches[0] ||
-      null
-    );
+    let bestMatchDifferencesCount = Number.MAX_SAFE_INTEGER;
+    let bestMatch: TapeRecord | null = null;
+    for (const potentialMatch of potentialMatches) {
+      const differencesCount = countDifferences(
+        requestPath,
+        requestHeaders,
+        requestBody,
+        potentialMatch
+      );
+      if (differencesCount === null) {
+        if (!bestMatch) {
+          bestMatch = potentialMatch;
+        }
+      } else if (differencesCount < bestMatchDifferencesCount) {
+        bestMatchDifferencesCount = differencesCount;
+        bestMatch = potentialMatch;
+      }
+    }
+    return bestMatch;
   }
 
   /**
@@ -392,6 +394,42 @@ function pathWithoutQueryParameters(path: string) {
   } else {
     return path;
   }
+}
+
+/**
+ * Returns the number of differences found between a request and a specific record's request.
+ *
+ * @returns null when the body of either request is not valid JSON.
+ */
+function countDifferences(
+  requestPath: string,
+  requestHeaders: Headers,
+  requestBody: Buffer,
+  compareTo: TapeRecord
+): number | null {
+  const parsedQuery = queryString.parse(requestPath);
+  const parsedCompareToQuery = queryString.parse(compareTo.request.path);
+  const serialisedRequestBody = serialiseBuffer(requestBody, requestHeaders);
+  const serialisedCompareToRequestBody = serialiseBuffer(
+    compareTo.request.body,
+    compareTo.request.headers
+  );
+  if (
+    serialisedRequestBody.encoding === "utf8" &&
+    serialisedCompareToRequestBody.encoding === "utf8"
+  ) {
+    try {
+      const requestBodyJson = JSON.parse(serialisedRequestBody.data);
+      const recordBodyJson = JSON.parse(serialisedCompareToRequestBody.data);
+      return (
+        (diff(requestBodyJson, recordBodyJson) || []).length +
+        (diff(parsedQuery, parsedCompareToQuery) || []).length
+      );
+    } catch (e) {
+      // Ignore.
+    }
+  }
+  return null;
 }
 
 const DEFAULT_TAPE = "default";

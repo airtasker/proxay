@@ -7,6 +7,8 @@ export const SIMPLE_TEXT_RESPONSE = "Plain text!";
 export const UTF8_PATH = "/utf8";
 export const UTF8_RESPONSE = "😊 Hello 💩";
 
+export const JSON_IDENTITY_PATH = "/json/identity";
+
 export const BINARY_PATH = "/binary";
 export const BINARY_RESPONSE = Buffer.from([
   // These are not valid UTF-8 characters, on purpose.
@@ -31,6 +33,7 @@ export class TestServer {
 
   constructor() {
     this.app = express();
+    this.app.use(express.json());
     this.app.use((_req, _res, next) => {
       this.requestCount += 1;
       next();
@@ -43,6 +46,9 @@ export class TestServer {
     });
     this.app.get(BINARY_PATH, (_req, res) => {
       res.send(BINARY_RESPONSE);
+    });
+    this.app.post(JSON_IDENTITY_PATH, (req, res) => {
+      res.json(req.body);
     });
     this.app.get("/*", (req, res) => {
       res.send(req.path);
