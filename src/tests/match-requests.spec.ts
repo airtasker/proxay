@@ -123,8 +123,9 @@ describe("Match requests", () => {
     });
   });
 
-  describe('When two requests are the same', () => {
-    // @ts-ignore
+  describe('When more than one requests are the same', () => {
+    let response2;
+
     beforeAll(async () => {
       await axios.post(`${PROXAY_HOST}/__proxay/tape`, {
         tape: "tape",
@@ -150,11 +151,21 @@ describe("Match requests", () => {
         field3: 1
       });
 
-      const response2 = await axios.post(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`, {
+      response2 = await axios.post(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`, {
         field3: 1
       });
 
       expect(response1.data.requestCount).not.toEqual(response2.data.requestCount);
     });
+
+    describe('when there are more requests than recorded', () => {
+      it("Pick the last request", async () => {
+        const response3 = await axios.post(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`, {
+          field3: 1
+        });
+
+        expect(response3.data.requestCount).toEqual(response2.data.requestCount);
+      })
+    })
   });
 });

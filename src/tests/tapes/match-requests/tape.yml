@@ -21,7 +21,7 @@ http_interactions:
         content-type: application/json; charset=utf-8
         content-length: '29'
         etag: W/"1d-+lBbNRLYl81nh5uqzzJ5d+KENc4"
-        date: 'Thu, 27 Sep 2018 03:35:42 GMT'
+        date: 'Mon, 01 Oct 2018 23:52:23 GMT'
         connection: close
       body:
         encoding: utf8
@@ -49,7 +49,7 @@ http_interactions:
         content-type: application/json; charset=utf-8
         content-length: '29'
         etag: W/"1d-pR+CAr+3yMrqMUZ89h4FsE6tY1w"
-        date: 'Thu, 27 Sep 2018 03:35:42 GMT'
+        date: 'Mon, 01 Oct 2018 23:52:23 GMT'
         connection: close
       body:
         encoding: utf8
