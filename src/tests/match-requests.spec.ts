@@ -124,7 +124,6 @@ describe("Match requests", () => {
   });
 
   describe('When more than one requests are the same', () => {
-    let response2;
 
     beforeAll(async () => {
       await axios.post(`${PROXAY_HOST}/__proxay/tape`, {
@@ -151,7 +150,7 @@ describe("Match requests", () => {
         field3: 1
       });
 
-      response2 = await axios.post(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`, {
+      const response2 = await axios.post(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`, {
         field3: 1
       });
 
@@ -159,7 +158,35 @@ describe("Match requests", () => {
     });
 
     describe('when there are more requests than recorded', () => {
+      beforeAll(async () => {
+        await axios.post(`${PROXAY_HOST}/__proxay/tape`, {
+          tape: "tape",
+          mode: "record"
+        });
+
+        await axios.post(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`, {
+          field3: 1,
+        });
+
+        await axios.post(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`, {
+          field3: 1,
+        });
+      });
+
       it("Pick the last request", async () => {
+        await axios.post(`${PROXAY_HOST}/__proxay/tape`, {
+          tape: "tape",
+          mode: "replay"
+        });
+
+        await axios.post(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`, {
+          field3: 1
+        });
+
+        const response2 = await axios.post(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`, {
+          field3: 1
+        });
+
         const response3 = await axios.post(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`, {
           field3: 1
         });

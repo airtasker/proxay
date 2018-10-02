@@ -20,12 +20,12 @@ http_interactions:
         x-powered-by: Express
         content-type: application/json; charset=utf-8
         content-length: '29'
-        etag: W/"1d-+lBbNRLYl81nh5uqzzJ5d+KENc4"
-        date: 'Mon, 01 Oct 2018 23:52:23 GMT'
+        etag: W/"1d-JnU5PAtd+lASiuNHmBxarew/M+U"
+        date: 'Tue, 02 Oct 2018 00:05:10 GMT'
         connection: close
       body:
         encoding: utf8
-        data: '{"field3":1,"requestCount":4}'
+        data: '{"field3":1,"requestCount":6}'
         compression: none
   - request:
       method: POST
@@ -48,10 +48,10 @@ http_interactions:
         x-powered-by: Express
         content-type: application/json; charset=utf-8
         content-length: '29'
-        etag: W/"1d-pR+CAr+3yMrqMUZ89h4FsE6tY1w"
-        date: 'Mon, 01 Oct 2018 23:52:23 GMT'
+        etag: W/"1d-8+jG/ulqqjo3N30WLapxCwCyi94"
+        date: 'Tue, 02 Oct 2018 00:05:10 GMT'
         connection: close
       body:
         encoding: utf8
-        data: '{"field3":1,"requestCount":5}'
+        data: '{"field3":1,"requestCount":7}'
         compression: none
