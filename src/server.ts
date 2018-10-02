@@ -21,6 +21,7 @@ export class RecordReplayServer {
   private currentTapeRecords: TapeRecord[] = [];
   private currentTape!: string;
   private loggingEnabled: boolean;
+  private matchedRequestsCounts: Map<TapeRecord, number> = new Map();
 
   constructor(options: {
     initialMode: Mode;
@@ -301,7 +302,19 @@ export class RecordReplayServer {
       } else if (differencesCount < bestMatchDifferencesCount) {
         bestMatchDifferencesCount = differencesCount;
         bestMatch = potentialMatch;
+      } else if (
+        bestMatch &&
+        differencesCount === bestMatchDifferencesCount &&
+        !!this.matchedRequestsCounts.get(bestMatch)
+      ) {
+        bestMatch = potentialMatch
       }
+    }
+    if (bestMatch) {
+      this.matchedRequestsCounts.set(
+        bestMatch,
+        (this.matchedRequestsCounts.get(bestMatch) || 0) + 1
+      )
     }
     return bestMatch;
   }

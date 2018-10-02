@@ -62,7 +62,8 @@ describe("Match requests", () => {
         key2: "a"
       },
       field2: "d",
-      field3: 1
+      field3: 1,
+      requestCount: 3,
     });
     expect(
       (await axios.post(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`, {
@@ -79,7 +80,8 @@ describe("Match requests", () => {
         key2: "b"
       },
       field2: "c",
-      field3: 1
+      field3: 1,
+      requestCount: 1,
     });
     expect(
       (await axios.post(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`, {
@@ -97,7 +99,8 @@ describe("Match requests", () => {
         key3: "c"
       },
       field2: "d",
-      field3: 1
+      field3: 1,
+      requestCount: 2,
     });
     expect(
       (await axios.post(`${PROXAY_HOST}${JSON_IDENTITY_PATH}?abc=123`, {
@@ -115,7 +118,81 @@ describe("Match requests", () => {
         key3: "c"
       },
       field2: "d",
-      field3: 1
+      field3: 1,
+      requestCount: 2,
     });
+  });
+
+  describe('When more than one requests are the same', () => {
+
+    beforeAll(async () => {
+      await axios.post(`${PROXAY_HOST}/__proxay/tape`, {
+        tape: "tape",
+        mode: "record"
+      });
+
+      await axios.post(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`, {
+        field3: 1,
+      });
+
+      await axios.post(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`, {
+        field3: 1,
+      });
+    });
+
+    it("Picks the request that hasn't been matched over the request has been matched", async () => {
+      await axios.post(`${PROXAY_HOST}/__proxay/tape`, {
+        tape: "tape",
+        mode: "replay"
+      });
+
+      const response1 = await axios.post(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`, {
+        field3: 1
+      });
+
+      const response2 = await axios.post(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`, {
+        field3: 1
+      });
+
+      expect(response1.data.requestCount).not.toEqual(response2.data.requestCount);
+    });
+
+    describe('when there are more requests than recorded', () => {
+      beforeAll(async () => {
+        await axios.post(`${PROXAY_HOST}/__proxay/tape`, {
+          tape: "tape",
+          mode: "record"
+        });
+
+        await axios.post(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`, {
+          field3: 1,
+        });
+
+        await axios.post(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`, {
+          field3: 1,
+        });
+      });
+
+      it("Pick the last request", async () => {
+        await axios.post(`${PROXAY_HOST}/__proxay/tape`, {
+          tape: "tape",
+          mode: "replay"
+        });
+
+        await axios.post(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`, {
+          field3: 1
+        });
+
+        const response2 = await axios.post(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`, {
+          field3: 1
+        });
+
+        const response3 = await axios.post(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`, {
+          field3: 1
+        });
+
+        expect(response3.data.requestCount).toEqual(response2.data.requestCount);
+      })
+    })
   });
 });
