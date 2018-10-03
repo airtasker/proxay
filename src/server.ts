@@ -442,7 +442,7 @@ function countDifferences(
       // Ignore.
     }
   }
-  return Number.MAX_SAFE_INTEGER;
+  return Infinity;
 }
 
 const DEFAULT_TAPE = "default";
