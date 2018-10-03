@@ -295,11 +295,11 @@ export class RecordReplayServer {
         requestBody,
         potentialMatch
       );
-      if (differencesCount === null) {
-        if (!bestMatch) {
-          bestMatch = potentialMatch;
-        }
-      } else if (differencesCount < bestMatchDifferencesCount) {
+      if (!bestMatch && !differencesCount) {
+        bestMatch = potentialMatch;
+      }
+
+      if ((differencesCount || 0) < bestMatchDifferencesCount) {
         bestMatchDifferencesCount = differencesCount;
         bestMatch = potentialMatch;
       } else if (
@@ -432,8 +432,8 @@ function countDifferences(
     serialisedCompareToRequestBody.encoding === "utf8"
   ) {
     try {
-      const requestBodyJson = JSON.parse(serialisedRequestBody.data);
-      const recordBodyJson = JSON.parse(serialisedCompareToRequestBody.data);
+      const requestBodyJson = JSON.parse(serialisedRequestBody.data || '{}');
+      const recordBodyJson = JSON.parse(serialisedCompareToRequestBody.data || '{}');
       return (
         (diff(requestBodyJson, recordBodyJson) || []).length +
         (diff(parsedQuery, parsedCompareToQuery) || []).length
