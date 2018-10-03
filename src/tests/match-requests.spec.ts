@@ -124,40 +124,33 @@ describe("Match requests", () => {
   });
 
   describe('When more than one requests are the same', () => {
+    describe('when replaying get request', () => {
+      beforeAll(async () => {
+        await axios.post(`${PROXAY_HOST}/__proxay/tape`, {
+          tape: "tape",
+          mode: "record"
+        });
 
-    beforeAll(async () => {
-      await axios.post(`${PROXAY_HOST}/__proxay/tape`, {
-        tape: "tape",
-        mode: "record"
+        await axios.get(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`);
+
+        await axios.get(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`);
       });
 
-      await axios.post(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`, {
-        field3: 1,
-      });
+      it("Picks the request that hasn't been matched over the request has been matched", async () => {
+        await axios.post(`${PROXAY_HOST}/__proxay/tape`, {
+          tape: "tape",
+          mode: "replay"
+        });
 
-      await axios.post(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`, {
-        field3: 1,
+        const response1 = await axios.get(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`);
+
+        const response2 = await axios.get(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`);
+
+        expect(response1.data.requestCount).not.toEqual(response2.data.requestCount);
       });
     });
 
-    it("Picks the request that hasn't been matched over the request has been matched", async () => {
-      await axios.post(`${PROXAY_HOST}/__proxay/tape`, {
-        tape: "tape",
-        mode: "replay"
-      });
-
-      const response1 = await axios.post(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`, {
-        field3: 1
-      });
-
-      const response2 = await axios.post(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`, {
-        field3: 1
-      });
-
-      expect(response1.data.requestCount).not.toEqual(response2.data.requestCount);
-    });
-
-    describe('when there are more requests than recorded', () => {
+    describe('when replaying post request', () => {
       beforeAll(async () => {
         await axios.post(`${PROXAY_HOST}/__proxay/tape`, {
           tape: "tape",
@@ -173,13 +166,13 @@ describe("Match requests", () => {
         });
       });
 
-      it("Pick the last request", async () => {
+      it("Picks the request that hasn't been matched over the request has been matched", async () => {
         await axios.post(`${PROXAY_HOST}/__proxay/tape`, {
           tape: "tape",
           mode: "replay"
         });
 
-        await axios.post(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`, {
+        const response1 = await axios.post(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`, {
           field3: 1
         });
 
@@ -187,12 +180,46 @@ describe("Match requests", () => {
           field3: 1
         });
 
-        const response3 = await axios.post(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`, {
-          field3: 1
+        expect(response1.data.requestCount).not.toEqual(response2.data.requestCount);
+      });
+
+      describe('when there are more requests than recorded', () => {
+        beforeAll(async () => {
+          await axios.post(`${PROXAY_HOST}/__proxay/tape`, {
+            tape: "tape",
+            mode: "record"
+          });
+
+          await axios.post(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`, {
+            field3: 1,
+          });
+
+          await axios.post(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`, {
+            field3: 1,
+          });
         });
 
-        expect(response3.data.requestCount).toEqual(response2.data.requestCount);
-      })
+        it("Pick the last request", async () => {
+          await axios.post(`${PROXAY_HOST}/__proxay/tape`, {
+            tape: "tape",
+            mode: "replay"
+          });
+
+          await axios.post(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`, {
+            field3: 1
+          });
+
+          const response2 = await axios.post(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`, {
+            field3: 1
+          });
+
+          const response3 = await axios.post(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`, {
+            field3: 1
+          });
+
+          expect(response3.data.requestCount).toEqual(response2.data.requestCount);
+        })
+      });
     })
   });
 });

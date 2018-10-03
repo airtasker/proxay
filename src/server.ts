@@ -295,11 +295,11 @@ export class RecordReplayServer {
         requestBody,
         potentialMatch
       );
-      if (differencesCount === null) {
-        if (!bestMatch) {
-          bestMatch = potentialMatch;
-        }
-      } else if (differencesCount < bestMatchDifferencesCount) {
+      if (!bestMatch && !differencesCount) {
+        bestMatch = potentialMatch;
+      }
+
+      if (differencesCount < bestMatchDifferencesCount) {
         bestMatchDifferencesCount = differencesCount;
         bestMatch = potentialMatch;
       } else if (
@@ -419,7 +419,7 @@ function countDifferences(
   requestHeaders: Headers,
   requestBody: Buffer,
   compareTo: TapeRecord
-): number | null {
+): number {
   const parsedQuery = queryString.parse(requestPath);
   const parsedCompareToQuery = queryString.parse(compareTo.request.path);
   const serialisedRequestBody = serialiseBuffer(requestBody, requestHeaders);
@@ -432,8 +432,8 @@ function countDifferences(
     serialisedCompareToRequestBody.encoding === "utf8"
   ) {
     try {
-      const requestBodyJson = JSON.parse(serialisedRequestBody.data);
-      const recordBodyJson = JSON.parse(serialisedCompareToRequestBody.data);
+      const requestBodyJson = JSON.parse(serialisedRequestBody.data || '{}');
+      const recordBodyJson = JSON.parse(serialisedCompareToRequestBody.data || '{}');
       return (
         (diff(requestBodyJson, recordBodyJson) || []).length +
         (diff(parsedQuery, parsedCompareToQuery) || []).length
@@ -442,7 +442,7 @@ function countDifferences(
       // Ignore.
     }
   }
-  return null;
+  return Infinity;
 }
 
 const DEFAULT_TAPE = "default";
