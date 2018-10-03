@@ -299,7 +299,7 @@ export class RecordReplayServer {
         bestMatch = potentialMatch;
       }
 
-      if ((differencesCount || 0) < bestMatchDifferencesCount) {
+      if (differencesCount < bestMatchDifferencesCount) {
         bestMatchDifferencesCount = differencesCount;
         bestMatch = potentialMatch;
       } else if (
@@ -419,7 +419,7 @@ function countDifferences(
   requestHeaders: Headers,
   requestBody: Buffer,
   compareTo: TapeRecord
-): number | null {
+): number {
   const parsedQuery = queryString.parse(requestPath);
   const parsedCompareToQuery = queryString.parse(compareTo.request.path);
   const serialisedRequestBody = serialiseBuffer(requestBody, requestHeaders);
@@ -442,7 +442,7 @@ function countDifferences(
       // Ignore.
     }
   }
-  return null;
+  return Number.MAX_SAFE_INTEGER;
 }
 
 const DEFAULT_TAPE = "default";
