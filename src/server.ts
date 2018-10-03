@@ -295,7 +295,7 @@ export class RecordReplayServer {
         requestBody,
         potentialMatch
       );
-      if (!bestMatch && !differencesCount) {
+      if (!bestMatch) {
         bestMatch = potentialMatch;
       }
 
