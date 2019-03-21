@@ -20,7 +20,7 @@ export class RecordReplayServer {
   private currentTapeRecords: TapeRecord[] = [];
   private currentTape!: string;
   private loggingEnabled: boolean;
-  private matchedRequestsCounts: Map<TapeRecord, number> = new Map();
+  private replayedTapes: Set<TapeRecord> = new Set();
 
   constructor(options: {
     initialMode: Mode;
@@ -73,7 +73,7 @@ export class RecordReplayServer {
                 req.headers,
                 requestBody
               ),
-              this.matchedRequestsCounts
+              this.replayedTapes
             );
             if (record) {
               if (this.loggingEnabled) {
@@ -112,7 +112,7 @@ export class RecordReplayServer {
                 req.headers,
                 requestBody
               ),
-              this.matchedRequestsCounts
+              this.replayedTapes
             );
             if (record) {
               if (this.loggingEnabled) {

@@ -8,31 +8,29 @@ import { Headers, TapeRecord } from "./tape";
  * have been recorded, each of them is replayed in the same order.
  *
  * If there are more requests to be replayed than we have recorded, this will
- * automatically "circle back around".
+ * always pick the last one.
  *
- * @param records A list of records (e.g. returned by findRecordMatches)
- * @param tapeReplayCount A map for each tape record of the number of times it's
- * been replayed before.
+ * @param records A list of records (e.g. returned by findRecordMatches).
+ * @param tapeReplayCount A set of tape records that have been replayed before.
  */
 export function findFirstLeastUsedRecord(
   records: TapeRecord[],
-  tapeReplayCount: Map<TapeRecord, number>
+  replayedTapes: Set<TapeRecord>
 ): TapeRecord | null {
-  let minimalCount = +Infinity;
-  let minimalIndex = -1;
-  for (let i = 0; i < records.length; i++) {
-    const count = tapeReplayCount.get(records[i]) || 0;
-    if (count < minimalCount) {
-      minimalCount = count;
-      minimalIndex = i;
+  // Look for a record that hasn't been replayed yet.
+  for (const record of records) {
+    if (!replayedTapes.has(record)) {
+      replayedTapes.add(record);
+      return record;
     }
   }
-  if (minimalIndex === -1) {
+
+  // OK, we didn't find one. Return the last one, if there's any.
+  if (records.length === 0) {
     return null;
+  } else {
+    return records[records.length - 1];
   }
-  const bestMatch = records[minimalIndex];
-  tapeReplayCount.set(bestMatch, minimalCount + 1);
-  return bestMatch;
 }
 
 /**
