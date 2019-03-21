@@ -1,33 +1,25 @@
-version: 2
+version: 2.1
+job_configuration: &job_configuration
+  docker:
+    - image: circleci/node:10-stretch
+  working_directory: ~/repo
 jobs:
-  build:
-    docker:
-      - image: circleci/node:10
-    working_directory: ~/repo
-
+  build-and-test:
+    <<: *job_configuration
     steps:
       - checkout
-
-      # Download and cache dependencies
       - restore_cache:
           keys:
-          - v1-dependencies-{{ checksum "package.json" }}
-          # fallback to using the latest cache if no exact match is found
-          - v1-dependencies-
-
+            - v1-dependencies-{{ checksum "package.json" }}
+            - v1-dependencies-
       - run: yarn install
-
       - save_cache:
           paths:
             - node_modules
           key: v1-dependencies-{{ checksum "package.json" }}
-
       - run: yarn test
-
       - run: yarn build
-
       - run: sudo npm link
-
       - run: |
           proxay -m record -h https://www.google.com -t tapes/ &
           # Wait until it loads.
@@ -36,3 +28,45 @@ jobs:
             echo "Waiting until server ready..."
             sleep 5
           done
+
+  prettier-check:
+    <<: *job_configuration
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "package.json" }}
+            - v1-dependencies-
+      - run: yarn install
+      - save_cache:
+          paths:
+            - node_modules
+          key: v1-dependencies-{{ checksum "package.json" }}
+      - run:
+          name: Prettier
+          command: |
+            yarn prettier --list-different "**/*.js" "**/*.jsx" "**/*.ts" "**/*.tsx"
+
+  tslint-check:
+    <<: *job_configuration
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "package.json" }}
+            - v1-dependencies-
+      - run: yarn install
+      - save_cache:
+          paths:
+            - node_modules
+          key: v1-dependencies-{{ checksum "package.json" }}
+      - run:
+          name: TSLint
+          command: |
+            yarn tslint -p .
+workflows:
+  build-and-test:
+    jobs:
+      - build-and-test
+      - prettier-check
+      - tslint-check

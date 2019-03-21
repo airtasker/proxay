@@ -5,12 +5,12 @@ export const SIMPLE_TEXT_PATH = "/simpletext";
 export const SIMPLE_TEXT_RESPONSE = "Plain text!";
 
 export const UTF8_PATH = "/utf8";
-export const UTF8_RESPONSE = "😊 Hello 💩";
+export const UTF8rESPONSE = "😊 Hello 💩";
 
 export const JSON_IDENTITY_PATH = "/json/identity";
 
 export const BINARY_PATH = "/binary";
-export const BINARY_RESPONSE = Buffer.from([
+export const BINARYrESPONSE = Buffer.from([
   // These are not valid UTF-8 characters, on purpose.
   12,
   48,
@@ -26,32 +26,31 @@ export const BINARY_RESPONSE = Buffer.from([
  * A test server used as a fake backend.
  */
 export class TestServer {
+  requestCount = 0;
   private app: Express;
   private server?: http.Server;
-
-  requestCount = 0;
 
   constructor() {
     this.app = express();
     this.app.use(express.json());
-    this.app.use((_req, _res, next) => {
+    this.app.use((req, res, next) => {
       this.requestCount += 1;
       next();
     });
-    this.app.get(SIMPLE_TEXT_PATH, (_req, res) => {
+    this.app.get(SIMPLE_TEXT_PATH, (req, res) => {
       res.send(SIMPLE_TEXT_RESPONSE);
     });
-    this.app.get(UTF8_PATH, (_req, res) => {
-      res.send(UTF8_RESPONSE);
+    this.app.get(UTF8_PATH, (req, res) => {
+      res.send(UTF8rESPONSE);
     });
-    this.app.get(BINARY_PATH, (_req, res) => {
-      res.send(BINARY_RESPONSE);
+    this.app.get(BINARY_PATH, (req, res) => {
+      res.send(BINARYrESPONSE);
     });
     this.app.get(JSON_IDENTITY_PATH, (req, res) => {
-      res.json({data: req.path, requestCount: this.requestCount});
+      res.json({ data: req.path, requestCount: this.requestCount });
     });
     this.app.post(JSON_IDENTITY_PATH, (req, res) => {
-      res.json({...req.body, requestCount: this.requestCount});
+      res.json({ ...req.body, requestCount: this.requestCount });
     });
     this.app.get("/*", (req, res) => {
       res.send(req.path);

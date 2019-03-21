@@ -1,7 +1,7 @@
 /**
  * A record of a specific HTTP interaction (request + response).
  */
-export type TapeRecord = {
+export interface TapeRecord {
   request: {
     method: string;
     path: string;
@@ -15,12 +15,12 @@ export type TapeRecord = {
     headers: Headers;
     body: Buffer;
   };
-};
+}
 
 /**
  * A persisted version of {@link TapeRecord}.
  */
-export type PersistedTapeRecord = {
+export interface PersistedTapeRecord {
   request: {
     method: string;
     path: string;
@@ -34,7 +34,7 @@ export type PersistedTapeRecord = {
     headers: Headers;
     body: PersistedBuffer;
   };
-};
+}
 
 /**
  * A buffer that can be persisted in JSON.
@@ -60,6 +60,6 @@ export type CompressionAlgorithm = "br" | "gzip" | "none";
 /**
  * Headers of a request or response.
  */
-export type Headers = {
+export interface Headers {
   [headerName: string]: string | string[] | undefined;
-};
+}

@@ -99,7 +99,7 @@ export function serialiseBuffer(
 ): PersistedBuffer {
   const header = headers["content-encoding"];
   const contentEncoding = typeof header === "string" ? header : undefined;
-  let originalBuffer = buffer;
+  const originalBuffer = buffer;
   let compression: CompressionAlgorithm = "none";
   if (contentEncoding === "br") {
     buffer = Buffer.from(brotli.decompress(buffer));
