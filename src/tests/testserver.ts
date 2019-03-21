@@ -5,12 +5,12 @@ export const SIMPLE_TEXT_PATH = "/simpletext";
 export const SIMPLE_TEXT_RESPONSE = "Plain text!";
 
 export const UTF8_PATH = "/utf8";
-export const UTF8rESPONSE = "😊 Hello 💩";
+export const UTF8_RESPONSE = "😊 Hello 💩";
 
 export const JSON_IDENTITY_PATH = "/json/identity";
 
 export const BINARY_PATH = "/binary";
-export const BINARYrESPONSE = Buffer.from([
+export const BINARY_RESPONSE = Buffer.from([
   // These are not valid UTF-8 characters, on purpose.
   12,
   48,
@@ -41,10 +41,10 @@ export class TestServer {
       res.send(SIMPLE_TEXT_RESPONSE);
     });
     this.app.get(UTF8_PATH, (req, res) => {
-      res.send(UTF8rESPONSE);
+      res.send(UTF8_RESPONSE);
     });
     this.app.get(BINARY_PATH, (req, res) => {
-      res.send(BINARYrESPONSE);
+      res.send(BINARY_RESPONSE);
     });
     this.app.get(JSON_IDENTITY_PATH, (req, res) => {
       res.json({ data: req.path, requestCount: this.requestCount });
