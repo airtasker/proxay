@@ -18,10 +18,13 @@ export function computeSimilarity(
 ): number {
   const parsedQuery = queryString.parse(requestPath);
   const parsedCompareToQuery = queryString.parse(compareTo.request.path);
-  const serialisedRequestBody = serialiseBuffer(requestBody, requestHeaders);
+  const serialisedRequestBody = serialiseBuffer(
+    requestBody,
+    stripExtraneousHeaders(requestHeaders)
+  );
   const serialisedCompareToRequestBody = serialiseBuffer(
     compareTo.request.body,
-    compareTo.request.headers
+    stripExtraneousHeaders(compareTo.request.headers)
   );
   if (
     serialisedRequestBody.encoding === "utf8" &&
@@ -46,4 +49,24 @@ export function computeSimilarity(
   }
   // If we couldn't compare JSON, then we'll assume they don't match.
   return +Infinity;
+}
+
+/**
+ * Strips out headers that are likely to result in false negatives.
+ */
+function stripExtraneousHeaders(headers: Headers): Headers {
+  const safeHeaders: Headers = {};
+  for (const key of Object.keys(headers)) {
+    switch (key) {
+      case "accept":
+      case "user-agent":
+      case "host":
+      case "connection":
+        // Ignore.
+        continue;
+      default:
+        safeHeaders[key] = headers[key];
+    }
+  }
+  return safeHeaders;
 }
