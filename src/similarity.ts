@@ -4,7 +4,7 @@ import { serialiseBuffer } from "./persistence";
 import { Headers, TapeRecord } from "./tape";
 
 /**
- * Returns a "similarity score" a request and an existing record.
+ * Returns a "similarity score" between a request and an existing record.
  *
  * The score is a number between 0 and +Infinity:
  * - 0 means "identical" (perfect match)
