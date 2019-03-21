@@ -63,15 +63,15 @@ block of your test suite.
 
 ## Typical use case
 
-Let's say you're writing tests for your frontend. You want your tests to run as
+Let's say you're writing tests for your client. You want your tests to run as
 fast as possible, but your backend is quite slow. Or worse, you have some tests already,
 but they're flaky because your backend or one of its dependencies isn't completely
 reliable.
 
-Instead of pointing your frontend to your backend like you normally would, use Proxay
+Instead of pointing your client to your backend like you normally would, use Proxay
 as your backend. Tell Proxay to record requests going to the backend and run your tests
 once. This will create "tapes" which are records of each request/response between your
-frontend and your backend.
+client and your backend.
 
 Then, run Proxay in replay mode and run your tests again. Your tests should still work,
 but you'll notice tests run a lot faster. That's because your backend is not used anymore.
@@ -79,7 +79,7 @@ Instead, Proxay plays back responses from the tapes it had previously recorded.
 
 This will make your tests faster and more stable. However, because you no longer use a real
 backend, you should still make sure to run your jobs in "record" mode on a regular basis (for
-example with a cron job on your CI) to test the implicit contract between your frontend and
+example with a cron job on your CI) to test the implicit contract between your client and
 backend.
 
 ---
