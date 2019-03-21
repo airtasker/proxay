@@ -1,10 +1,9 @@
 import assertNever from "assert-never";
 import chalk from "chalk";
-import { diff } from "deep-diff";
 import http from "http";
-import queryString from "query-string";
 import { ensureBuffer } from "./buffer";
-import { Persistence, serialiseBuffer } from "./persistence";
+import { findFirstLeastUsedRecord, findRecordMatches } from "./matcher";
+import { Persistence } from "./persistence";
 import { send } from "./sender";
 import { Headers, TapeRecord } from "./tape";
 
@@ -66,11 +65,15 @@ export class RecordReplayServer {
         let record: TapeRecord | null;
         switch (this.mode) {
           case "replay":
-            record = this.findRecord(
-              req.method,
-              requestPath,
-              req.headers,
-              requestBody
+            record = findFirstLeastUsedRecord(
+              findRecordMatches(
+                this.currentTapeRecords,
+                req.method,
+                requestPath,
+                req.headers,
+                requestBody
+              ),
+              this.matchedRequestsCounts
             );
             if (record) {
               if (this.loggingEnabled) {
@@ -101,11 +104,15 @@ export class RecordReplayServer {
             }
             break;
           case "mimic":
-            record = this.findRecord(
-              req.method,
-              requestPath,
-              req.headers,
-              requestBody
+            record = findFirstLeastUsedRecord(
+              findRecordMatches(
+                this.currentTapeRecords,
+                req.method,
+                requestPath,
+                req.headers,
+                requestBody
+              ),
+              this.matchedRequestsCounts
             );
             if (record) {
               if (this.loggingEnabled) {
@@ -333,54 +340,6 @@ export class RecordReplayServer {
   }
 
   /**
-   * Finds a matching record for a particular request.
-   */
-  private findRecord(
-    requestMethod: string,
-    requestPath: string,
-    requestHeaders: Headers,
-    requestBody: Buffer
-  ): TapeRecord | null {
-    const potentialMatches = this.currentTapeRecords.filter(
-      record =>
-        record.request.method === requestMethod &&
-        pathWithoutQueryParameters(record.request.path) ===
-          pathWithoutQueryParameters(requestPath)
-    );
-    let bestMatchDifferencesCount = Number.MAX_SAFE_INTEGER;
-    let bestMatch: TapeRecord | null = null;
-    for (const potentialMatch of potentialMatches) {
-      const differencesCount = countDifferences(
-        requestPath,
-        requestHeaders,
-        requestBody,
-        potentialMatch
-      );
-      if (!bestMatch) {
-        bestMatch = potentialMatch;
-      }
-
-      if (differencesCount < bestMatchDifferencesCount) {
-        bestMatchDifferencesCount = differencesCount;
-        bestMatch = potentialMatch;
-      } else if (
-        bestMatch &&
-        differencesCount === bestMatchDifferencesCount &&
-        !!this.matchedRequestsCounts.get(bestMatch)
-      ) {
-        bestMatch = potentialMatch;
-      }
-    }
-    if (bestMatch) {
-      this.matchedRequestsCounts.set(
-        bestMatch,
-        (this.matchedRequestsCounts.get(bestMatch) || 0) + 1
-      );
-    }
-    return bestMatch;
-  }
-
-  /**
    * Sends a particular response to the client.
    */
   private sendResponse(record: TapeRecord, res: http.ServerResponse) {
@@ -415,53 +374,6 @@ function extractPath(url: string) {
     path = url;
   }
   return path;
-}
-
-function pathWithoutQueryParameters(path: string) {
-  const questionMarkPosition = path.indexOf("?");
-  if (questionMarkPosition !== -1) {
-    return path.substr(0, questionMarkPosition);
-  } else {
-    return path;
-  }
-}
-
-/**
- * Returns the number of differences found between a request and a specific record's request.
- *
- * @returns null when the body of either request is not valid JSON.
- */
-function countDifferences(
-  requestPath: string,
-  requestHeaders: Headers,
-  requestBody: Buffer,
-  compareTo: TapeRecord
-): number {
-  const parsedQuery = queryString.parse(requestPath);
-  const parsedCompareToQuery = queryString.parse(compareTo.request.path);
-  const serialisedRequestBody = serialiseBuffer(requestBody, requestHeaders);
-  const serialisedCompareToRequestBody = serialiseBuffer(
-    compareTo.request.body,
-    compareTo.request.headers
-  );
-  if (
-    serialisedRequestBody.encoding === "utf8" &&
-    serialisedCompareToRequestBody.encoding === "utf8"
-  ) {
-    try {
-      const requestBodyJson = JSON.parse(serialisedRequestBody.data || "{}");
-      const recordBodyJson = JSON.parse(
-        serialisedCompareToRequestBody.data || "{}"
-      );
-      return (
-        (diff(requestBodyJson, recordBodyJson) || []).length +
-        (diff(parsedQuery, parsedCompareToQuery) || []).length
-      );
-    } catch (e) {
-      // Ignore.
-    }
-  }
-  return Infinity;
 }
 
 const DEFAULT_TAPE = "default";
