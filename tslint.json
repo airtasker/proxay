@@ -8,7 +8,13 @@
     "max-classes-per-file": false,
     "no-console": false,
     "member-access": [true, "no-public"],
-    "object-literal-sort-keys": false
+    "object-literal-sort-keys": false,
+    "variable-name": [
+      true,
+      "ban-keywords",
+      "check-format",
+      "allow-leading-underscore"
+    ]
   },
   "rulesDirectory": []
 }
