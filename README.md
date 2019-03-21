@@ -4,8 +4,12 @@
 
 Proxay (pronounced "prokseï") is a proxy server that helps you write faster tests.
 
-Use Proxay as a layer between your frontend and its backend to record interactions and
-later replay them on demand.
+Use Proxay as a layer between a client and its backend to record interactions and later replay them on demand.
+
+You can use Proxay to proxy interactions between:
+- a web frontend and its backend
+- a mobile app and its backend
+- a server and another server (or a set of others, if using multiple Proxay instances)
 
 Proxay can operate in several modes:
 - **Record mode**: Proxies requests to the backend and records interactions as "tapes" on disk.
