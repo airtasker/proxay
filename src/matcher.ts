@@ -13,14 +13,13 @@ import { Headers, TapeRecord } from "./tape";
  * @param records A list of records (e.g. returned by findRecordMatches).
  * @param tapeReplayCount A set of tape records that have been replayed before.
  */
-export function findFirstLeastUsedRecord(
+export function findNextRecordToReplay(
   records: TapeRecord[],
   replayedTapes: Set<TapeRecord>
 ): TapeRecord | null {
   // Look for a record that hasn't been replayed yet.
   for (const record of records) {
     if (!replayedTapes.has(record)) {
-      replayedTapes.add(record);
       return record;
     }
   }
