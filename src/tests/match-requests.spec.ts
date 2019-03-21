@@ -63,7 +63,7 @@ describe("Match requests", () => {
       },
       field2: "d",
       field3: 1,
-      requestCount: 3,
+      requestCount: 3
     });
     expect(
       (await axios.post(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`, {
@@ -81,7 +81,7 @@ describe("Match requests", () => {
       },
       field2: "c",
       field3: 1,
-      requestCount: 1,
+      requestCount: 1
     });
     expect(
       (await axios.post(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`, {
@@ -100,7 +100,7 @@ describe("Match requests", () => {
       },
       field2: "d",
       field3: 1,
-      requestCount: 2,
+      requestCount: 2
     });
     expect(
       (await axios.post(`${PROXAY_HOST}${JSON_IDENTITY_PATH}?abc=123`, {
@@ -119,12 +119,12 @@ describe("Match requests", () => {
       },
       field2: "d",
       field3: 1,
-      requestCount: 2,
+      requestCount: 2
     });
   });
 
-  describe('When more than one requests are the same', () => {
-    describe('when replaying get request', () => {
+  describe("When more than one requests are the same", () => {
+    describe("when replaying get request", () => {
       beforeAll(async () => {
         await axios.post(`${PROXAY_HOST}/__proxay/tape`, {
           tape: "tape",
@@ -142,15 +142,21 @@ describe("Match requests", () => {
           mode: "replay"
         });
 
-        const response1 = await axios.get(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`);
+        const response1 = await axios.get(
+          `${PROXAY_HOST}${JSON_IDENTITY_PATH}`
+        );
 
-        const response2 = await axios.get(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`);
+        const response2 = await axios.get(
+          `${PROXAY_HOST}${JSON_IDENTITY_PATH}`
+        );
 
-        expect(response1.data.requestCount).not.toEqual(response2.data.requestCount);
+        expect(response1.data.requestCount).not.toEqual(
+          response2.data.requestCount
+        );
       });
     });
 
-    describe('when replaying post request', () => {
+    describe("when replaying post request", () => {
       beforeAll(async () => {
         await axios.post(`${PROXAY_HOST}/__proxay/tape`, {
           tape: "tape",
@@ -158,11 +164,11 @@ describe("Match requests", () => {
         });
 
         await axios.post(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`, {
-          field3: 1,
+          field3: 1
         });
 
         await axios.post(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`, {
-          field3: 1,
+          field3: 1
         });
       });
 
@@ -172,18 +178,26 @@ describe("Match requests", () => {
           mode: "replay"
         });
 
-        const response1 = await axios.post(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`, {
-          field3: 1
-        });
+        const response1 = await axios.post(
+          `${PROXAY_HOST}${JSON_IDENTITY_PATH}`,
+          {
+            field3: 1
+          }
+        );
 
-        const response2 = await axios.post(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`, {
-          field3: 1
-        });
+        const response2 = await axios.post(
+          `${PROXAY_HOST}${JSON_IDENTITY_PATH}`,
+          {
+            field3: 1
+          }
+        );
 
-        expect(response1.data.requestCount).not.toEqual(response2.data.requestCount);
+        expect(response1.data.requestCount).not.toEqual(
+          response2.data.requestCount
+        );
       });
 
-      describe('when there are more requests than recorded', () => {
+      describe("when there are more requests than recorded", () => {
         beforeAll(async () => {
           await axios.post(`${PROXAY_HOST}/__proxay/tape`, {
             tape: "tape",
@@ -191,11 +205,11 @@ describe("Match requests", () => {
           });
 
           await axios.post(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`, {
-            field3: 1,
+            field3: 1
           });
 
           await axios.post(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`, {
-            field3: 1,
+            field3: 1
           });
         });
 
@@ -209,17 +223,25 @@ describe("Match requests", () => {
             field3: 1
           });
 
-          const response2 = await axios.post(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`, {
-            field3: 1
-          });
+          const response2 = await axios.post(
+            `${PROXAY_HOST}${JSON_IDENTITY_PATH}`,
+            {
+              field3: 1
+            }
+          );
 
-          const response3 = await axios.post(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`, {
-            field3: 1
-          });
+          const response3 = await axios.post(
+            `${PROXAY_HOST}${JSON_IDENTITY_PATH}`,
+            {
+              field3: 1
+            }
+          );
 
-          expect(response3.data.requestCount).toEqual(response2.data.requestCount);
-        })
+          expect(response3.data.requestCount).toEqual(
+            response2.data.requestCount
+          );
+        });
       });
-    })
+    });
   });
 });

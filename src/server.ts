@@ -40,13 +40,15 @@ export class RecordReplayServer {
 
     this.server = http.createServer(async (req, res) => {
       if (!req.url) {
-        this.loggingEnabled &&
+        if (this.loggingEnabled) {
           console.error(chalk.red("Received a request without URL."));
+        }
         return;
       }
       if (!req.method) {
-        this.loggingEnabled &&
+        if (this.loggingEnabled) {
           console.error(chalk.red("Received a request without HTTP method."));
+        }
         return;
       }
 
@@ -71,10 +73,11 @@ export class RecordReplayServer {
               requestBody
             );
             if (record) {
-              this.loggingEnabled &&
+              if (this.loggingEnabled) {
                 console.log(`Replayed: ${req.method} ${requestPath}`);
+              }
             } else {
-              this.loggingEnabled &&
+              if (this.loggingEnabled) {
                 console.warn(
                   chalk.yellow(
                     `Unexpected request ${
@@ -82,6 +85,7 @@ export class RecordReplayServer {
                     } ${requestPath} has no matching record in tapes.`
                   )
                 );
+              }
             }
             break;
           case "record":
@@ -92,8 +96,9 @@ export class RecordReplayServer {
               requestBody
             );
             this.addRecordToTape(record);
-            this.loggingEnabled &&
+            if (this.loggingEnabled) {
               console.log(`Recorded: ${req.method} ${requestPath}`);
+            }
             break;
           case "mimic":
             record = this.findRecord(
@@ -103,8 +108,9 @@ export class RecordReplayServer {
               requestBody
             );
             if (record) {
-              this.loggingEnabled &&
+              if (this.loggingEnabled) {
                 console.log(`Replayed: ${req.method} ${requestPath}`);
+              }
             } else {
               record = await this.proxy(
                 req.method,
@@ -113,8 +119,9 @@ export class RecordReplayServer {
                 requestBody
               );
               this.addRecordToTape(record);
-              this.loggingEnabled &&
+              if (this.loggingEnabled) {
                 console.log(`Recorded: ${req.method} ${requestPath}`);
+              }
             }
             break;
           case "passthrough":
@@ -124,8 +131,9 @@ export class RecordReplayServer {
               req.headers,
               requestBody
             );
-            this.loggingEnabled &&
+            if (this.loggingEnabled) {
               console.log(`Proxied: ${req.method} ${requestPath}`);
+            }
             break;
           default:
             throw assertNever(this.mode);
@@ -138,7 +146,9 @@ export class RecordReplayServer {
           res.end();
         }
       } catch (e) {
-        this.loggingEnabled && console.error(chalk.red("Unexpected error:"), e);
+        if (this.loggingEnabled) {
+          console.error(chalk.red("Unexpected error:"), e);
+        }
         res.statusCode = 500;
         res.end();
       }
@@ -157,6 +167,52 @@ export class RecordReplayServer {
    */
   async stop() {
     await new Promise(resolve => this.server.close(resolve));
+  }
+
+  /**
+   * Proxies a specific request and returns the resulting record.
+   */
+  async proxy(
+    requestMethod: string,
+    requestPath: string,
+    requestHeaders: Headers,
+    requestBody: Buffer
+  ): Promise<TapeRecord> {
+    if (!this.proxiedHost) {
+      throw new Error("Missing proxied host");
+    }
+    try {
+      return await send(
+        this.proxiedHost,
+        requestMethod,
+        requestPath,
+        requestHeaders,
+        requestBody,
+        this.timeout
+      );
+    } catch (e) {
+      if (e.code) {
+        if (this.loggingEnabled) {
+          console.error(
+            chalk.red(
+              `Could not proxy request ${requestMethod} ${requestPath} (${
+                e.code
+              })`
+            )
+          );
+        }
+      } else {
+        if (this.loggingEnabled) {
+          console.error(
+            chalk.red(
+              `Could not proxy request ${requestMethod} ${requestPath}`,
+              e
+            )
+          );
+        }
+      }
+      throw e;
+    }
   }
 
   /**
@@ -196,7 +252,9 @@ export class RecordReplayServer {
       if (tape) {
         if (!this.persistence.isTapeNameValid(tape)) {
           const errorMessage = `Invalid tape name: ${tape}`;
-          this.loggingEnabled && console.error(chalk.red(errorMessage));
+          if (this.loggingEnabled) {
+            console.error(chalk.red(errorMessage));
+          }
           res.statusCode = 403;
           res.end(errorMessage);
           return;
@@ -221,8 +279,9 @@ export class RecordReplayServer {
    */
   private loadTape(tapeName: string): boolean {
     this.currentTape = tapeName;
-    this.loggingEnabled &&
+    if (this.loggingEnabled) {
       console.log(chalk.blueBright(`Loaded tape: ${tapeName}`));
+    }
     switch (this.mode) {
       case "record":
         this.currentTapeRecords = [];
@@ -235,7 +294,9 @@ export class RecordReplayServer {
           );
           return true;
         } catch (e) {
-          this.loggingEnabled && console.warn(chalk.yellow(e.message));
+          if (this.loggingEnabled) {
+            console.warn(chalk.yellow(e.message));
+          }
           return false;
         }
       case "mimic":
@@ -307,60 +368,16 @@ export class RecordReplayServer {
         differencesCount === bestMatchDifferencesCount &&
         !!this.matchedRequestsCounts.get(bestMatch)
       ) {
-        bestMatch = potentialMatch
+        bestMatch = potentialMatch;
       }
     }
     if (bestMatch) {
       this.matchedRequestsCounts.set(
         bestMatch,
         (this.matchedRequestsCounts.get(bestMatch) || 0) + 1
-      )
+      );
     }
     return bestMatch;
-  }
-
-  /**
-   * Proxies a specific request and returns the resulting record.
-   */
-  async proxy(
-    requestMethod: string,
-    requestPath: string,
-    requestHeaders: Headers,
-    requestBody: Buffer
-  ): Promise<TapeRecord> {
-    if (!this.proxiedHost) {
-      throw new Error("Missing proxied host");
-    }
-    try {
-      return await send(
-        this.proxiedHost,
-        requestMethod,
-        requestPath,
-        requestHeaders,
-        requestBody,
-        this.timeout
-      );
-    } catch (e) {
-      if (e.code) {
-        this.loggingEnabled &&
-          console.error(
-            chalk.red(
-              `Could not proxy request ${requestMethod} ${requestPath} (${
-                e.code
-              })`
-            )
-          );
-      } else {
-        this.loggingEnabled &&
-          console.error(
-            chalk.red(
-              `Could not proxy request ${requestMethod} ${requestPath}`,
-              e
-            )
-          );
-      }
-      throw e;
-    }
   }
 
   /**
@@ -432,8 +449,10 @@ function countDifferences(
     serialisedCompareToRequestBody.encoding === "utf8"
   ) {
     try {
-      const requestBodyJson = JSON.parse(serialisedRequestBody.data || '{}');
-      const recordBodyJson = JSON.parse(serialisedCompareToRequestBody.data || '{}');
+      const requestBodyJson = JSON.parse(serialisedRequestBody.data || "{}");
+      const recordBodyJson = JSON.parse(
+        serialisedCompareToRequestBody.data || "{}"
+      );
       return (
         (diff(requestBodyJson, recordBodyJson) || []).length +
         (diff(parsedQuery, parsedCompareToQuery) || []).length

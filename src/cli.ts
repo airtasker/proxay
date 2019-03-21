@@ -19,7 +19,7 @@ async function main(argv: string[]) {
   const initialMode: string = (program.mode || "").toLowerCase();
   const tapeDir: string = program.tapes;
   const host: string = program.host;
-  const port = parseInt(program.port);
+  const port = parseInt(program.port, 10);
 
   switch (initialMode) {
     case "record":

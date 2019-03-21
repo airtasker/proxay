@@ -39,8 +39,8 @@ export async function send(
     }
   );
   const statusCode = response.statusCode || 200;
-  let responseBody = await new Promise<Buffer>(resolve => {
-    let chunks: Buffer[] = [];
+  const responseBody = await new Promise<Buffer>(resolve => {
+    const chunks: Buffer[] = [];
     response.on("data", chunk => {
       chunks.push(ensureBuffer(chunk));
     });
