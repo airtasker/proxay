@@ -1,13 +1,13 @@
 {
   "name": "proxay",
-  "version": "1.2.11",
+  "version": "1.2.12",
   "author": {
     "name": "François Wouts",
     "email": "f@zenc.io"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/zenclabs/proxay"
+    "url": "https://github.com/airtasker/proxay"
   },
   "license": "MIT",
   "scripts": {
