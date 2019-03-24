@@ -76,6 +76,7 @@ export class RecordReplayServer {
               this.replayedTapes
             );
             if (record) {
+              this.replayedTapes.add(record);
               if (this.loggingEnabled) {
                 console.log(`Replayed: ${req.method} ${requestPath}`);
               }
@@ -115,6 +116,7 @@ export class RecordReplayServer {
               this.replayedTapes
             );
             if (record) {
+              this.replayedTapes.add(record);
               if (this.loggingEnabled) {
                 console.log(`Replayed: ${req.method} ${requestPath}`);
               }
