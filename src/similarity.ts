@@ -12,11 +12,23 @@ import { Headers, TapeRecord } from "./tape";
  * - +Infinity means "very different" (no match)
  */
 export function computeSimilarity(
+  requestMethod: string,
   requestPath: string,
   requestHeaders: Headers,
   requestBody: Buffer,
   compareTo: TapeRecord
 ): number {
+  if (requestMethod !== compareTo.request.method) {
+    // If the HTTP method is different, no match.
+    return +Infinity;
+  }
+  if (
+    pathWithoutQueryParameters(requestPath) !==
+    pathWithoutQueryParameters(compareTo.request.path)
+  ) {
+    // If the path is different (apart from query parameters), no match.
+    return +Infinity;
+  }
   const parsedQuery = queryString.parse(requestPath);
   const parsedCompareToQuery = queryString.parse(compareTo.request.path);
   const serialisedRequestBody = serialiseBuffer(
@@ -56,6 +68,15 @@ export function computeSimilarity(
   }
   // If we couldn't compare JSON, then we'll assume they don't match.
   return +Infinity;
+}
+
+function pathWithoutQueryParameters(path: string) {
+  const questionMarkPosition = path.indexOf("?");
+  if (questionMarkPosition !== -1) {
+    return path.substr(0, questionMarkPosition);
+  } else {
+    return path;
+  }
 }
 
 /**
