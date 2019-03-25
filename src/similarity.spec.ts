@@ -64,7 +64,7 @@ describe("similarity", () => {
         },
         response: DUMMY_RESPONSE
       })
-    ).toBe(2);
+    ).toBe(1);
     expect(
       computeSimilarity("POST", "/test?a=b", {}, Buffer.from([]), {
         request: {
@@ -75,7 +75,7 @@ describe("similarity", () => {
         },
         response: DUMMY_RESPONSE
       })
-    ).toBe(2);
+    ).toBe(1);
     expect(
       computeSimilarity("POST", "/test?a=b", {}, Buffer.from([]), {
         request: {
@@ -87,6 +87,28 @@ describe("similarity", () => {
         response: DUMMY_RESPONSE
       })
     ).toBe(2);
+    expect(
+      computeSimilarity("POST", "/test?a=b&c=d", {}, Buffer.from([]), {
+        request: {
+          method: "POST",
+          path: "/test?a=b&c=d",
+          headers: {},
+          body: Buffer.from([])
+        },
+        response: DUMMY_RESPONSE
+      })
+    ).toBe(0);
+    expect(
+      computeSimilarity("POST", "/test?c=f&a=b", {}, Buffer.from([]), {
+        request: {
+          method: "POST",
+          path: "/test?a=b&c=d",
+          headers: {},
+          body: Buffer.from([])
+        },
+        response: DUMMY_RESPONSE
+      })
+    ).toBe(1);
   });
 
   it("counts headers differences (ignoring extraneous ones)", () => {

@@ -29,8 +29,8 @@ export function computeSimilarity(
     // If the path is different (apart from query parameters), no match.
     return +Infinity;
   }
-  const parsedQuery = queryString.parse(requestPath);
-  const parsedCompareToQuery = queryString.parse(compareTo.request.path);
+  const parsedQuery = queryParameters(requestPath);
+  const parsedCompareToQuery = queryParameters(compareTo.request.path);
   const headers = stripExtraneousHeaders(requestHeaders);
   const compareToHeaders = stripExtraneousHeaders(compareTo.request.headers);
   const serialisedRequestBody = serialiseBuffer(requestBody, requestHeaders);
@@ -80,7 +80,7 @@ function countStringDifferences(a: string, b: string) {
   // It looks like it's not JSON, so compare as strings.
   const stringSimilarityScore = compareTwoStrings(a, b);
   // compareTwoStrings() returns 0 for completely different strings,
-  // and 1 for identical strings.
+  // and 1 for identical strings, and a number in between otherwise.
   const numberOfDifferentCharacters = Math.round(
     ((1 - stringSimilarityScore) * (a.length + b.length)) / 2
   );
@@ -93,6 +93,15 @@ function pathWithoutQueryParameters(path: string) {
     return path.substr(0, questionMarkPosition);
   } else {
     return path;
+  }
+}
+
+function queryParameters(path: string) {
+  const questionMarkPosition = path.indexOf("?");
+  if (questionMarkPosition !== -1) {
+    return queryString.parse(path.substr(questionMarkPosition));
+  } else {
+    return {};
   }
 }
 
