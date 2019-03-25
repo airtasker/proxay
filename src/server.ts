@@ -4,8 +4,8 @@ import http from "http";
 import { ensureBuffer } from "./buffer";
 import { findNextRecordToReplay, findRecordMatches } from "./matcher";
 import { Persistence } from "./persistence";
-import { send } from "./sender";
-import { Headers, TapeRecord } from "./tape";
+import { proxy } from "./proxy";
+import { TapeRecord } from "./tape";
 
 /**
  * A server that proxies or replays requests depending on the mode.
@@ -93,11 +93,21 @@ export class RecordReplayServer {
             }
             break;
           case "record":
-            record = await this.proxy(
-              req.method,
-              requestPath,
-              req.headers,
-              requestBody
+            if (!this.proxiedHost) {
+              throw new Error("Missing proxied host");
+            }
+            record = await proxy(
+              {
+                host: this.proxiedHost,
+                method: req.method,
+                path: requestPath,
+                headers: req.headers,
+                body: requestBody,
+                timeout: this.timeout
+              },
+              {
+                loggingEnabled: this.loggingEnabled
+              }
             );
             this.addRecordToTape(record);
             if (this.loggingEnabled) {
@@ -121,11 +131,21 @@ export class RecordReplayServer {
                 console.log(`Replayed: ${req.method} ${requestPath}`);
               }
             } else {
-              record = await this.proxy(
-                req.method,
-                requestPath,
-                req.headers,
-                requestBody
+              if (!this.proxiedHost) {
+                throw new Error("Missing proxied host");
+              }
+              record = await proxy(
+                {
+                  host: this.proxiedHost,
+                  method: req.method,
+                  path: requestPath,
+                  headers: req.headers,
+                  body: requestBody,
+                  timeout: this.timeout
+                },
+                {
+                  loggingEnabled: this.loggingEnabled
+                }
               );
               this.addRecordToTape(record);
               if (this.loggingEnabled) {
@@ -134,11 +154,21 @@ export class RecordReplayServer {
             }
             break;
           case "passthrough":
-            record = await this.proxy(
-              req.method,
-              requestPath,
-              req.headers,
-              requestBody
+            if (!this.proxiedHost) {
+              throw new Error("Missing proxied host");
+            }
+            record = await proxy(
+              {
+                host: this.proxiedHost,
+                method: req.method,
+                path: requestPath,
+                headers: req.headers,
+                body: requestBody,
+                timeout: this.timeout
+              },
+              {
+                loggingEnabled: this.loggingEnabled
+              }
             );
             if (this.loggingEnabled) {
               console.log(`Proxied: ${req.method} ${requestPath}`);
@@ -176,52 +206,6 @@ export class RecordReplayServer {
    */
   async stop() {
     await new Promise(resolve => this.server.close(resolve));
-  }
-
-  /**
-   * Proxies a specific request and returns the resulting record.
-   */
-  async proxy(
-    requestMethod: string,
-    requestPath: string,
-    requestHeaders: Headers,
-    requestBody: Buffer
-  ): Promise<TapeRecord> {
-    if (!this.proxiedHost) {
-      throw new Error("Missing proxied host");
-    }
-    try {
-      return await send(
-        this.proxiedHost,
-        requestMethod,
-        requestPath,
-        requestHeaders,
-        requestBody,
-        this.timeout
-      );
-    } catch (e) {
-      if (e.code) {
-        if (this.loggingEnabled) {
-          console.error(
-            chalk.red(
-              `Could not proxy request ${requestMethod} ${requestPath} (${
-                e.code
-              })`
-            )
-          );
-        }
-      } else {
-        if (this.loggingEnabled) {
-          console.error(
-            chalk.red(
-              `Could not proxy request ${requestMethod} ${requestPath}`,
-              e
-            )
-          );
-        }
-      }
-      throw e;
-    }
   }
 
   /**
