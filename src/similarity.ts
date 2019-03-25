@@ -1,5 +1,6 @@
 import { diff } from "deep-diff";
 import queryString from "query-string";
+import { compareTwoStrings } from "string-similarity";
 import { serialiseBuffer } from "./persistence";
 import { Headers, TapeRecord } from "./tape";
 
@@ -35,16 +36,22 @@ export function computeSimilarity(
       const recordBodyJson = JSON.parse(
         serialisedCompareToRequestBody.data || "{}"
       );
+      // Return the number of fields that differ in JSON.
       const differencesCount =
         (diff(requestBodyJson, recordBodyJson) || []).length +
         (diff(parsedQuery, parsedCompareToQuery) || []).length;
-      if (differencesCount === 0) {
-        return 0;
-      } else {
-        return differencesCount;
-      }
+      return differencesCount;
     } catch (e) {
-      // Ignore.
+      // Return the number of characters that differ between both strings.
+      return (
+        (compareTwoStrings(
+          serialisedRequestBody.data,
+          serialisedCompareToRequestBody.data
+        ) *
+          (serialisedRequestBody.data.length +
+            serialisedCompareToRequestBody.data.length)) /
+        2
+      );
     }
   }
   // If we couldn't compare JSON, then we'll assume they don't match.
