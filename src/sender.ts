@@ -66,7 +66,7 @@ export async function send(
     if (options.loggingEnabled) {
       console.error(
         chalk.red(
-          `Could not proxy request ${request.method} ${
+          `Could not send request ${request.method} ${
             request.path
           } (error: ${e.code || "unknown"})`
         )
