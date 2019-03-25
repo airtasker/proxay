@@ -7,7 +7,7 @@ import { Headers, TapeRecord } from "./tape";
  * Sends a network request and returns the recorded tape.
  */
 export async function send(
-  request: Request,
+  request: Request & { host: string },
   options: {
     timeout?: number;
   }
