@@ -3,9 +3,10 @@ import chalk from "chalk";
 import http from "http";
 import { ensureBuffer } from "./buffer";
 import { findNextRecordToReplay, findRecordMatches } from "./matcher";
+import { Mode } from "./modes";
 import { Persistence } from "./persistence";
-import { send } from "./sender";
-import { Headers, TapeRecord } from "./tape";
+import { Request, send } from "./sender";
+import { TapeRecord } from "./tape";
 
 /**
  * A server that proxies or replays requests depending on the mode.
@@ -52,102 +53,20 @@ export class RecordReplayServer {
       }
 
       try {
-        const requestBody = await receiveRequestBody(req);
-        const requestPath = extractPath(req.url);
+        const request: Request = {
+          method: req.method,
+          path: extractPath(req.url),
+          headers: req.headers,
+          body: await receiveRequestBody(req)
+        };
         if (
-          requestPath === "/__proxay" ||
-          requestPath.startsWith("/__proxay/")
+          request.path === "/__proxay" ||
+          request.path.startsWith("/__proxay/")
         ) {
-          this.handleProxayApi(req.method, requestPath, requestBody, res);
+          this.handleProxayApi(request, res);
           return;
         }
-
-        let record: TapeRecord | null;
-        switch (this.mode) {
-          case "replay":
-            record = findNextRecordToReplay(
-              findRecordMatches(
-                this.currentTapeRecords,
-                req.method,
-                requestPath,
-                req.headers,
-                requestBody
-              ),
-              this.replayedTapes
-            );
-            if (record) {
-              this.replayedTapes.add(record);
-              if (this.loggingEnabled) {
-                console.log(`Replayed: ${req.method} ${requestPath}`);
-              }
-            } else {
-              if (this.loggingEnabled) {
-                console.warn(
-                  chalk.yellow(
-                    `Unexpected request ${
-                      req.method
-                    } ${requestPath} has no matching record in tapes.`
-                  )
-                );
-              }
-            }
-            break;
-          case "record":
-            record = await this.proxy(
-              req.method,
-              requestPath,
-              req.headers,
-              requestBody
-            );
-            this.addRecordToTape(record);
-            if (this.loggingEnabled) {
-              console.log(`Recorded: ${req.method} ${requestPath}`);
-            }
-            break;
-          case "mimic":
-            record = findNextRecordToReplay(
-              findRecordMatches(
-                this.currentTapeRecords,
-                req.method,
-                requestPath,
-                req.headers,
-                requestBody
-              ),
-              this.replayedTapes
-            );
-            if (record) {
-              this.replayedTapes.add(record);
-              if (this.loggingEnabled) {
-                console.log(`Replayed: ${req.method} ${requestPath}`);
-              }
-            } else {
-              record = await this.proxy(
-                req.method,
-                requestPath,
-                req.headers,
-                requestBody
-              );
-              this.addRecordToTape(record);
-              if (this.loggingEnabled) {
-                console.log(`Recorded: ${req.method} ${requestPath}`);
-              }
-            }
-            break;
-          case "passthrough":
-            record = await this.proxy(
-              req.method,
-              requestPath,
-              req.headers,
-              requestBody
-            );
-            if (this.loggingEnabled) {
-              console.log(`Proxied: ${req.method} ${requestPath}`);
-            }
-            break;
-          default:
-            throw assertNever(this.mode);
-        }
-
+        const record = await this.fetchResponse(request);
         if (record) {
           this.sendResponse(record, res);
         } else {
@@ -179,72 +98,24 @@ export class RecordReplayServer {
   }
 
   /**
-   * Proxies a specific request and returns the resulting record.
-   */
-  async proxy(
-    requestMethod: string,
-    requestPath: string,
-    requestHeaders: Headers,
-    requestBody: Buffer
-  ): Promise<TapeRecord> {
-    if (!this.proxiedHost) {
-      throw new Error("Missing proxied host");
-    }
-    try {
-      return await send(
-        this.proxiedHost,
-        requestMethod,
-        requestPath,
-        requestHeaders,
-        requestBody,
-        this.timeout
-      );
-    } catch (e) {
-      if (e.code) {
-        if (this.loggingEnabled) {
-          console.error(
-            chalk.red(
-              `Could not proxy request ${requestMethod} ${requestPath} (${
-                e.code
-              })`
-            )
-          );
-        }
-      } else {
-        if (this.loggingEnabled) {
-          console.error(
-            chalk.red(
-              `Could not proxy request ${requestMethod} ${requestPath}`,
-              e
-            )
-          );
-        }
-      }
-      throw e;
-    }
-  }
-
-  /**
    * Handles requests that are intended for Proxay itself.
    */
-  private handleProxayApi(
-    requestMethod: string,
-    requestPath: string,
-    requestBody: Buffer,
-    res: http.ServerResponse
-  ) {
+  private handleProxayApi(request: Request, res: http.ServerResponse) {
     // Sending a request to /__proxay will return a 200 (so tests can identify whether
     // their backend is Proxay or not).
-    if (requestMethod.toLowerCase() === "get" && requestPath === "/__proxay") {
+    if (
+      request.method.toLowerCase() === "get" &&
+      request.path === "/__proxay"
+    ) {
       res.end("Proxay!");
     }
 
     // Sending a request to /__proxay/tape will pick a specific tape and/or a new mode.
     if (
-      requestMethod.toLowerCase() === "post" &&
-      requestPath === "/__proxay/tape"
+      request.method.toLowerCase() === "post" &&
+      request.path === "/__proxay/tape"
     ) {
-      const json = requestBody.toString("utf8");
+      const json = request.body.toString("utf8");
       let tape;
       let mode;
       try {
@@ -279,6 +150,159 @@ export class RecordReplayServer {
         res.end(`Unloaded tape`);
       }
     }
+  }
+
+  private async fetchResponse(request: Request): Promise<TapeRecord | null> {
+    switch (this.mode) {
+      case "replay":
+        return this.fetchReplayResponse(request);
+      case "record":
+        return this.fetchRecordResponse(request);
+      case "mimic":
+        return this.fetchMimicResponse(request);
+      case "passthrough":
+        return this.fetchPassthroughResponse(request);
+      default:
+        throw assertNever(this.mode);
+    }
+  }
+
+  /**
+   * Fetches the response from the tape, returning null otherwise.
+   */
+  private async fetchReplayResponse(
+    request: Request
+  ): Promise<TapeRecord | null> {
+    const record = findNextRecordToReplay(
+      findRecordMatches(
+        this.currentTapeRecords,
+        request.method,
+        request.path,
+        request.headers,
+        request.body
+      ),
+      this.replayedTapes
+    );
+    if (record) {
+      this.replayedTapes.add(record);
+      if (this.loggingEnabled) {
+        console.log(`Replayed: ${request.method} ${request.path}`);
+      }
+    } else {
+      if (this.loggingEnabled) {
+        console.warn(
+          chalk.yellow(
+            `Unexpected request ${request.method} ${
+              request.path
+            } has no matching record in tapes.`
+          )
+        );
+      }
+    }
+    return record;
+  }
+
+  /**
+   * Fetches the response directly from the proxied host and records it.
+   */
+  private async fetchRecordResponse(
+    request: Request
+  ): Promise<TapeRecord | null> {
+    if (!this.proxiedHost) {
+      throw new Error("Missing proxied host");
+    }
+    const record = await send(
+      {
+        host: this.proxiedHost,
+        method: request.method,
+        path: request.path,
+        headers: request.headers,
+        body: request.body
+      },
+      {
+        loggingEnabled: this.loggingEnabled,
+        timeout: this.timeout
+      }
+    );
+    this.addRecordToTape(record);
+    if (this.loggingEnabled) {
+      console.log(`Recorded: ${request.method} ${request.path}`);
+    }
+    return record;
+  }
+
+  /**
+   * Fetches the response from the tape if present, otherwise from the proxied host.
+   */
+  private async fetchMimicResponse(
+    request: Request
+  ): Promise<TapeRecord | null> {
+    let record = findNextRecordToReplay(
+      findRecordMatches(
+        this.currentTapeRecords,
+        request.method,
+        request.path,
+        request.headers,
+        request.body
+      ),
+      this.replayedTapes
+    );
+    if (record) {
+      this.replayedTapes.add(record);
+      if (this.loggingEnabled) {
+        console.log(`Replayed: ${request.method} ${request.path}`);
+      }
+    } else {
+      if (!this.proxiedHost) {
+        throw new Error("Missing proxied host");
+      }
+      record = await send(
+        {
+          host: this.proxiedHost,
+          method: request.method,
+          path: request.path,
+          headers: request.headers,
+          body: request.body
+        },
+        {
+          loggingEnabled: this.loggingEnabled,
+          timeout: this.timeout
+        }
+      );
+      this.addRecordToTape(record);
+      if (this.loggingEnabled) {
+        console.log(`Recorded: ${request.method} ${request.path}`);
+      }
+    }
+    return record;
+  }
+
+  /**
+   * Fetches the response directly from the proxied host without recording it.
+   */
+  private async fetchPassthroughResponse(
+    request: Request
+  ): Promise<TapeRecord | null> {
+    if (!this.proxiedHost) {
+      throw new Error("Missing proxied host");
+    }
+    const record = await send(
+      {
+        host: this.proxiedHost,
+        method: request.method,
+        path: request.path,
+        headers: request.headers,
+        body: request.body
+      },
+      {
+        loggingEnabled: this.loggingEnabled,
+        timeout: this.timeout
+      }
+    );
+    if (this.loggingEnabled) {
+      console.log(`Proxied: ${request.method} ${request.path}`);
+    }
+    return record;
   }
 
   /**
@@ -379,28 +403,3 @@ function extractPath(url: string) {
 }
 
 const DEFAULT_TAPE = "default";
-
-/**
- * Possible modes.
- */
-export type Mode = ReplayMode | RecordMode | MimicMode | PassthroughMode;
-
-/**
- * Replays requests from tapes. Fails any unexpected requests.
- */
-export type ReplayMode = "replay";
-
-/**
- * Records requests. Ignores recorded tapes.
- */
-export type RecordMode = "record";
-
-/**
- * Records requests the first time it encounters them, then replays them.
- */
-export type MimicMode = "mimic";
-
-/**
- * Acts as a pass-through proxy. No recording occurs.
- */
-export type PassthroughMode = "passthrough";
