@@ -20,7 +20,6 @@ export function findNextRecordToReplay(
   // Look for a record that hasn't been replayed yet.
   for (const record of records) {
     if (!replayedTapes.has(record)) {
-      replayedTapes.add(record);
       return record;
     }
   }
@@ -48,15 +47,9 @@ export function findRecordMatches(
   requestHeaders: Headers,
   requestBody: Buffer
 ): TapeRecord[] {
-  const potentialMatches = tapeRecords.filter(
-    record =>
-      record.request.method === requestMethod &&
-      pathWithoutQueryParameters(record.request.path) ===
-        pathWithoutQueryParameters(requestPath)
-  );
   let bestSimilarityScore = +Infinity;
   let bestMatches: TapeRecord[] = [];
-  for (const potentialMatch of potentialMatches) {
+  for (const potentialMatch of tapeRecords) {
     const similarityScore = computeSimilarity(
       requestMethod,
       requestPath,
@@ -76,14 +69,5 @@ export function findRecordMatches(
     return bestMatches;
   } else {
     return [];
-  }
-}
-
-function pathWithoutQueryParameters(path: string) {
-  const questionMarkPosition = path.indexOf("?");
-  if (questionMarkPosition !== -1) {
-    return path.substr(0, questionMarkPosition);
-  } else {
-    return path;
   }
 }
