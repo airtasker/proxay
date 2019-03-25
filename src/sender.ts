@@ -1,3 +1,4 @@
+import chalk from "chalk";
 import http from "http";
 import https from "https";
 import { ensureBuffer } from "./buffer";
@@ -9,56 +10,70 @@ import { Headers, TapeRecord } from "./tape";
 export async function send(
   request: RequestWithHost,
   options: {
+    loggingEnabled?: boolean;
     timeout?: number;
   }
 ): Promise<TapeRecord> {
-  const [scheme, hostnameWithPort] = request.host.split("://");
-  const [hostname, port] = hostnameWithPort.split(":");
-  const response = await new Promise<http.IncomingMessage>(
-    (resolve, reject) => {
-      const requestOptions: http.RequestOptions = {
-        hostname,
+  try {
+    const [scheme, hostnameWithPort] = request.host.split("://");
+    const [hostname, port] = hostnameWithPort.split(":");
+    const response = await new Promise<http.IncomingMessage>(
+      (resolve, reject) => {
+        const requestOptions: http.RequestOptions = {
+          hostname,
+          method: request.method,
+          path: request.path,
+          port,
+          headers: {
+            ...request.headers,
+            host: hostname
+          },
+          timeout: options.timeout
+        };
+        const proxyRequest =
+          scheme === "http"
+            ? http.request(requestOptions, resolve)
+            : https.request(requestOptions, resolve);
+        proxyRequest.on("error", reject);
+        proxyRequest.write(request.body);
+        proxyRequest.end();
+      }
+    );
+    const statusCode = response.statusCode || 200;
+    const responseBody = await new Promise<Buffer>(resolve => {
+      const chunks: Buffer[] = [];
+      response.on("data", chunk => {
+        chunks.push(ensureBuffer(chunk));
+      });
+      response.on("end", () => resolve(Buffer.concat(chunks)));
+    });
+    return {
+      request: {
         method: request.method,
         path: request.path,
-        port,
-        headers: {
-          ...request.headers,
-          host: hostname
-        },
-        timeout: options.timeout
-      };
-      const proxyRequest =
-        scheme === "http"
-          ? http.request(requestOptions, resolve)
-          : https.request(requestOptions, resolve);
-      proxyRequest.on("error", reject);
-      proxyRequest.write(request.body);
-      proxyRequest.end();
-    }
-  );
-  const statusCode = response.statusCode || 200;
-  const responseBody = await new Promise<Buffer>(resolve => {
-    const chunks: Buffer[] = [];
-    response.on("data", chunk => {
-      chunks.push(ensureBuffer(chunk));
-    });
-    response.on("end", () => resolve(Buffer.concat(chunks)));
-  });
-  return {
-    request: {
-      method: request.method,
-      path: request.path,
-      headers: request.headers,
-      body: request.body
-    },
-    response: {
-      status: {
-        code: statusCode
+        headers: request.headers,
+        body: request.body
       },
-      headers: response.headers,
-      body: responseBody
+      response: {
+        status: {
+          code: statusCode
+        },
+        headers: response.headers,
+        body: responseBody
+      }
+    };
+  } catch (e) {
+    if (options.loggingEnabled) {
+      console.error(
+        chalk.red(
+          `Could not proxy request ${request.method} ${
+            request.path
+          } (error: ${e.code || "unknown"})`
+        )
+      );
     }
-  };
+    throw e;
+  }
 }
 
 export interface Request {

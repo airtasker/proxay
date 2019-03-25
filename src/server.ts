@@ -5,8 +5,7 @@ import { ensureBuffer } from "./buffer";
 import { findNextRecordToReplay, findRecordMatches } from "./matcher";
 import { Mode } from "./modes";
 import { Persistence } from "./persistence";
-import { proxy } from "./proxy";
-import { Request } from "./sender";
+import { Request, send } from "./sender";
 import { TapeRecord } from "./tape";
 
 /**
@@ -212,7 +211,7 @@ export class RecordReplayServer {
     if (!this.proxiedHost) {
       throw new Error("Missing proxied host");
     }
-    const record = await proxy(
+    const record = await send(
       {
         host: this.proxiedHost,
         method: request.method,
@@ -257,7 +256,7 @@ export class RecordReplayServer {
       if (!this.proxiedHost) {
         throw new Error("Missing proxied host");
       }
-      record = await proxy(
+      record = await send(
         {
           host: this.proxiedHost,
           method: request.method,
@@ -287,7 +286,7 @@ export class RecordReplayServer {
     if (!this.proxiedHost) {
       throw new Error("Missing proxied host");
     }
-    const record = await proxy(
+    const record = await send(
       {
         host: this.proxiedHost,
         method: request.method,
