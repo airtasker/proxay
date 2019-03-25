@@ -1,12 +1,12 @@
 import chalk from "chalk";
-import { Request, send } from "./sender";
+import { RequestWithHost, send } from "./sender";
 import { TapeRecord } from "./tape";
 
 /**
  * Proxies a specific request and returns the resulting record.
  */
 export async function proxy(
-  request: Request,
+  request: RequestWithHost,
   options: {
     loggingEnabled?: boolean;
     timeout?: number;
