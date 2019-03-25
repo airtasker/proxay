@@ -2,7 +2,7 @@ import assertNever from "assert-never";
 import chalk from "chalk";
 import http from "http";
 import { ensureBuffer } from "./buffer";
-import { findFirstLeastUsedRecord, findRecordMatches } from "./matcher";
+import { findNextRecordToReplay, findRecordMatches } from "./matcher";
 import { Persistence } from "./persistence";
 import { send } from "./sender";
 import { Headers, TapeRecord } from "./tape";
@@ -65,7 +65,7 @@ export class RecordReplayServer {
         let record: TapeRecord | null;
         switch (this.mode) {
           case "replay":
-            record = findFirstLeastUsedRecord(
+            record = findNextRecordToReplay(
               findRecordMatches(
                 this.currentTapeRecords,
                 req.method,
@@ -105,7 +105,7 @@ export class RecordReplayServer {
             }
             break;
           case "mimic":
-            record = findFirstLeastUsedRecord(
+            record = findNextRecordToReplay(
               findRecordMatches(
                 this.currentTapeRecords,
                 req.method,
