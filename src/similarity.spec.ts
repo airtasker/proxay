@@ -89,6 +89,92 @@ describe("similarity", () => {
     ).toBe(2);
   });
 
+  it("counts headers differences (ignoring extraneous ones)", () => {
+    expect(
+      computeSimilarity(
+        "POST",
+        "/test",
+        {
+          accept: "application/json",
+          "user-agent": "Chrome",
+          host: "local",
+          connection: "persist",
+          "x-region": "australia"
+        },
+        Buffer.from([]),
+        {
+          request: {
+            method: "POST",
+            path: "/test",
+            headers: {
+              accept: "application/vnd.api+json",
+              "user-agent": "Firefox",
+              host: "google.com",
+              "x-region": "australia"
+            },
+            body: Buffer.from([])
+          },
+          response: DUMMY_RESPONSE
+        }
+      )
+    ).toBe(0);
+    expect(
+      computeSimilarity(
+        "POST",
+        "/test",
+        {
+          accept: "application/json",
+          "user-agent": "Chrome",
+          host: "local",
+          connection: "persist"
+        },
+        Buffer.from([]),
+        {
+          request: {
+            method: "POST",
+            path: "/test",
+            headers: {
+              accept: "application/vnd.api+json",
+              "user-agent": "Firefox",
+              host: "google.com",
+              "x-region": "UK"
+            },
+            body: Buffer.from([])
+          },
+          response: DUMMY_RESPONSE
+        }
+      )
+    ).toBe(1);
+    expect(
+      computeSimilarity(
+        "POST",
+        "/test",
+        {
+          accept: "application/json",
+          "user-agent": "Chrome",
+          host: "local",
+          connection: "persist",
+          "x-region": "australia"
+        },
+        Buffer.from([]),
+        {
+          request: {
+            method: "POST",
+            path: "/test",
+            headers: {
+              accept: "application/vnd.api+json",
+              "user-agent": "Firefox",
+              host: "google.com",
+              "x-region": "UK"
+            },
+            body: Buffer.from([])
+          },
+          response: DUMMY_RESPONSE
+        }
+      )
+    ).toBe(1);
+  });
+
   it("relies on JSON payload similarity", () => {
     // The following payloads are identical, but formatted differently.
     expect(

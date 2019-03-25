@@ -31,6 +31,8 @@ export function computeSimilarity(
   }
   const parsedQuery = queryString.parse(requestPath);
   const parsedCompareToQuery = queryString.parse(compareTo.request.path);
+  const headers = stripExtraneousHeaders(requestHeaders);
+  const compareToHeaders = stripExtraneousHeaders(compareTo.request.headers);
   const serialisedRequestBody = serialiseBuffer(requestBody, requestHeaders);
   const serialisedCompareToRequestBody = serialiseBuffer(
     compareTo.request.body,
@@ -38,6 +40,7 @@ export function computeSimilarity(
   );
   return (
     countObjectDifferences(parsedQuery, parsedCompareToQuery) +
+    countObjectDifferences(headers, compareToHeaders) +
     countBodyDifferences(serialisedRequestBody, serialisedCompareToRequestBody)
   );
 }
@@ -91,4 +94,24 @@ function pathWithoutQueryParameters(path: string) {
   } else {
     return path;
   }
+}
+
+/**
+ * Strips out headers that are likely to result in false negatives.
+ */
+function stripExtraneousHeaders(headers: Headers): Headers {
+  const safeHeaders: Headers = {};
+  for (const key of Object.keys(headers)) {
+    switch (key) {
+      case "accept":
+      case "user-agent":
+      case "host":
+      case "connection":
+        // Ignore.
+        continue;
+      default:
+        safeHeaders[key] = headers[key];
+    }
+  }
+  return safeHeaders;
 }
