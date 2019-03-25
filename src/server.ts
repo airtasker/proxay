@@ -106,7 +106,7 @@ export class RecordReplayServer {
     // their backend is Proxay or not).
     if (
       request.method.toLowerCase() === "get" &&
-      request.method === "/__proxay"
+      request.path === "/__proxay"
     ) {
       res.end("Proxay!");
     }
