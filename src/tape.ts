@@ -48,11 +48,6 @@ export type PersistedBuffer =
       encoding: "utf8";
       compression: CompressionAlgorithm;
       data: string;
-    }
-  | {
-      // Deprecated. Instead, we store JSON as utf8 so exact formatting is kept.
-      encoding: "json";
-      data: {};
     };
 
 export type CompressionAlgorithm = "br" | "gzip" | "none";

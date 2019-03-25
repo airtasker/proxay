@@ -2,7 +2,7 @@ import { diff } from "deep-diff";
 import queryString from "query-string";
 import { compareTwoStrings } from "string-similarity";
 import { serialiseBuffer } from "./persistence";
-import { Headers, TapeRecord } from "./tape";
+import { Headers, PersistedBuffer, TapeRecord } from "./tape";
 
 /**
  * Returns a "similarity score" between a request and an existing record.
@@ -36,35 +36,52 @@ export function computeSimilarity(
     compareTo.request.body,
     compareTo.request.headers
   );
-  if (
-    serialisedRequestBody.encoding === "utf8" &&
-    serialisedCompareToRequestBody.encoding === "utf8"
-  ) {
+  return (
+    countObjectDifferences(parsedQuery, parsedCompareToQuery) +
+    countBodyDifferences(serialisedRequestBody, serialisedCompareToRequestBody)
+  );
+}
+
+/**
+ * Returns the numbers of differences between two persisted body buffers.
+ */
+function countBodyDifferences(a: PersistedBuffer, b: PersistedBuffer): number {
+  if (a.encoding === "utf8" && b.encoding === "utf8") {
     try {
-      const requestBodyJson = JSON.parse(serialisedRequestBody.data || "{}");
-      const recordBodyJson = JSON.parse(
-        serialisedCompareToRequestBody.data || "{}"
-      );
+      const requestBodyJson = JSON.parse(a.data || "{}");
+      const recordBodyJson = JSON.parse(b.data || "{}");
       // Return the number of fields that differ in JSON.
-      const differencesCount =
-        (diff(requestBodyJson, recordBodyJson) || []).length +
-        (diff(parsedQuery, parsedCompareToQuery) || []).length;
-      return differencesCount;
+      return countObjectDifferences(requestBodyJson, recordBodyJson);
     } catch (e) {
-      // Return the number of characters that differ between both strings.
-      return (
-        (compareTwoStrings(
-          serialisedRequestBody.data,
-          serialisedCompareToRequestBody.data
-        ) *
-          (serialisedRequestBody.data.length +
-            serialisedCompareToRequestBody.data.length)) /
-        2
-      );
+      return countStringDifferences(a.data, b.data);
     }
   }
-  // If we couldn't compare JSON, then we'll assume they don't match.
+  if (a.encoding === "base64" && b.encoding === "base64") {
+    return countStringDifferences(a.data, b.data);
+  }
+  // If we couldn't compare, then we'll assume they don't match.
   return +Infinity;
+}
+
+/**
+ * Returns the number of fields that differ between two objects.
+ */
+function countObjectDifferences(a: object, b: object) {
+  return (diff(a, b) || []).length;
+}
+
+/**
+ * Returns the number of characters that differ between two strings.
+ */
+function countStringDifferences(a: string, b: string) {
+  // It looks like it's not JSON, so compare as strings.
+  const stringSimilarityScore = compareTwoStrings(a, b);
+  // compareTwoStrings() returns 0 for completely different strings,
+  // and 1 for identical strings.
+  const numberOfDifferentCharacters = Math.round(
+    ((1 - stringSimilarityScore) * (a.length + b.length)) / 2
+  );
+  return numberOfDifferentCharacters;
 }
 
 function pathWithoutQueryParameters(path: string) {
