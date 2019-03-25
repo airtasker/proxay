@@ -1,5 +1,5 @@
 /**
- * Possible modes.
+ * All the possibles modes in which Proxay can run.
  */
 export type Mode = ReplayMode | RecordMode | MimicMode | PassthroughMode;
 
