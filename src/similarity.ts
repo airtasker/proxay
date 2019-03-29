@@ -113,9 +113,23 @@ function stripExtraneousHeaders(headers: Headers): Headers {
   for (const key of Object.keys(headers)) {
     switch (key) {
       case "accept":
-      case "user-agent":
-      case "host":
+      case "accept-encoding":
+      case "age":
+      case "cache-control":
+      case "clear-site-data":
       case "connection":
+      case "expires":
+      case "from":
+      case "host":
+      case "postman-token":
+      case "pragma":
+      case "referer":
+      case "referer-policy":
+      case "te":
+      case "trailer":
+      case "transfer-encoding":
+      case "user-agent":
+      case "warning":
         // Ignore.
         continue;
       default:
