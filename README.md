@@ -117,3 +117,25 @@ patterns, you may need MockServer.
 
 However, if all you need is a simple record/replay proxy layer, you'll probably find that Proxay is
 much easier to set up and run.
+
+---
+
+## Releasing a new version of Proxay (for contributors)
+
+To release a new version of Proxay, follow the following two steps:
+
+### Update the version in `master`
+
+1. Create a new branch.
+2. Update the `version` field in `package.json`.
+3. Send a PR with the changes (commit message `Release [version]`).
+4. Merge the PR into master.
+
+### Create a release on GitHub
+
+1. Visit the [releases page](https://github.com/airtasker/proxay/releases) to see what was last announced.
+2. Draft a new release:
+    - Tag = `v[version]` (e.g. `v2.1.1`). **Do not forget the `v`, which is required to trigger the NPM publish on CircleCI.**
+    - Title = `Release v[version]` (e.g. `Release v2.1.1`)
+3. Make sure to announce major changes since the last version in the description.
+4. Once published, [check CircleCI](https://circleci.com/gh/airtasker/proxay) to ensure publication was successful.
