@@ -17,6 +17,8 @@ Proxay can operate in several modes:
 - **Mimic mode**: Records requests the first time it encounters them, then replays them (record then replay).
 - **Passthrough mode**: Proxies requests without persisting them (like a conventional proxy).
 
+Proxay is language-agnostic: it's just a server. Your code doesn't need to be written in JavaScript to benefit from using it.
+
 ## Installing
 
 Make sure you have [NPM](https://www.npmjs.com) installed, then run:
