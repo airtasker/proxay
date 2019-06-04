@@ -29,9 +29,10 @@
   dependencies:
     "@types/node" "*"
 
-"@types/deep-diff@^0.0.31":
-  version "0.0.31"
-  resolved "https://registry.yarnpkg.com/@types/deep-diff/-/deep-diff-0.0.31.tgz#0632b274d1db23cb80f0c1d4e4254c3392fd8219"
+"@types/deep-diff@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@types/deep-diff/-/deep-diff-1.0.0.tgz#7eba3202a99b3a207f758f351f7f86387269fc40"
+  integrity sha512-ENsJcujGbCU/oXhDfQ12mSo/mCBWodT2tpARZKmatoSrf8+cGRCPi0KVj3I0FORhYZfLXkewXu7AoIWqiBLkNw==
 
 "@types/events@*":
   version "1.2.0"
