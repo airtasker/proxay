@@ -192,9 +192,7 @@ export class RecordReplayServer {
       if (this.loggingEnabled) {
         console.warn(
           chalk.yellow(
-            `Unexpected request ${request.method} ${
-              request.path
-            } has no matching record in tapes.`
+            `Unexpected request ${request.method} ${request.path} has no matching record in tapes.`
           )
         );
       }
