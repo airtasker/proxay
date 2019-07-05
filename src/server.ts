@@ -378,7 +378,7 @@ export class RecordReplayServer {
   }
 }
 
-function receiveRequestBody(req: http.ServerRequest): Promise<Buffer> {
+function receiveRequestBody(req: http.IncomingMessage): Promise<Buffer> {
   const requestChunks: Buffer[] = [];
   req.on("data", chunk => {
     requestChunks.push(ensureBuffer(chunk));
