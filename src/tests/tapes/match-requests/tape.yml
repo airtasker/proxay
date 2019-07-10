@@ -5,13 +5,13 @@ http_interactions:
       headers:
         accept: 'application/json, text/plain, */*'
         content-type: application/json;charset=utf-8
-        user-agent: axios/0.18.0
-        content-length: '12'
+        user-agent: axios/0.18.1
+        content-length: '58'
         host: 'localhost:4000'
         connection: close
       body:
         encoding: utf8
-        data: '{"field3":1}'
+        data: '{"field1":{"key1":"a","key2":"b"},"field2":"c","field3":1}'
         compression: none
     response:
       status:
@@ -19,13 +19,14 @@ http_interactions:
       headers:
         x-powered-by: Express
         content-type: application/json; charset=utf-8
-        content-length: '29'
-        etag: W/"1d-VScr985hiId2x6Go7UQU+rhoiH4"
-        date: 'Wed, 03 Oct 2018 05:02:35 GMT'
+        content-length: '75'
+        etag: W/"4b-fSXUVsSnPMT6ss4NVt0TCf5UAD0"
+        date: 'Wed, 10 Jul 2019 05:50:20 GMT'
         connection: close
       body:
         encoding: utf8
-        data: '{"field3":1,"requestCount":8}'
+        data: >-
+          {"field1":{"key1":"a","key2":"b"},"field2":"c","field3":1,"requestCount":1}
         compression: none
   - request:
       method: POST
@@ -33,13 +34,13 @@ http_interactions:
       headers:
         accept: 'application/json, text/plain, */*'
         content-type: application/json;charset=utf-8
-        user-agent: axios/0.18.0
-        content-length: '12'
+        user-agent: axios/0.18.1
+        content-length: '69'
         host: 'localhost:4000'
         connection: close
       body:
         encoding: utf8
-        data: '{"field3":1}'
+        data: '{"field1":{"key1":"a","key2":"b","key3":"c"},"field2":"d","field3":1}'
         compression: none
     response:
       status:
@@ -47,11 +48,41 @@ http_interactions:
       headers:
         x-powered-by: Express
         content-type: application/json; charset=utf-8
-        content-length: '29'
-        etag: W/"1d-0K0LkiFwFoK7E4ko+TIPXZRaod4"
-        date: 'Wed, 03 Oct 2018 05:02:35 GMT'
+        content-length: '86'
+        etag: W/"56-ayQ6aqlq+IJo4+J0JztUgHmeIqc"
+        date: 'Wed, 10 Jul 2019 05:50:20 GMT'
         connection: close
       body:
         encoding: utf8
-        data: '{"field3":1,"requestCount":9}'
+        data: >-
+          {"field1":{"key1":"a","key2":"b","key3":"c"},"field2":"d","field3":1,"requestCount":2}
+        compression: none
+  - request:
+      method: POST
+      path: /json/identity
+      headers:
+        accept: 'application/json, text/plain, */*'
+        content-type: application/json;charset=utf-8
+        user-agent: axios/0.18.1
+        content-length: '58'
+        host: 'localhost:4000'
+        connection: close
+      body:
+        encoding: utf8
+        data: '{"field1":{"key1":"z","key2":"a"},"field2":"d","field3":1}'
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        x-powered-by: Express
+        content-type: application/json; charset=utf-8
+        content-length: '75'
+        etag: W/"4b-Ji5jph0FEi0WI5LRoYtE2yWe5Y8"
+        date: 'Wed, 10 Jul 2019 05:50:20 GMT'
+        connection: close
+      body:
+        encoding: utf8
+        data: >-
+          {"field1":{"key1":"z","key2":"a"},"field2":"d","field3":1,"requestCount":3}
         compression: none

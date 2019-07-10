@@ -4,17 +4,26 @@ import { RecordReplayServer } from "../server";
 import { PROXAY_PORT, TEST_SERVER_HOST, TEST_SERVER_PORT } from "./config";
 import { TestServer } from "./testserver";
 
-export function setupServers(mode: Mode, tapeName: string = mode) {
+export function setupServers({
+  mode,
+  tapeDirName = mode,
+  defaultTapeName
+}: {
+  mode: Mode;
+  tapeDirName?: string;
+  defaultTapeName?: string;
+}) {
   const servers = {} as {
     backend: TestServer;
     proxy: RecordReplayServer;
   };
 
-  beforeAll(async done => {
+  beforeEach(async done => {
     servers.backend = new TestServer();
     servers.proxy = new RecordReplayServer({
       initialMode: mode,
-      tapeDir: path.join(__dirname, "tapes", tapeName),
+      tapeDir: path.join(__dirname, "tapes", tapeDirName),
+      defaultTapeName,
       host: TEST_SERVER_HOST,
       timeout: 100
     });
@@ -25,7 +34,7 @@ export function setupServers(mode: Mode, tapeName: string = mode) {
     done();
   });
 
-  afterAll(async done => {
+  afterEach(async done => {
     await Promise.all([servers.backend.stop(), servers.proxy.stop()]);
     done();
   });

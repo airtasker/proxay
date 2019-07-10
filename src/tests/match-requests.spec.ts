@@ -4,7 +4,7 @@ import { setupServers } from "./setup";
 import { JSON_IDENTITY_PATH } from "./testserver";
 
 describe("Match requests", () => {
-  setupServers("replay", "match-requests");
+  setupServers({ mode: "replay", tapeDirName: "match-requests" });
 
   it("Picks the best match for a given request", async () => {
     // Start recording in tape "tape".

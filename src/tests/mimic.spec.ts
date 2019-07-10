@@ -21,7 +21,7 @@ describe("Mimic", () => {
     }
   });
 
-  const servers = setupServers("mimic");
+  const servers = setupServers({ mode: "mimic" });
 
   test("response: simple text", async () => {
     const response = await axios.get(`${PROXAY_HOST}${SIMPLE_TEXT_PATH}`);
