@@ -1,4 +1,6 @@
 import axios from "axios";
+import { existsSync } from "fs";
+import { join } from "path";
 import { PROXAY_HOST } from "./config";
 import { setupServers } from "./setup";
 import {
@@ -12,7 +14,12 @@ import {
 
 describe("Record", () => {
   describe("with default settings", () => {
-    setupServers({ mode: "record" });
+    const servers = setupServers({ mode: "record" });
+
+    test("uses default default tape name", async () => {
+      await axios.get(`${PROXAY_HOST}${SIMPLE_TEXT_PATH}`);
+      expect(existsSync(join(servers.tapeDir, "default.yml"))).toBe(true);
+    });
 
     test("response: simple text", async () => {
       const response = await axios.get(`${PROXAY_HOST}${SIMPLE_TEXT_PATH}`);
@@ -39,11 +46,15 @@ describe("Record", () => {
   });
 
   describe("given a custom default tape name", () => {
-    setupServers({ mode: "record", defaultTapeName: "customDefault" });
+    const servers = setupServers({
+      mode: "record",
+      defaultTapeName: "customDefault"
+    });
 
-    test("response: simple text", async () => {
-      const response = await axios.get(`${PROXAY_HOST}${SIMPLE_TEXT_PATH}`);
-      expect(response.data).toBe(SIMPLE_TEXT_RESPONSE);
+    test("uses custom default tape name", async () => {
+      await axios.get(`${PROXAY_HOST}${SIMPLE_TEXT_PATH}`);
+      expect(existsSync(join(servers.tapeDir, "customDefault.yml"))).toBe(true);
+      expect(existsSync(join(servers.tapeDir, "default.yml"))).toBe(false);
     });
   });
 });

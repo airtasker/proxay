@@ -1,4 +1,5 @@
 import path from "path";
+import rimraf from "rimraf";
 import { Mode } from "../modes";
 import { RecordReplayServer } from "../server";
 import { PROXAY_PORT, TEST_SERVER_HOST, TEST_SERVER_PORT } from "./config";
@@ -13,16 +14,24 @@ export function setupServers({
   tapeDirName?: string;
   defaultTapeName?: string;
 }) {
-  const servers = {} as {
+  const tapeDir = path.join(__dirname, "tapes", tapeDirName);
+  const servers = { tapeDir } as {
     backend: TestServer;
     proxy: RecordReplayServer;
+    tapeDir: string;
   };
 
-  beforeEach(async done => {
+  beforeEach(() => {
+    if (mode !== "replay") {
+      rimraf.sync(tapeDir);
+    }
+  });
+
+  beforeAll(async done => {
     servers.backend = new TestServer();
     servers.proxy = new RecordReplayServer({
       initialMode: mode,
-      tapeDir: path.join(__dirname, "tapes", tapeDirName),
+      tapeDir,
       defaultTapeName,
       host: TEST_SERVER_HOST,
       timeout: 100
@@ -34,7 +43,7 @@ export function setupServers({
     done();
   });
 
-  afterEach(async done => {
+  afterAll(async done => {
     await Promise.all([servers.backend.stop(), servers.proxy.stop()]);
     done();
   });
