@@ -27,10 +27,10 @@ export class RecordReplayServer {
   constructor(options: {
     initialMode: Mode;
     tapeDir: string;
+    defaultTapeName: string;
     host?: string;
     timeout?: number;
     enableLogging?: boolean;
-    defaultTapeName?: string;
   }) {
     this.currentTapeRecords = [];
     this.mode = options.initialMode;
@@ -38,7 +38,7 @@ export class RecordReplayServer {
     this.timeout = options.timeout || 5000;
     this.loggingEnabled = options.enableLogging || false;
     this.persistence = new Persistence(options.tapeDir);
-    this.defaultTape = options.defaultTapeName || DEFAULT_TAPE;
+    this.defaultTape = options.defaultTapeName;
     this.loadTape(this.defaultTape);
 
     this.server = http.createServer(async (req, res) => {
@@ -402,5 +402,3 @@ function extractPath(url: string) {
   }
   return path;
 }
-
-const DEFAULT_TAPE = "default";

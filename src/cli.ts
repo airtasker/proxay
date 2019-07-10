@@ -9,15 +9,17 @@ async function main(argv: string[]) {
   program
     .option("-m, --mode <mode>", "Mode (record, replay or passthrough)")
     .option(
-      "-t, --tapes <tapes-dir>",
+      "-t, --tapes-dir <tapes-dir>",
       "Directory in which to record/replay tapes"
     )
+    .option("--default-tape <tape-name>", "Name of the default tape", "default")
     .option("-h, --host <host>", "Host to proxy (not required in replay mode)")
     .option("-p, --port <port>", "Local port to serve on", "3000")
     .parse(argv);
 
   const initialMode: string = (program.mode || "").toLowerCase();
-  const tapeDir: string = program.tapes;
+  const tapeDir: string = program.tapesDir;
+  const defaultTapeName: string = program.defaultTape;
   const host: string = program.host;
   const port = parseInt(program.port, 10);
 
@@ -57,6 +59,7 @@ async function main(argv: string[]) {
     initialMode,
     tapeDir,
     host,
+    defaultTapeName,
     enableLogging: true
   });
   await server.start(port);

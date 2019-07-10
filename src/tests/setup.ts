@@ -8,7 +8,7 @@ import { TestServer } from "./testserver";
 export function setupServers({
   mode,
   tapeDirName = mode,
-  defaultTapeName
+  defaultTapeName = "default"
 }: {
   mode: Mode;
   tapeDirName?: string;
