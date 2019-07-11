@@ -1,4 +1,6 @@
 import axios from "axios";
+import { existsSync } from "fs";
+import { join } from "path";
 import { PROXAY_HOST } from "./config";
 import { setupServers } from "./setup";
 import {
@@ -11,7 +13,15 @@ import {
 } from "./testserver";
 
 describe("Record", () => {
-  setupServers("record");
+  const servers = setupServers({
+    mode: "record",
+    defaultTapeName: "customDefault"
+  });
+
+  test("uses default tape name", async () => {
+    await axios.get(`${PROXAY_HOST}${SIMPLE_TEXT_PATH}`);
+    expect(existsSync(join(servers.tapeDir, "customDefault.yml"))).toBe(true);
+  });
 
   test("response: simple text", async () => {
     const response = await axios.get(`${PROXAY_HOST}${SIMPLE_TEXT_PATH}`);

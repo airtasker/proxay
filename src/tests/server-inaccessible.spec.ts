@@ -3,7 +3,10 @@ import { PROXAY_HOST } from "./config";
 import { setupServers } from "./setup";
 
 describe("Server inaccessible", () => {
-  const servers = setupServers("passthrough", "switching-tapes");
+  const servers = setupServers({
+    mode: "passthrough",
+    tapeDirName: "switching-tapes"
+  });
 
   it("doesn't crash when server is inaccessible", async () => {
     await servers.backend.stop();

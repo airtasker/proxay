@@ -5,7 +5,7 @@ http_interactions:
       headers:
         accept: 'application/json, text/plain, */*'
         content-type: application/json;charset=utf-8
-        user-agent: axios/0.18.0
+        user-agent: axios/0.18.1
         content-length: '12'
         host: 'localhost:4000'
         connection: close
@@ -21,7 +21,7 @@ http_interactions:
         content-type: application/json; charset=utf-8
         content-length: '29'
         etag: W/"1d-VScr985hiId2x6Go7UQU+rhoiH4"
-        date: 'Wed, 03 Oct 2018 05:02:35 GMT'
+        date: 'Wed, 10 Jul 2019 06:19:13 GMT'
         connection: close
       body:
         encoding: utf8
@@ -33,7 +33,7 @@ http_interactions:
       headers:
         accept: 'application/json, text/plain, */*'
         content-type: application/json;charset=utf-8
-        user-agent: axios/0.18.0
+        user-agent: axios/0.18.1
         content-length: '12'
         host: 'localhost:4000'
         connection: close
@@ -49,7 +49,7 @@ http_interactions:
         content-type: application/json; charset=utf-8
         content-length: '29'
         etag: W/"1d-0K0LkiFwFoK7E4ko+TIPXZRaod4"
-        date: 'Wed, 03 Oct 2018 05:02:35 GMT'
+        date: 'Wed, 10 Jul 2019 06:19:13 GMT'
         connection: close
       body:
         encoding: utf8

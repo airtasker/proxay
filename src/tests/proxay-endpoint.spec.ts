@@ -3,7 +3,7 @@ import { PROXAY_HOST } from "./config";
 import { setupServers } from "./setup";
 
 describe("Proxay endpoint", () => {
-  setupServers("replay");
+  setupServers({ mode: "replay" });
 
   it("returns a 200 for /__proxay", async () => {
     const response = await axios.get(`${PROXAY_HOST}/__proxay`);

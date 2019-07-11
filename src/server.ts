@@ -21,11 +21,13 @@ export class RecordReplayServer {
   private currentTapeRecords: TapeRecord[] = [];
   private currentTape!: string;
   private loggingEnabled: boolean;
+  private defaultTape: string;
   private replayedTapes: Set<TapeRecord> = new Set();
 
   constructor(options: {
     initialMode: Mode;
     tapeDir: string;
+    defaultTapeName: string;
     host?: string;
     timeout?: number;
     enableLogging?: boolean;
@@ -36,7 +38,8 @@ export class RecordReplayServer {
     this.timeout = options.timeout || 5000;
     this.loggingEnabled = options.enableLogging || false;
     this.persistence = new Persistence(options.tapeDir);
-    this.loadTape(DEFAULT_TAPE);
+    this.defaultTape = options.defaultTapeName;
+    this.loadTape(this.defaultTape);
 
     this.server = http.createServer(async (req, res) => {
       if (!req.url) {
@@ -352,7 +355,7 @@ export class RecordReplayServer {
    * Unloads the current tape, falling back to the default.
    */
   private unloadTape() {
-    this.loadTape(DEFAULT_TAPE);
+    this.loadTape(this.defaultTape);
   }
 
   /**
@@ -399,5 +402,3 @@ function extractPath(url: string) {
   }
   return path;
 }
-
-const DEFAULT_TAPE = "default";

@@ -11,7 +11,7 @@ import {
 } from "./testserver";
 
 describe("Replay", () => {
-  setupServers("replay");
+  setupServers({ mode: "replay" });
 
   test("response: simple text", async () => {
     const response = await axios.get(`${PROXAY_HOST}${SIMPLE_TEXT_PATH}`);
