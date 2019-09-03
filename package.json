@@ -60,7 +60,7 @@
     "@types/rimraf": "^2.0.2",
     "@types/string-similarity": "^3.0.0",
     "express": "^4.17.1",
-    "jest": "^24.8.0",
+    "jest": "^24.9.0",
     "prettier": "^1.18.2",
     "rimraf": "^2.6.3",
     "ts-jest": "^24.0.2",
