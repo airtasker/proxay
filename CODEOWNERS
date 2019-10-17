@@ -1,1 +1,6 @@
-* @airtasker/tooling-team
+# Main squad: *Eng Effectiveness* (Tooling)
+# Main slack channel: #eng-effectiveness
+
+# Mainly targeting dependabot PRs with this. Trialing https://pullpanda.com/assigner
+# Please see commit message for more context
+/yarn.lock @airtasker/tooling-pullassigner
