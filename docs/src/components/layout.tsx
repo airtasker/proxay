@@ -5,10 +5,18 @@
  * See: https://www.gatsbyjs.org/docs/use-static-query/
  */
 
+import styled from "@emotion/styled"
 import { graphql, useStaticQuery } from "gatsby"
 import React from "react"
 import Header from "./header"
 import "./layout.css"
+
+const MainContainer = styled.div`
+  margin: 0 auto;
+  max-width: 960px;
+  padding: 0px 1.0875rem 1.45rem;
+  padding-top: 0;
+`
 
 const Layout: React.FC<{}> = ({ children }) => {
   const data = useStaticQuery(graphql`
@@ -24,21 +32,14 @@ const Layout: React.FC<{}> = ({ children }) => {
   return (
     <>
       <Header siteTitle={data.site.siteMetadata.title} />
-      <div
-        style={{
-          margin: `0 auto`,
-          maxWidth: 960,
-          padding: `0px 1.0875rem 1.45rem`,
-          paddingTop: 0,
-        }}
-      >
+      <MainContainer>
         <main>{children}</main>
         <footer>
           © {new Date().getFullYear()}, Built with
           {` `}
           <a href="https://www.gatsbyjs.org">Gatsby</a>
         </footer>
-      </div>
+      </MainContainer>
     </>
   )
 }
