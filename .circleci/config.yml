@@ -70,15 +70,34 @@ jobs:
           keys:
             - v1-dependencies-{{ checksum "package.json" }}
             - v1-dependencies-
-      - run: yarn install
+      - run: cd docs && yarn install
       - save_cache:
           paths:
             - node_modules
           key: v1-dependencies-{{ checksum "package.json" }}
       - run:
-          name: TSLint
+          name: Check type safety
           command: |
-            yarn tslint -p .
+            yarn tsc --noEmit
+      - run:
+          name: Build docs
+          command: |
+            yarn build
+
+  docs-check:
+    <<: *job_configuration
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "docs/package.json" }}
+            - v1-dependencies-
+      - run: yarn install
+      - save_cache:
+          paths:
+            - node_modules
+          key: v1-dependencies-{{ checksum "docs/package.json" }}
+      - run: yarn test
 
   publish:
     <<: *job_configuration
@@ -118,6 +137,10 @@ workflows:
             tags:
               only: /^v[0-9]+\.[0-9]+\.[0-9]+$/
       - tslint-check:
+          filters:
+            tags:
+              only: /^v[0-9]+\.[0-9]+\.[0-9]+$/
+      - docs-check:
           filters:
             tags:
               only: /^v[0-9]+\.[0-9]+\.[0-9]+$/

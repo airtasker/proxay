@@ -12,12 +12,10 @@ import Helmet from "react-helmet"
 function SEO({
   description = "",
   lang = "en",
-  meta = [],
   title,
 }: {
   description?: string
   lang?: string
-  meta?: object[]
   title: string
 }) {
   const { site } = useStaticQuery(
@@ -76,7 +74,7 @@ function SEO({
           name: `twitter:description`,
           content: metaDescription,
         },
-      ].concat(meta)}
+      ]}
     />
   )
 }

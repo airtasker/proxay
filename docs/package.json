@@ -18,8 +18,10 @@
     "react-helmet": "^5.2.1"
   },
   "devDependencies": {
+    "@types/react-helmet": "^5.0.13",
     "gatsby-plugin-typescript": "^2.1.15",
-    "prettier": "^1.18.2"
+    "prettier": "^1.18.2",
+    "typescript": "^3.6.4"
   },
   "keywords": [
     "gatsby"
