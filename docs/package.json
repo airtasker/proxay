@@ -13,12 +13,12 @@
     "gatsby-plugin-sharp": "^2.2.25",
     "gatsby-source-filesystem": "^2.1.26",
     "gatsby-transformer-sharp": "^2.2.16",
-    "prop-types": "^15.7.2",
     "react": "^16.9.0",
     "react-dom": "^16.9.0",
     "react-helmet": "^5.2.1"
   },
   "devDependencies": {
+    "gatsby-plugin-typescript": "^2.1.15",
     "prettier": "^1.18.2"
   },
   "keywords": [
