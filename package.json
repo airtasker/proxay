@@ -57,7 +57,7 @@
     "@types/jest": "^24.0.19",
     "@types/js-yaml": "^3.12.1",
     "@types/node": "^12.11.7",
-    "@types/rimraf": "^2.0.2",
+    "@types/rimraf": "^2.0.3",
     "@types/string-similarity": "^3.0.0",
     "express": "^4.17.1",
     "jest": "^24.9.0",
