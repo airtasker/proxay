@@ -11,6 +11,7 @@ import emotionReset from "emotion-reset"
 import { graphql, useStaticQuery } from "gatsby"
 import React from "react"
 import Header from "./header"
+import { Nav } from "./nav"
 
 const MainContainer = styled.div`
   margin: 0 auto;
@@ -71,6 +72,7 @@ const Layout: React.FC<{}> = ({ children }) => {
       />
       <Header siteTitle={data.site.siteMetadata.title} />
       <MainContainer>
+        <Nav />
         <main>{children}</main>
         <footer>
           © {new Date().getFullYear()}, Built with
