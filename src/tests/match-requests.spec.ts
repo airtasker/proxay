@@ -48,14 +48,16 @@ describe("Match requests", () => {
 
     // Make sure the best possible match is picked each time.
     expect(
-      (await axios.post(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`, {
-        field1: {
-          key1: "z",
-          key2: "a"
-        },
-        field2: "d",
-        field3: 1
-      })).data
+      (
+        await axios.post(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`, {
+          field1: {
+            key1: "z",
+            key2: "a"
+          },
+          field2: "d",
+          field3: 1
+        })
+      ).data
     ).toEqual({
       field1: {
         key1: "z",
@@ -66,14 +68,16 @@ describe("Match requests", () => {
       requestCount: 3
     });
     expect(
-      (await axios.post(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`, {
-        field1: {
-          key1: "a",
-          key2: "b"
-        },
-        field2: "d",
-        field3: 1
-      })).data
+      (
+        await axios.post(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`, {
+          field1: {
+            key1: "a",
+            key2: "b"
+          },
+          field2: "d",
+          field3: 1
+        })
+      ).data
     ).toEqual({
       field1: {
         key1: "a",
@@ -84,14 +88,16 @@ describe("Match requests", () => {
       requestCount: 1
     });
     expect(
-      (await axios.post(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`, {
-        field1: {
-          key1: "a",
-          key2: "b",
-          key3: "c"
-        },
-        unrelatedField: "abc"
-      })).data
+      (
+        await axios.post(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`, {
+          field1: {
+            key1: "a",
+            key2: "b",
+            key3: "c"
+          },
+          unrelatedField: "abc"
+        })
+      ).data
     ).toEqual({
       field1: {
         key1: "a",
@@ -103,14 +109,16 @@ describe("Match requests", () => {
       requestCount: 2
     });
     expect(
-      (await axios.post(`${PROXAY_HOST}${JSON_IDENTITY_PATH}?abc=123`, {
-        field1: {
-          key1: "a",
-          key2: "b",
-          key3: "c"
-        },
-        unrelatedField: "abc"
-      })).data
+      (
+        await axios.post(`${PROXAY_HOST}${JSON_IDENTITY_PATH}?abc=123`, {
+          field1: {
+            key1: "a",
+            key2: "b",
+            key3: "c"
+          },
+          unrelatedField: "abc"
+        })
+      ).data
     ).toEqual({
       field1: {
         key1: "a",
