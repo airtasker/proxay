@@ -36,7 +36,7 @@ yarn global add proxay
 proxay --mode record --host https://api.website.com --tapes tapes/
 
 # Replay mode (no proxying)
-proxay --mode replay --tapes tapes/
+proxay --mode replay --tapes-dir tapes/
 
 # Passthrough mode (proxies requests without persisting)
 proxay --mode passthrough --host https://api.website.com
