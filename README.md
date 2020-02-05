@@ -33,7 +33,7 @@ yarn global add proxay
 
 ```sh
 # Record mode (proxies requests)
-proxay --mode record --host https://api.website.com --tapes tapes/
+proxay --mode record --host https://api.website.com --tapes-dir tapes/
 
 # Replay mode (no proxying)
 proxay --mode replay --tapes-dir tapes/
