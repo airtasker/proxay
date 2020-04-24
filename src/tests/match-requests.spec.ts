@@ -10,40 +10,40 @@ describe("Match requests", () => {
     // Start recording in tape "tape".
     await axios.post(`${PROXAY_HOST}/__proxay/tape`, {
       tape: "tape",
-      mode: "record"
+      mode: "record",
     });
 
     // Pre-record a few requests and responses.
     await axios.post(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`, {
       field1: {
         key1: "a",
-        key2: "b"
+        key2: "b",
       },
       field2: "c",
-      field3: 1
+      field3: 1,
     });
     await axios.post(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`, {
       field1: {
         key1: "a",
         key2: "b",
-        key3: "c"
+        key3: "c",
       },
       field2: "d",
-      field3: 1
+      field3: 1,
     });
     await axios.post(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`, {
       field1: {
         key1: "z",
-        key2: "a"
+        key2: "a",
       },
       field2: "d",
-      field3: 1
+      field3: 1,
     });
 
     // Switch to replay mode, same tape.
     await axios.post(`${PROXAY_HOST}/__proxay/tape`, {
       tape: "tape",
-      mode: "replay"
+      mode: "replay",
     });
 
     // Make sure the best possible match is picked each time.
@@ -52,40 +52,20 @@ describe("Match requests", () => {
         await axios.post(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`, {
           field1: {
             key1: "z",
-            key2: "a"
+            key2: "a",
           },
           field2: "d",
-          field3: 1
+          field3: 1,
         })
       ).data
     ).toEqual({
       field1: {
         key1: "z",
-        key2: "a"
+        key2: "a",
       },
       field2: "d",
       field3: 1,
-      requestCount: 3
-    });
-    expect(
-      (
-        await axios.post(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`, {
-          field1: {
-            key1: "a",
-            key2: "b"
-          },
-          field2: "d",
-          field3: 1
-        })
-      ).data
-    ).toEqual({
-      field1: {
-        key1: "a",
-        key2: "b"
-      },
-      field2: "c",
-      field3: 1,
-      requestCount: 1
+      requestCount: 3,
     });
     expect(
       (
@@ -93,20 +73,40 @@ describe("Match requests", () => {
           field1: {
             key1: "a",
             key2: "b",
-            key3: "c"
           },
-          unrelatedField: "abc"
+          field2: "d",
+          field3: 1,
         })
       ).data
     ).toEqual({
       field1: {
         key1: "a",
         key2: "b",
-        key3: "c"
+      },
+      field2: "c",
+      field3: 1,
+      requestCount: 1,
+    });
+    expect(
+      (
+        await axios.post(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`, {
+          field1: {
+            key1: "a",
+            key2: "b",
+            key3: "c",
+          },
+          unrelatedField: "abc",
+        })
+      ).data
+    ).toEqual({
+      field1: {
+        key1: "a",
+        key2: "b",
+        key3: "c",
       },
       field2: "d",
       field3: 1,
-      requestCount: 2
+      requestCount: 2,
     });
     expect(
       (
@@ -114,20 +114,20 @@ describe("Match requests", () => {
           field1: {
             key1: "a",
             key2: "b",
-            key3: "c"
+            key3: "c",
           },
-          unrelatedField: "abc"
+          unrelatedField: "abc",
         })
       ).data
     ).toEqual({
       field1: {
         key1: "a",
         key2: "b",
-        key3: "c"
+        key3: "c",
       },
       field2: "d",
       field3: 1,
-      requestCount: 2
+      requestCount: 2,
     });
   });
 
@@ -136,7 +136,7 @@ describe("Match requests", () => {
       beforeAll(async () => {
         await axios.post(`${PROXAY_HOST}/__proxay/tape`, {
           tape: "tape",
-          mode: "record"
+          mode: "record",
         });
 
         await axios.get(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`);
@@ -147,7 +147,7 @@ describe("Match requests", () => {
       it("Picks the request that hasn't been matched over the request has been matched", async () => {
         await axios.post(`${PROXAY_HOST}/__proxay/tape`, {
           tape: "tape",
-          mode: "replay"
+          mode: "replay",
         });
 
         const response1 = await axios.get(
@@ -168,35 +168,35 @@ describe("Match requests", () => {
       beforeAll(async () => {
         await axios.post(`${PROXAY_HOST}/__proxay/tape`, {
           tape: "tape",
-          mode: "record"
+          mode: "record",
         });
 
         await axios.post(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`, {
-          field3: 1
+          field3: 1,
         });
 
         await axios.post(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`, {
-          field3: 1
+          field3: 1,
         });
       });
 
       it("Picks the request that hasn't been matched over the request has been matched", async () => {
         await axios.post(`${PROXAY_HOST}/__proxay/tape`, {
           tape: "tape",
-          mode: "replay"
+          mode: "replay",
         });
 
         const response1 = await axios.post(
           `${PROXAY_HOST}${JSON_IDENTITY_PATH}`,
           {
-            field3: 1
+            field3: 1,
           }
         );
 
         const response2 = await axios.post(
           `${PROXAY_HOST}${JSON_IDENTITY_PATH}`,
           {
-            field3: 1
+            field3: 1,
           }
         );
 
@@ -209,39 +209,39 @@ describe("Match requests", () => {
         beforeAll(async () => {
           await axios.post(`${PROXAY_HOST}/__proxay/tape`, {
             tape: "tape",
-            mode: "record"
+            mode: "record",
           });
 
           await axios.post(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`, {
-            field3: 1
+            field3: 1,
           });
 
           await axios.post(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`, {
-            field3: 1
+            field3: 1,
           });
         });
 
         it("Pick the last request", async () => {
           await axios.post(`${PROXAY_HOST}/__proxay/tape`, {
             tape: "tape",
-            mode: "replay"
+            mode: "replay",
           });
 
           await axios.post(`${PROXAY_HOST}${JSON_IDENTITY_PATH}`, {
-            field3: 1
+            field3: 1,
           });
 
           const response2 = await axios.post(
             `${PROXAY_HOST}${JSON_IDENTITY_PATH}`,
             {
-              field3: 1
+              field3: 1,
             }
           );
 
           const response3 = await axios.post(
             `${PROXAY_HOST}${JSON_IDENTITY_PATH}`,
             {
-              field3: 1
+              field3: 1,
             }
           );
 

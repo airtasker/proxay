@@ -60,7 +60,7 @@ jobs:
       - run:
           name: Prettier
           command: |
-            yarn prettier --list-different "**/*.js" "**/*.jsx" "**/*.ts" "**/*.tsx"
+            yarn prettier --list-different "**/*.ts"
 
   tslint-check:
     <<: *job_configuration

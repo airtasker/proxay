@@ -8,7 +8,7 @@ import {
   Headers,
   PersistedBuffer,
   PersistedTapeRecord,
-  TapeRecord
+  TapeRecord,
 } from "./tape";
 
 /**
@@ -27,7 +27,7 @@ export class Persistence {
     fs.writeFileSync(
       tapePath,
       yaml.safeDump({
-        http_interactions: persistedTapeRecords
+        http_interactions: persistedTapeRecords,
       }),
       "utf8"
     );
@@ -67,13 +67,13 @@ export function persistTape(record: TapeRecord): PersistedTapeRecord {
       method: record.request.method,
       path: record.request.path,
       headers: record.request.headers,
-      body: serialiseBuffer(record.request.body, record.request.headers)
+      body: serialiseBuffer(record.request.body, record.request.headers),
     },
     response: {
       status: record.response.status,
       headers: record.response.headers,
-      body: serialiseBuffer(record.response.body, record.response.headers)
-    }
+      body: serialiseBuffer(record.response.body, record.response.headers),
+    },
   };
 }
 
@@ -83,13 +83,13 @@ export function reviveTape(persistedRecord: PersistedTapeRecord): TapeRecord {
       method: persistedRecord.request.method,
       path: persistedRecord.request.path,
       headers: persistedRecord.request.headers,
-      body: unserialiseBuffer(persistedRecord.request.body)
+      body: unserialiseBuffer(persistedRecord.request.body),
     },
     response: {
       status: persistedRecord.response.status,
       headers: persistedRecord.response.headers,
-      body: unserialiseBuffer(persistedRecord.response.body)
-    }
+      body: unserialiseBuffer(persistedRecord.response.body),
+    },
   };
 }
 
@@ -121,7 +121,7 @@ export function serialiseBuffer(
       return {
         encoding: "utf8",
         data: utf8Representation,
-        compression
+        compression,
       };
     }
   } catch {
@@ -131,7 +131,7 @@ export function serialiseBuffer(
   // since we might as well store it in its compressed state.
   return {
     encoding: "base64",
-    data: originalBuffer.toString("base64")
+    data: originalBuffer.toString("base64"),
   };
 }
 

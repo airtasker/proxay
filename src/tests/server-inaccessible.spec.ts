@@ -5,7 +5,7 @@ import { setupServers } from "./setup";
 describe("Server inaccessible", () => {
   const servers = setupServers({
     mode: "passthrough",
-    tapeDirName: "switching-tapes"
+    tapeDirName: "switching-tapes",
   });
 
   it("doesn't crash when server is inaccessible", async () => {

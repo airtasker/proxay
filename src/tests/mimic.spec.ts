@@ -9,7 +9,7 @@ import {
   SIMPLE_TEXT_PATH,
   SIMPLE_TEXT_RESPONSE,
   UTF8_PATH,
-  UTF8_RESPONSE
+  UTF8_RESPONSE,
 } from "./testserver";
 
 describe("Mimic", () => {
@@ -35,7 +35,7 @@ describe("Mimic", () => {
 
   test("response: binary", async () => {
     const response = await axios.get(`${PROXAY_HOST}${BINARY_PATH}`, {
-      responseType: "arraybuffer"
+      responseType: "arraybuffer",
     });
     expect(response.data).toEqual(BINARY_RESPONSE);
   });
@@ -55,7 +55,7 @@ describe("Mimic", () => {
 
   test("can pick any tape", async () => {
     await axios.post(`${PROXAY_HOST}/__proxay/tape`, {
-      tape: "new-tape"
+      tape: "new-tape",
     });
   });
 });

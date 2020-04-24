@@ -60,7 +60,7 @@ async function main(argv: string[]) {
     tapeDir,
     host,
     defaultTapeName,
-    enableLogging: true
+    enableLogging: true,
   });
   await server.start(port);
   console.log(chalk.green(`Proxying in ${initialMode} mode on port ${port}.`));

@@ -7,7 +7,7 @@ import {
   SIMPLE_TEXT_PATH,
   SIMPLE_TEXT_RESPONSE,
   UTF8_PATH,
-  UTF8_RESPONSE
+  UTF8_RESPONSE,
 } from "./testserver";
 
 describe("Replay", () => {
@@ -25,21 +25,21 @@ describe("Replay", () => {
 
   test("response: binary", async () => {
     const response = await axios.get(`${PROXAY_HOST}${BINARY_PATH}`, {
-      responseType: "arraybuffer"
+      responseType: "arraybuffer",
     });
     expect(response.data).toEqual(BINARY_RESPONSE);
   });
 
   test("can pick an existing tape", async () => {
     await axios.post(`${PROXAY_HOST}/__proxay/tape`, {
-      tape: "existing-tape"
+      tape: "existing-tape",
     });
   });
 
   test("cannot pick a tape that does not exist", async () => {
     await expect(
       axios.post(`${PROXAY_HOST}/__proxay/tape`, {
-        tape: "does-not-exist-tape"
+        tape: "does-not-exist-tape",
       })
     ).rejects.toEqual(new Error("Request failed with status code 404"));
   });
