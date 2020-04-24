@@ -6,8 +6,8 @@ const DUMMY_RESPONSE = {
   headers: {},
   body: Buffer.from([]),
   status: {
-    code: 200
-  }
+    code: 200,
+  },
 };
 
 describe("similarity", () => {
@@ -18,9 +18,9 @@ describe("similarity", () => {
           method: "POST",
           path: "/test",
           headers: {},
-          body: Buffer.from([])
+          body: Buffer.from([]),
         },
-        response: DUMMY_RESPONSE
+        response: DUMMY_RESPONSE,
       })
     ).toBe(0);
   });
@@ -32,9 +32,9 @@ describe("similarity", () => {
           method: "POST",
           path: "/test",
           headers: {},
-          body: Buffer.from([])
+          body: Buffer.from([]),
         },
-        response: DUMMY_RESPONSE
+        response: DUMMY_RESPONSE,
       })
     ).toBe(Infinity);
   });
@@ -46,9 +46,9 @@ describe("similarity", () => {
           method: "POST",
           path: "/test/other",
           headers: {},
-          body: Buffer.from([])
+          body: Buffer.from([]),
         },
-        response: DUMMY_RESPONSE
+        response: DUMMY_RESPONSE,
       })
     ).toBe(Infinity);
   });
@@ -60,9 +60,9 @@ describe("similarity", () => {
           method: "POST",
           path: "/test?c=d",
           headers: {},
-          body: Buffer.from([])
+          body: Buffer.from([]),
         },
-        response: DUMMY_RESPONSE
+        response: DUMMY_RESPONSE,
       })
     ).toBe(1);
     expect(
@@ -71,9 +71,9 @@ describe("similarity", () => {
           method: "POST",
           path: "/test",
           headers: {},
-          body: Buffer.from([])
+          body: Buffer.from([]),
         },
-        response: DUMMY_RESPONSE
+        response: DUMMY_RESPONSE,
       })
     ).toBe(1);
     expect(
@@ -82,9 +82,9 @@ describe("similarity", () => {
           method: "POST",
           path: "/test?c=d",
           headers: {},
-          body: Buffer.from([])
+          body: Buffer.from([]),
         },
-        response: DUMMY_RESPONSE
+        response: DUMMY_RESPONSE,
       })
     ).toBe(2);
     expect(
@@ -93,9 +93,9 @@ describe("similarity", () => {
           method: "POST",
           path: "/test?a=b&c=d",
           headers: {},
-          body: Buffer.from([])
+          body: Buffer.from([]),
         },
-        response: DUMMY_RESPONSE
+        response: DUMMY_RESPONSE,
       })
     ).toBe(0);
     expect(
@@ -104,9 +104,9 @@ describe("similarity", () => {
           method: "POST",
           path: "/test?a=b&c=d",
           headers: {},
-          body: Buffer.from([])
+          body: Buffer.from([]),
         },
-        response: DUMMY_RESPONSE
+        response: DUMMY_RESPONSE,
       })
     ).toBe(1);
   });
@@ -121,7 +121,7 @@ describe("similarity", () => {
           "user-agent": "Chrome",
           host: "local",
           connection: "persist",
-          "x-region": "australia"
+          "x-region": "australia",
         },
         Buffer.from([]),
         {
@@ -132,11 +132,11 @@ describe("similarity", () => {
               accept: "application/vnd.api+json",
               "user-agent": "Firefox",
               host: "google.com",
-              "x-region": "australia"
+              "x-region": "australia",
             },
-            body: Buffer.from([])
+            body: Buffer.from([]),
           },
-          response: DUMMY_RESPONSE
+          response: DUMMY_RESPONSE,
         }
       )
     ).toBe(0);
@@ -148,7 +148,7 @@ describe("similarity", () => {
           accept: "application/json",
           "user-agent": "Chrome",
           host: "local",
-          connection: "persist"
+          connection: "persist",
         },
         Buffer.from([]),
         {
@@ -159,11 +159,11 @@ describe("similarity", () => {
               accept: "application/vnd.api+json",
               "user-agent": "Firefox",
               host: "google.com",
-              "x-region": "UK"
+              "x-region": "UK",
             },
-            body: Buffer.from([])
+            body: Buffer.from([]),
           },
-          response: DUMMY_RESPONSE
+          response: DUMMY_RESPONSE,
         }
       )
     ).toBe(1);
@@ -176,7 +176,7 @@ describe("similarity", () => {
           "user-agent": "Chrome",
           host: "local",
           connection: "persist",
-          "x-region": "australia"
+          "x-region": "australia",
         },
         Buffer.from([]),
         {
@@ -187,11 +187,11 @@ describe("similarity", () => {
               accept: "application/vnd.api+json",
               "user-agent": "Firefox",
               host: "google.com",
-              "x-region": "UK"
+              "x-region": "UK",
             },
-            body: Buffer.from([])
+            body: Buffer.from([]),
           },
-          response: DUMMY_RESPONSE
+          response: DUMMY_RESPONSE,
         }
       )
     ).toBe(1);
@@ -207,7 +207,7 @@ describe("similarity", () => {
         compactJsonBuffer({
           a: 1,
           b: 2,
-          c: 3
+          c: 3,
         }),
         {
           request: {
@@ -217,10 +217,10 @@ describe("similarity", () => {
             body: wellFormattedJsonBuffer({
               a: 1,
               b: 2,
-              c: 3
-            })
+              c: 3,
+            }),
           },
-          response: DUMMY_RESPONSE
+          response: DUMMY_RESPONSE,
         }
       )
     ).toBe(0);
@@ -234,7 +234,7 @@ describe("similarity", () => {
         compactJsonBuffer({
           a: 1,
           b: 2,
-          c: 3
+          c: 3,
         }),
         {
           request: {
@@ -246,11 +246,11 @@ describe("similarity", () => {
               b: 2,
               c: {
                 d: 4,
-                e: 5
-              }
-            })
+                e: 5,
+              },
+            }),
           },
-          response: DUMMY_RESPONSE
+          response: DUMMY_RESPONSE,
         }
       )
     ).toBe(1);
@@ -264,7 +264,7 @@ describe("similarity", () => {
         compactJsonBuffer({
           a: 1,
           b: 2,
-          c: 3
+          c: 3,
         }),
         {
           request: {
@@ -274,10 +274,10 @@ describe("similarity", () => {
             body: wellFormattedJsonBuffer({
               d: 1,
               e: 2,
-              f: 3
-            })
+              f: 3,
+            }),
           },
-          response: DUMMY_RESPONSE
+          response: DUMMY_RESPONSE,
         }
       )
     ).toBe(6);
@@ -290,9 +290,9 @@ describe("similarity", () => {
           method: "POST",
           path: "/test",
           headers: {},
-          body: Buffer.from("abc")
+          body: Buffer.from("abc"),
         },
-        response: DUMMY_RESPONSE
+        response: DUMMY_RESPONSE,
       })
     ).toBe(0);
     expect(
@@ -301,9 +301,9 @@ describe("similarity", () => {
           method: "POST",
           path: "/test",
           headers: {},
-          body: Buffer.from("hello Kevin")
+          body: Buffer.from("hello Kevin"),
         },
-        response: DUMMY_RESPONSE
+        response: DUMMY_RESPONSE,
       })
     ).toBe(6);
   });
@@ -321,9 +321,9 @@ describe("similarity", () => {
           method: "POST",
           path: "/test",
           headers: {},
-          body: avatarFile1
+          body: avatarFile1,
         },
-        response: DUMMY_RESPONSE
+        response: DUMMY_RESPONSE,
       })
     ).toBe(0);
     expect(
@@ -332,9 +332,9 @@ describe("similarity", () => {
           method: "POST",
           path: "/test",
           headers: {},
-          body: avatarFile2
+          body: avatarFile2,
         },
-        response: DUMMY_RESPONSE
+        response: DUMMY_RESPONSE,
       })
     ).toBe(5149);
   });

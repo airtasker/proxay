@@ -32,7 +32,7 @@ const BINARY_REQUEST = Buffer.from([
   155,
   1,
   234,
-  140
+  140,
 ]);
 
 const BINARY_RESPONSE = Buffer.from([
@@ -60,7 +60,7 @@ const BINARY_RESPONSE = Buffer.from([
   255,
   33,
   203,
-  179
+  179,
 ]);
 
 const UTF8_REQUEST_BROTLI = Buffer.from(
@@ -85,15 +85,15 @@ describe("Persistence", () => {
           method: "GET",
           path: "/path",
           headers: {},
-          body: Buffer.from(UTF8_REQUEST, "utf8")
+          body: Buffer.from(UTF8_REQUEST, "utf8"),
         },
         response: {
           status: {
-            code: 200
+            code: 200,
           },
           headers: {},
-          body: Buffer.from(UTF8_RESPONSE, "utf8")
-        }
+          body: Buffer.from(UTF8_RESPONSE, "utf8"),
+        },
       })
     ).toEqual({
       request: {
@@ -103,20 +103,20 @@ describe("Persistence", () => {
         body: {
           encoding: "utf8",
           data: UTF8_REQUEST,
-          compression: "none"
-        }
+          compression: "none",
+        },
       },
       response: {
         status: {
-          code: 200
+          code: 200,
         },
         headers: {},
         body: {
           encoding: "utf8",
           data: UTF8_RESPONSE,
-          compression: "none"
-        }
-      }
+          compression: "none",
+        },
+      },
     });
   });
 
@@ -127,15 +127,15 @@ describe("Persistence", () => {
           method: "GET",
           path: "/path",
           headers: {},
-          body: BINARY_REQUEST
+          body: BINARY_REQUEST,
         },
         response: {
           status: {
-            code: 200
+            code: 200,
           },
           headers: {},
-          body: BINARY_RESPONSE
-        }
+          body: BINARY_RESPONSE,
+        },
       })
     ).toEqual({
       request: {
@@ -144,19 +144,19 @@ describe("Persistence", () => {
         headers: {},
         body: {
           encoding: "base64",
-          data: "AjAiaJsB6owCMCJomwHqjAIwImibAeqM"
-        }
+          data: "AjAiaJsB6owCMCJomwHqjAIwImibAeqM",
+        },
       },
       response: {
         status: {
-          code: 200
+          code: 200,
         },
         headers: {},
         body: {
           encoding: "base64",
-          data: "DDD5aP8hy7MMMPlo/yHLswww+Wj/Icuz"
-        }
-      }
+          data: "DDD5aP8hy7MMMPlo/yHLswww+Wj/Icuz",
+        },
+      },
     });
   });
 
@@ -167,46 +167,46 @@ describe("Persistence", () => {
           method: "GET",
           path: "/path",
           headers: {
-            "content-encoding": "br"
+            "content-encoding": "br",
           },
-          body: UTF8_REQUEST_BROTLI
+          body: UTF8_REQUEST_BROTLI,
         },
         response: {
           status: {
-            code: 200
+            code: 200,
           },
           headers: {
-            "content-encoding": "br"
+            "content-encoding": "br",
           },
-          body: UTF8_RESPONSE_BROTLI
-        }
+          body: UTF8_RESPONSE_BROTLI,
+        },
       })
     ).toEqual({
       request: {
         method: "GET",
         path: "/path",
         headers: {
-          "content-encoding": "br"
+          "content-encoding": "br",
         },
         body: {
           encoding: "utf8",
           data: UTF8_REQUEST,
-          compression: "br"
-        }
+          compression: "br",
+        },
       },
       response: {
         status: {
-          code: 200
+          code: 200,
         },
         headers: {
-          "content-encoding": "br"
+          "content-encoding": "br",
         },
         body: {
           encoding: "utf8",
           data: UTF8_RESPONSE,
-          compression: "br"
-        }
-      }
+          compression: "br",
+        },
+      },
     });
   });
 
@@ -217,44 +217,44 @@ describe("Persistence", () => {
           method: "GET",
           path: "/path",
           headers: {
-            "content-encoding": "br"
+            "content-encoding": "br",
           },
-          body: BINARY_REQUEST_BROTLI
+          body: BINARY_REQUEST_BROTLI,
         },
         response: {
           status: {
-            code: 200
+            code: 200,
           },
           headers: {
-            "content-encoding": "br"
+            "content-encoding": "br",
           },
-          body: BINARY_RESPONSE_BROTLI
-        }
+          body: BINARY_RESPONSE_BROTLI,
+        },
       })
     ).toEqual({
       request: {
         method: "GET",
         path: "/path",
         headers: {
-          "content-encoding": "br"
+          "content-encoding": "br",
         },
         body: {
           encoding: "base64",
-          data: "GxcAAI6UrMm1WkAERl0HoDFuCn3CIekc"
-        }
+          data: "GxcAAI6UrMm1WkAERl0HoDFuCn3CIekc",
+        },
       },
       response: {
         status: {
-          code: 200
+          code: 200,
         },
         headers: {
-          "content-encoding": "br"
+          "content-encoding": "br",
         },
         body: {
           encoding: "base64",
-          data: "GxcAAI6UrPmFmgFmOV+HoM3+C33CIe4U"
-        }
-      }
+          data: "GxcAAI6UrPmFmgFmOV+HoM3+C33CIe4U",
+        },
+      },
     });
   });
 
@@ -265,46 +265,46 @@ describe("Persistence", () => {
           method: "GET",
           path: "/path",
           headers: {
-            "content-encoding": "gzip"
+            "content-encoding": "gzip",
           },
-          body: UTF8_REQUEST_GZIP
+          body: UTF8_REQUEST_GZIP,
         },
         response: {
           status: {
-            code: 200
+            code: 200,
           },
           headers: {
-            "content-encoding": "gzip"
+            "content-encoding": "gzip",
           },
-          body: UTF8_RESPONSE_GZIP
-        }
+          body: UTF8_RESPONSE_GZIP,
+        },
       })
     ).toEqual({
       request: {
         method: "GET",
         path: "/path",
         headers: {
-          "content-encoding": "gzip"
+          "content-encoding": "gzip",
         },
         body: {
           encoding: "utf8",
           data: UTF8_REQUEST,
-          compression: "gzip"
-        }
+          compression: "gzip",
+        },
       },
       response: {
         status: {
-          code: 200
+          code: 200,
         },
         headers: {
-          "content-encoding": "gzip"
+          "content-encoding": "gzip",
         },
         body: {
           encoding: "utf8",
           data: UTF8_RESPONSE,
-          compression: "gzip"
-        }
-      }
+          compression: "gzip",
+        },
+      },
     });
   });
 
@@ -315,44 +315,44 @@ describe("Persistence", () => {
           method: "GET",
           path: "/path",
           headers: {
-            "content-encoding": "gzip"
+            "content-encoding": "gzip",
           },
-          body: BINARY_REQUEST_GZIP
+          body: BINARY_REQUEST_GZIP,
         },
         response: {
           status: {
-            code: 200
+            code: 200,
           },
           headers: {
-            "content-encoding": "gzip"
+            "content-encoding": "gzip",
           },
-          body: BINARY_RESPONSE_GZIP
-        }
+          body: BINARY_RESPONSE_GZIP,
+        },
       })
     ).toEqual({
       request: {
         method: "GET",
         path: "/path",
         headers: {
-          "content-encoding": "gzip"
+          "content-encoding": "gzip",
         },
         body: {
           encoding: "base64",
-          data: "H4sIAAAAAAAAA2MyUMqYzfiqhwmNBgCNSozuGAAAAA=="
-        }
+          data: "H4sIAAAAAAAAA2MyUMqYzfiqhwmNBgCNSozuGAAAAA==",
+        },
       },
       response: {
         status: {
-          code: 200
+          code: 200,
         },
         headers: {
-          "content-encoding": "gzip"
+          "content-encoding": "gzip",
         },
         body: {
           encoding: "base64",
-          data: "H4sIAAAAAAAAA+Mx+JnxX/H0Zh40GgB5ykTGGAAAAA=="
-        }
-      }
+          data: "H4sIAAAAAAAAA+Mx+JnxX/H0Zh40GgB5ykTGGAAAAA==",
+        },
+      },
     });
   });
 
@@ -366,35 +366,35 @@ describe("Persistence", () => {
           body: {
             encoding: "utf8",
             data: UTF8_REQUEST,
-            compression: "none"
-          }
+            compression: "none",
+          },
         },
         response: {
           status: {
-            code: 200
+            code: 200,
           },
           headers: {},
           body: {
             encoding: "utf8",
             data: UTF8_RESPONSE,
-            compression: "none"
-          }
-        }
+            compression: "none",
+          },
+        },
       })
     ).toEqual({
       request: {
         method: "GET",
         path: "/path",
         headers: {},
-        body: Buffer.from(UTF8_REQUEST, "utf8")
+        body: Buffer.from(UTF8_REQUEST, "utf8"),
       },
       response: {
         status: {
-          code: 200
+          code: 200,
         },
         headers: {},
-        body: Buffer.from(UTF8_RESPONSE, "utf8")
-      }
+        body: Buffer.from(UTF8_RESPONSE, "utf8"),
+      },
     });
   });
 
@@ -407,34 +407,34 @@ describe("Persistence", () => {
           headers: {},
           body: {
             encoding: "base64",
-            data: "AjAiaJsB6owCMCJomwHqjAIwImibAeqM"
-          }
+            data: "AjAiaJsB6owCMCJomwHqjAIwImibAeqM",
+          },
         },
         response: {
           status: {
-            code: 200
+            code: 200,
           },
           headers: {},
           body: {
             encoding: "base64",
-            data: "DDD5aP8hy7MMMPlo/yHLswww+Wj/Icuz"
-          }
-        }
+            data: "DDD5aP8hy7MMMPlo/yHLswww+Wj/Icuz",
+          },
+        },
       })
     ).toEqual({
       request: {
         method: "GET",
         path: "/path",
         headers: {},
-        body: BINARY_REQUEST
+        body: BINARY_REQUEST,
       },
       response: {
         status: {
-          code: 200
+          code: 200,
         },
         headers: {},
-        body: BINARY_RESPONSE
-      }
+        body: BINARY_RESPONSE,
+      },
     });
   });
 
@@ -448,35 +448,35 @@ describe("Persistence", () => {
           body: {
             encoding: "utf8",
             data: UTF8_REQUEST,
-            compression: "br"
-          }
+            compression: "br",
+          },
         },
         response: {
           status: {
-            code: 200
+            code: 200,
           },
           headers: {},
           body: {
             encoding: "utf8",
             data: UTF8_RESPONSE,
-            compression: "br"
-          }
-        }
+            compression: "br",
+          },
+        },
       })
     ).toEqual({
       request: {
         method: "GET",
         path: "/path",
         headers: {},
-        body: UTF8_REQUEST_BROTLI
+        body: UTF8_REQUEST_BROTLI,
       },
       response: {
         status: {
-          code: 200
+          code: 200,
         },
         headers: {},
-        body: UTF8_RESPONSE_BROTLI
-      }
+        body: UTF8_RESPONSE_BROTLI,
+      },
     });
   });
 
@@ -490,35 +490,35 @@ describe("Persistence", () => {
           body: {
             encoding: "utf8",
             data: UTF8_REQUEST,
-            compression: "gzip"
-          }
+            compression: "gzip",
+          },
         },
         response: {
           status: {
-            code: 200
+            code: 200,
           },
           headers: {},
           body: {
             encoding: "utf8",
             data: UTF8_RESPONSE,
-            compression: "gzip"
-          }
-        }
+            compression: "gzip",
+          },
+        },
       })
     ).toEqual({
       request: {
         method: "GET",
         path: "/path",
         headers: {},
-        body: UTF8_REQUEST_GZIP
+        body: UTF8_REQUEST_GZIP,
       },
       response: {
         status: {
-          code: 200
+          code: 200,
         },
         headers: {},
-        body: UTF8_RESPONSE_GZIP
-      }
+        body: UTF8_RESPONSE_GZIP,
+      },
     });
   });
 });

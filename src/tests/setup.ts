@@ -8,7 +8,7 @@ import { TestServer } from "./testserver";
 export function setupServers({
   mode,
   tapeDirName = mode,
-  defaultTapeName = "default"
+  defaultTapeName = "default",
 }: {
   mode: Mode;
   tapeDirName?: string;
@@ -27,23 +27,23 @@ export function setupServers({
     }
   });
 
-  beforeAll(async done => {
+  beforeAll(async (done) => {
     servers.backend = new TestServer();
     servers.proxy = new RecordReplayServer({
       initialMode: mode,
       tapeDir,
       defaultTapeName,
       host: TEST_SERVER_HOST,
-      timeout: 100
+      timeout: 100,
     });
     await Promise.all([
       servers.proxy.start(PROXAY_PORT),
-      servers.backend.start(TEST_SERVER_PORT)
+      servers.backend.start(TEST_SERVER_PORT),
     ]);
     done();
   });
 
-  afterAll(async done => {
+  afterAll(async (done) => {
     await Promise.all([servers.backend.stop(), servers.proxy.stop()]);
     done();
   });

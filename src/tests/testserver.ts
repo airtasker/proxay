@@ -19,7 +19,7 @@ export const BINARY_RESPONSE = Buffer.from([
   255,
   33,
   203,
-  179
+  179,
 ]);
 
 /**
@@ -62,7 +62,7 @@ export class TestServer {
    */
   async start(port: number) {
     await new Promise(
-      resolve => (this.server = this.app.listen(port, resolve))
+      (resolve) => (this.server = this.app.listen(port, resolve))
     );
   }
 

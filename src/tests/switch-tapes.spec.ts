@@ -5,14 +5,14 @@ import { setupServers } from "./setup";
 describe("Switching tapes", () => {
   const servers = setupServers({
     mode: "replay",
-    tapeDirName: "switching-tapes"
+    tapeDirName: "switching-tapes",
   });
 
   it("can switch between record and replay mode", async () => {
     // Start in record mode.
     await axios.post(`${PROXAY_HOST}/__proxay/tape`, {
       tape: "my-tape",
-      mode: "record"
+      mode: "record",
     });
     expect(servers.backend.requestCount).toBe(0);
 
@@ -25,7 +25,7 @@ describe("Switching tapes", () => {
     // Switch to replay mode, same tape.
     await axios.post(`${PROXAY_HOST}/__proxay/tape`, {
       tape: "my-tape",
-      mode: "replay"
+      mode: "replay",
     });
 
     // Second call should be replayed.

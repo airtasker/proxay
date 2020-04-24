@@ -26,9 +26,9 @@ export async function send(
           port,
           headers: {
             ...request.headers,
-            host: hostname
+            host: hostname,
           },
-          timeout: options.timeout
+          timeout: options.timeout,
         };
         const proxyRequest =
           scheme === "http"
@@ -40,9 +40,9 @@ export async function send(
       }
     );
     const statusCode = response.statusCode || 200;
-    const responseBody = await new Promise<Buffer>(resolve => {
+    const responseBody = await new Promise<Buffer>((resolve) => {
       const chunks: Buffer[] = [];
-      response.on("data", chunk => {
+      response.on("data", (chunk) => {
         chunks.push(ensureBuffer(chunk));
       });
       response.on("end", () => resolve(Buffer.concat(chunks)));
@@ -52,23 +52,23 @@ export async function send(
         method: request.method,
         path: request.path,
         headers: request.headers,
-        body: request.body
+        body: request.body,
       },
       response: {
         status: {
-          code: statusCode
+          code: statusCode,
         },
         headers: response.headers,
-        body: responseBody
-      }
+        body: responseBody,
+      },
     };
   } catch (e) {
     if (options.loggingEnabled) {
       console.error(
         chalk.red(
-          `Could not send request ${request.method} ${
-            request.path
-          } (error: ${e.code || "unknown"})`
+          `Could not send request ${request.method} ${request.path} (error: ${
+            e.code || "unknown"
+          })`
         )
       );
     }

@@ -60,7 +60,7 @@ export class RecordReplayServer {
           method: req.method,
           path: extractPath(req.url),
           headers: req.headers,
-          body: await receiveRequestBody(req)
+          body: await receiveRequestBody(req),
         };
         if (
           request.path === "/__proxay" ||
@@ -90,14 +90,14 @@ export class RecordReplayServer {
    * Starts the server.
    */
   async start(port: number) {
-    await new Promise(resolve => this.server.listen(port, resolve));
+    await new Promise((resolve) => this.server.listen(port, resolve));
   }
 
   /**
    * Stops the server.
    */
   async stop() {
-    await new Promise(resolve => this.server.close(resolve));
+    await new Promise((resolve) => this.server.close(resolve));
   }
 
   /**
@@ -218,11 +218,11 @@ export class RecordReplayServer {
         method: request.method,
         path: request.path,
         headers: request.headers,
-        body: request.body
+        body: request.body,
       },
       {
         loggingEnabled: this.loggingEnabled,
-        timeout: this.timeout
+        timeout: this.timeout,
       }
     );
     this.addRecordToTape(record);
@@ -263,11 +263,11 @@ export class RecordReplayServer {
           method: request.method,
           path: request.path,
           headers: request.headers,
-          body: request.body
+          body: request.body,
         },
         {
           loggingEnabled: this.loggingEnabled,
-          timeout: this.timeout
+          timeout: this.timeout,
         }
       );
       this.addRecordToTape(record);
@@ -293,11 +293,11 @@ export class RecordReplayServer {
         method: request.method,
         path: request.path,
         headers: request.headers,
-        body: request.body
+        body: request.body,
       },
       {
         loggingEnabled: this.loggingEnabled,
-        timeout: this.timeout
+        timeout: this.timeout,
       }
     );
     if (this.loggingEnabled) {
@@ -371,7 +371,7 @@ export class RecordReplayServer {
    */
   private sendResponse(record: TapeRecord, res: http.ServerResponse) {
     res.statusCode = record.response.status.code;
-    Object.keys(record.response.headers).forEach(headerName => {
+    Object.keys(record.response.headers).forEach((headerName) => {
       const headerValue = record.response.headers[headerName];
       if (headerValue) {
         res.setHeader(headerName, headerValue);
@@ -383,10 +383,10 @@ export class RecordReplayServer {
 
 function receiveRequestBody(req: http.IncomingMessage): Promise<Buffer> {
   const requestChunks: Buffer[] = [];
-  req.on("data", chunk => {
+  req.on("data", (chunk) => {
     requestChunks.push(ensureBuffer(chunk));
   });
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     req.on("end", () => resolve(Buffer.concat(requestChunks)));
   });
 }
