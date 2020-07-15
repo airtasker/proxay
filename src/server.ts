@@ -31,13 +31,15 @@ export class RecordReplayServer {
     host?: string;
     timeout?: number;
     enableLogging?: boolean;
+    redactHeaders?: string[];
   }) {
     this.currentTapeRecords = [];
     this.mode = options.initialMode;
     this.proxiedHost = options.host;
     this.timeout = options.timeout || 5000;
     this.loggingEnabled = options.enableLogging || false;
-    this.persistence = new Persistence(options.tapeDir);
+    const redactHeaders = options.redactHeaders || [];
+    this.persistence = new Persistence(options.tapeDir, redactHeaders);
     this.defaultTape = options.defaultTapeName;
     this.loadTape(this.defaultTape);
 
