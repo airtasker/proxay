@@ -21,7 +21,9 @@ export class Persistence {
    * Saves the tape to disk.
    */
   saveTapeToDisk(tapeName: string, tapeRecords: TapeRecord[]) {
-    const persistedTapeRecords = tapeRecords.map(this.redact, this).map(persistTape);
+    const persistedTapeRecords = tapeRecords
+      .map(this.redact, this)
+      .map(persistTape);
     const tapePath = this.getTapePath(tapeName);
     fs.ensureDirSync(path.dirname(tapePath));
     fs.writeFileSync(
@@ -72,10 +74,13 @@ export class Persistence {
 /**
  * Redacts the headers of the given record based on the provided array of headers to redact
  */
-export function redactRequestHeaders(record: TapeRecord, redactHeaders: string[]) {
-  redactHeaders.forEach(header => {
+export function redactRequestHeaders(
+  record: TapeRecord,
+  redactHeaders: string[]
+) {
+  redactHeaders.forEach((header) => {
     if (record.request.headers[header]) {
-      record.request.headers[header] = 'XXXX';
+      record.request.headers[header] = "XXXX";
     }
   });
 }
