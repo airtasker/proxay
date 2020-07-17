@@ -98,7 +98,7 @@ describe("Redaction", () => {
       }
     redactRequestHeaders(record, ['x-auth-token'])
     expect(record.request.headers['x-auth-token']).not.toEqual(sensitiveData)
-    expect(record.request.headers['host']).toEqual(hostname)
+    expect(record.request.headers.host).toEqual(hostname)
   })
 });
 

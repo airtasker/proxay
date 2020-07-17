@@ -27,7 +27,7 @@ async function main(argv: string[]) {
   const defaultTapeName: string = program.defaultTape;
   const host: string = program.host;
   const port = parseInt(program.port, 10);
-  const redactHeaders = program.redactHeaders
+  const redactHeaders: string[] = program.redactHeaders
 
   switch (initialMode) {
     case "record":
@@ -67,7 +67,7 @@ async function main(argv: string[]) {
     host,
     defaultTapeName,
     enableLogging: true,
-    redactHeaders: redactHeaders
+    redactHeaders
   });
   await server.start(port);
   console.log(chalk.green(`Proxying in ${initialMode} mode on port ${port}.`));
