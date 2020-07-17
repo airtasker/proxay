@@ -79,27 +79,27 @@ const BINARY_RESPONSE_GZIP = gzipSync(BINARY_RESPONSE);
 
 describe("Redaction", () => {
   it("redacts specified headers", () => {
-    const sensitiveData = 'some sensitive data';
-    const hostname = 'some-host'
+    const sensitiveData = "some sensitive data";
+    const hostname = "some-host";
     const record = {
-        request: {
-          method: "GET",
-          path: "/path",
-          headers: {host: hostname, 'x-auth-token': sensitiveData},
-          body: Buffer.from(UTF8_REQUEST, "utf8"),
+      request: {
+        method: "GET",
+        path: "/path",
+        headers: { host: hostname, "x-auth-token": sensitiveData },
+        body: Buffer.from(UTF8_REQUEST, "utf8"),
+      },
+      response: {
+        status: {
+          code: 200,
         },
-        response: {
-          status: {
-            code: 200,
-          },
-          headers: {},
-          body: Buffer.from(UTF8_RESPONSE, "utf8"),
-        },
-      }
-    redactRequestHeaders(record, ['x-auth-token'])
-    expect(record.request.headers['x-auth-token']).not.toEqual(sensitiveData)
-    expect(record.request.headers.host).toEqual(hostname)
-  })
+        headers: {},
+        body: Buffer.from(UTF8_RESPONSE, "utf8"),
+      },
+    };
+    redactRequestHeaders(record, ["x-auth-token"]);
+    expect(record.request.headers["x-auth-token"]).not.toEqual(sensitiveData);
+    expect(record.request.headers.host).toEqual(hostname);
+  });
 });
 
 describe("Persistence", () => {
