@@ -68,6 +68,6 @@
     "ts-node-dev": "^1.0.0-pre.51",
     "tslint": "^6.1.2",
     "tslint-config-prettier": "^1.18.0",
-    "typescript": "^3.9.6"
+    "typescript": "^3.9.7"
   }
 }
