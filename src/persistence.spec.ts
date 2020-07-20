@@ -1,6 +1,6 @@
 import brotli from "brotli";
 import { gzipSync } from "zlib";
-import { persistTape, reviveTape } from "./persistence";
+import { persistTape, reviveTape, redactRequestHeaders } from "./persistence";
 
 // Note the repetition. This is necessary otherwise Brotli compression
 // will be null.
@@ -76,6 +76,31 @@ const UTF8_REQUEST_GZIP = gzipSync(Buffer.from(UTF8_REQUEST, "utf8"));
 const UTF8_RESPONSE_GZIP = gzipSync(Buffer.from(UTF8_RESPONSE, "utf8"));
 const BINARY_REQUEST_GZIP = gzipSync(BINARY_REQUEST);
 const BINARY_RESPONSE_GZIP = gzipSync(BINARY_RESPONSE);
+
+describe("Redaction", () => {
+  it("redacts specified headers", () => {
+    const sensitiveData = "some sensitive data";
+    const hostname = "some-host";
+    const record = {
+      request: {
+        method: "GET",
+        path: "/path",
+        headers: { host: hostname, "x-auth-token": sensitiveData },
+        body: Buffer.from(UTF8_REQUEST, "utf8"),
+      },
+      response: {
+        status: {
+          code: 200,
+        },
+        headers: {},
+        body: Buffer.from(UTF8_RESPONSE, "utf8"),
+      },
+    };
+    redactRequestHeaders(record, ["x-auth-token"]);
+    expect(record.request.headers["x-auth-token"]).toEqual("XXXX");
+    expect(record.request.headers.host).toEqual(hostname);
+  });
+});
 
 describe("Persistence", () => {
   it("persists utf-8", () => {

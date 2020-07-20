@@ -15,13 +15,18 @@ import {
  * Persistence layer to save tapes to disk and read them from disk.
  */
 export class Persistence {
-  constructor(private tapeDir: string) {}
+  constructor(
+    private readonly tapeDir: string,
+    private readonly redactHeaders: string[]
+  ) {}
 
   /**
    * Saves the tape to disk.
    */
   saveTapeToDisk(tapeName: string, tapeRecords: TapeRecord[]) {
-    const persistedTapeRecords = tapeRecords.map(persistTape);
+    const persistedTapeRecords = tapeRecords
+      .map(this.redact, this)
+      .map(persistTape);
     const tapePath = this.getTapePath(tapeName);
     fs.ensureDirSync(path.dirname(tapePath));
     fs.writeFileSync(
@@ -31,6 +36,14 @@ export class Persistence {
       }),
       "utf8"
     );
+  }
+
+  /**
+   * Redacts the request headers of the given record, depending on the redactHeaders array
+   */
+  private redact(record: TapeRecord): TapeRecord {
+    redactRequestHeaders(record, this.redactHeaders);
+    return record;
   }
 
   /**
@@ -59,6 +72,20 @@ export class Persistence {
   private getTapePath(tapeName: string) {
     return path.join(this.tapeDir, `${tapeName}.yml`);
   }
+}
+
+/**
+ * Redacts the headers of the given record based on the provided array of headers to redact
+ */
+export function redactRequestHeaders(
+  record: TapeRecord,
+  redactHeaders: string[]
+) {
+  redactHeaders.forEach((header) => {
+    if (record.request.headers[header]) {
+      record.request.headers[header] = "XXXX";
+    }
+  });
 }
 
 export function persistTape(record: TapeRecord): PersistedTapeRecord {
