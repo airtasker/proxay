@@ -5,7 +5,7 @@ import program from "commander";
 import fs from "fs-extra";
 import { RecordReplayServer } from "./server";
 
-function commaSeparatedList(value: string, _dummyPrevious?: any) {
+function commaSeparatedList(value: string) {
   return value ? value.split(",") : [];
 }
 

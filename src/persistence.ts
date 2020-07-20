@@ -15,7 +15,10 @@ import {
  * Persistence layer to save tapes to disk and read them from disk.
  */
 export class Persistence {
-  constructor(private readonly tapeDir: string, private readonly redactHeaders: string[]) {}
+  constructor(
+    private readonly tapeDir: string,
+    private readonly redactHeaders: string[]
+  ) {}
 
   /**
    * Saves the tape to disk.
