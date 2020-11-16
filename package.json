@@ -48,7 +48,7 @@
     "fs-extra": "^9.0.1",
     "js-yaml": "^3.14.0",
     "query-string": "^6.13.6",
-    "string-similarity": "^4.0.2"
+    "string-similarity": "^4.0.3"
   },
   "devDependencies": {
     "@types/deep-diff": "^1.0.0",
