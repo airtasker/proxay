@@ -1,0 +1,60 @@
+version: 2
+registries:
+  npm-registry-npm-cloudsmith-io-airtasker-api-codegen:
+    type: npm-registry
+    url: https://npm.cloudsmith.io/airtasker/api-codegen
+    token: "${{secrets.NPM_REGISTRY_NPM_CLOUDSMITH_IO_AIRTASKER_API_CODEGEN_TOKEN}}"
+  npm-registry-npm-cloudsmith-io-airtasker-listings:
+    type: npm-registry
+    url: https://npm.cloudsmith.io/airtasker/listings
+    token: "${{secrets.NPM_REGISTRY_NPM_CLOUDSMITH_IO_AIRTASKER_LISTINGS_TOKEN}}"
+
+updates:
+- package-ecosystem: npm
+  directory: "/"
+  schedule:
+    interval: weekly
+    timezone: Australia/Sydney
+  open-pull-requests-limit: 99
+  ignore:
+  - dependency-name: "@types/fs-extra"
+    versions:
+    - 9.0.10
+    - 9.0.7
+    - 9.0.8
+    - 9.0.9
+  - dependency-name: y18n
+    versions:
+    - 4.0.1
+  - dependency-name: "@types/node"
+    versions:
+    - 14.14.22
+    - 14.14.27
+    - 14.14.31
+    - 14.14.32
+    - 14.14.34
+    - 14.14.35
+    - 14.14.37
+  - dependency-name: "@types/jest"
+    versions:
+    - 26.0.20
+    - 26.0.21
+  - dependency-name: query-string
+    versions:
+    - 6.13.8
+    - 6.14.0
+    - 6.14.1
+  - dependency-name: commander
+    versions:
+    - 7.0.0
+    - 7.1.0
+  - dependency-name: js-yaml
+    versions:
+    - 4.0.0
+  - dependency-name: "@types/js-yaml"
+    versions:
+    - 4.0.0
+  rebase-strategy: disabled
+  registries:
+  - npm-registry-npm-cloudsmith-io-airtasker-api-codegen
+  - npm-registry-npm-cloudsmith-io-airtasker-listings
