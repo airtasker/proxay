@@ -51,7 +51,7 @@
     "string-similarity": "^4.0.4"
   },
   "devDependencies": {
-    "@types/deep-diff": "^1.0.0",
+    "@types/deep-diff": "^1.0.1",
     "@types/express": "^4.17.11",
     "@types/fs-extra": "^9.0.6",
     "@types/jest": "^26.0.19",
