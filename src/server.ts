@@ -1,6 +1,8 @@
 import assertNever from "assert-never";
 import chalk from "chalk";
+import fs from "fs";
 import http from "http";
+import https from "https";
 import { ensureBuffer } from "./buffer";
 import { findNextRecordToReplay, findRecordMatches } from "./matcher";
 import { Mode } from "./modes";
@@ -32,6 +34,8 @@ export class RecordReplayServer {
     timeout?: number;
     enableLogging?: boolean;
     redactHeaders?: string[];
+    httpsKey?: string,
+    httpsCert?: string,
   }) {
     this.currentTapeRecords = [];
     this.mode = options.initialMode;
@@ -43,7 +47,7 @@ export class RecordReplayServer {
     this.defaultTape = options.defaultTapeName;
     this.loadTape(this.defaultTape);
 
-    this.server = http.createServer(async (req, res) => {
+    const handler = async (req: http.IncomingMessage, res: http.ServerResponse) => {
       if (!req.url) {
         if (this.loggingEnabled) {
           console.error(chalk.red("Received a request without URL."));
@@ -85,7 +89,18 @@ export class RecordReplayServer {
         res.statusCode = 500;
         res.end();
       }
-    });
+    };
+
+    if (options.httpsKey && options.httpsCert) {
+      console.info('Enabling HTTPS server')
+      const httpsOptions = {
+        key: fs.readFileSync(options.httpsKey),
+        cert: fs.readFileSync(options.httpsCert),
+      };
+      this.server = https.createServer(httpsOptions, handler);
+    } else {
+      this.server = http.createServer(handler);
+    }
   }
 
   /**

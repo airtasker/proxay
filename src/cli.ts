@@ -19,6 +19,8 @@ async function main(argv: string[]) {
     .option("--default-tape <tape-name>", "Name of the default tape", "default")
     .option("-h, --host <host>", "Host to proxy (not required in replay mode)")
     .option("-p, --port <port>", "Local port to serve on", "3000")
+    .option("--https-key <filename.pem>", "Enable HTTPS server with this key. Also requires --https-cert.")
+    .option("--https-cert <filename.pem>", "Enable HTTPS server with this cert. Also requires --https-key.")
     .option(
       "-r, --redact-headers <headers>",
       "Request headers to redact",
@@ -32,6 +34,8 @@ async function main(argv: string[]) {
   const host: string = program.host;
   const port = parseInt(program.port, 10);
   const redactHeaders: string[] = program.redactHeaders;
+  const httpsKey: string = program.httpsKey;
+  const httpsCert: string = program.httpsCert;
 
   switch (initialMode) {
     case "record":
@@ -72,6 +76,8 @@ async function main(argv: string[]) {
     defaultTapeName,
     enableLogging: true,
     redactHeaders,
+    httpsKey,
+    httpsCert,
   });
   await server.start(port);
   console.log(chalk.green(`Proxying in ${initialMode} mode on port ${port}.`));
