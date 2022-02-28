@@ -115,7 +115,8 @@ export class RecordReplayServer {
         const byte = buffer[0];
 
         let server;
-        if (byte === 22) { // First byte of HTTPS is a 22.
+        // First byte of HTTPS is a 22.
+        if (byte === 22) {
           server = httpsServer;
         } else if (32 < byte && byte < 127) {
           server = httpServer;
