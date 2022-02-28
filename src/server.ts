@@ -34,8 +34,8 @@ export class RecordReplayServer {
     timeout?: number;
     enableLogging?: boolean;
     redactHeaders?: string[];
-    httpsKey?: string,
-    httpsCert?: string,
+    httpsKey?: string;
+    httpsCert?: string;
   }) {
     this.currentTapeRecords = [];
     this.mode = options.initialMode;
@@ -47,7 +47,10 @@ export class RecordReplayServer {
     this.defaultTape = options.defaultTapeName;
     this.loadTape(this.defaultTape);
 
-    const handler = async (req: http.IncomingMessage, res: http.ServerResponse) => {
+    const handler = async (
+      req: http.IncomingMessage,
+      res: http.ServerResponse
+    ) => {
       if (!req.url) {
         if (this.loggingEnabled) {
           console.error(chalk.red("Received a request without URL."));
@@ -92,7 +95,7 @@ export class RecordReplayServer {
     };
 
     if (options.httpsKey && options.httpsCert) {
-      console.info('Enabling HTTPS server')
+      console.info("Enabling HTTPS server");
       const httpsOptions = {
         key: fs.readFileSync(options.httpsKey),
         cert: fs.readFileSync(options.httpsCert),

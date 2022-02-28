@@ -19,8 +19,14 @@ async function main(argv: string[]) {
     .option("--default-tape <tape-name>", "Name of the default tape", "default")
     .option("-h, --host <host>", "Host to proxy (not required in replay mode)")
     .option("-p, --port <port>", "Local port to serve on", "3000")
-    .option("--https-key <filename.pem>", "Enable HTTPS server with this key. Also requires --https-cert.")
-    .option("--https-cert <filename.pem>", "Enable HTTPS server with this cert. Also requires --https-key.")
+    .option(
+      "--https-key <filename.pem>",
+      "Enable HTTPS server with this key. Also requires --https-cert."
+    )
+    .option(
+      "--https-cert <filename.pem>",
+      "Enable HTTPS server with this cert. Also requires --https-key."
+    )
     .option(
       "-r, --redact-headers <headers>",
       "Request headers to redact",
