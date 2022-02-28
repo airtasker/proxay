@@ -105,16 +105,17 @@ export class RecordReplayServer {
       httpsServer = https.createServer(httpsOptions, handler);
     }
 
+    // Copied from https://stackoverflow.com/a/42019773/16286019
     this.server = net.createServer((socket) => {
       socket.once("data", (buffer) => {
         // Pause the socket
         socket.pause();
 
         // Determine if this is an HTTP(s) request
-        let byte = buffer[0];
+        const byte = buffer[0];
 
         let server;
-        if (byte === 22) {
+        if (byte === 22) { // First byte of HTTPS is a 22.
           server = httpsServer;
         } else if (32 < byte && byte < 127) {
           server = httpServer;
