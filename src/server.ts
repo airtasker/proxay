@@ -3,6 +3,7 @@ import chalk from "chalk";
 import fs from "fs";
 import http from "http";
 import https from "https";
+import net from "net";
 import { ensureBuffer } from "./buffer";
 import { findNextRecordToReplay, findRecordMatches } from "./matcher";
 import { Mode } from "./modes";
@@ -14,7 +15,7 @@ import { TapeRecord } from "./tape";
  * A server that proxies or replays requests depending on the mode.
  */
 export class RecordReplayServer {
-  private server: http.Server;
+  private server: net.Server;
   private persistence: Persistence;
 
   private mode: Mode;
@@ -94,16 +95,47 @@ export class RecordReplayServer {
       }
     };
 
+    const httpServer = http.createServer(handler);
+    let httpsServer: https.Server | null = null;
     if (options.httpsKey && options.httpsCert) {
-      console.info("Enabling HTTPS server");
       const httpsOptions = {
         key: fs.readFileSync(options.httpsKey),
         cert: fs.readFileSync(options.httpsCert),
       };
-      this.server = https.createServer(httpsOptions, handler);
-    } else {
-      this.server = http.createServer(handler);
+      httpsServer = https.createServer(httpsOptions, handler);
     }
+
+    this.server = net.createServer((socket) => {
+      socket.once("data", (buffer) => {
+        // Pause the socket
+        socket.pause();
+
+        // Determine if this is an HTTP(s) request
+        let byte = buffer[0];
+
+        let server;
+        if (byte === 22) {
+          server = httpsServer;
+        } else if (32 < byte && byte < 127) {
+          server = httpServer;
+        }
+
+        if (server) {
+          // Push the buffer back onto the front of the data stream
+          socket.unshift(buffer);
+
+          // Emit the socket to the HTTP(s) server
+          server.emit("connection", socket);
+        }
+
+        // As of NodeJS 10.x the socket must be
+        // resumed asynchronously or the socket
+        // connection hangs, potentially crashing
+        // the process. Prior to NodeJS 10.x
+        // the socket may be resumed synchronously.
+        process.nextTick(() => socket.resume());
+      });
+    });
   }
 
   /**
