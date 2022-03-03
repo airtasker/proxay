@@ -165,6 +165,7 @@ export class RecordReplayServer {
       request.path === "/__proxay"
     ) {
       res.end("Proxay!");
+      return;
     }
 
     // Sending a request to /__proxay/tape will pick a specific tape and/or a new mode.
@@ -206,7 +207,12 @@ export class RecordReplayServer {
         this.unloadTape();
         res.end(`Unloaded tape`);
       }
+      return;
     }
+
+    // If we got here, we don't know what to do. Return a 404.
+    res.statusCode = 404;
+    res.end(`Unhandled proxay request.\n\n${JSON.stringify(request)}`);
   }
 
   private async fetchResponse(request: Request): Promise<TapeRecord | null> {
@@ -230,6 +236,7 @@ export class RecordReplayServer {
   private async fetchReplayResponse(
     request: Request
   ): Promise<TapeRecord | null> {
+    console.log(`fetchReplayResponse(${JSON.stringify(request)})`);
     const record = findNextRecordToReplay(
       findRecordMatches(
         this.currentTapeRecords,
