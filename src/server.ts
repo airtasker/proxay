@@ -35,6 +35,7 @@ export class RecordReplayServer {
     timeout?: number;
     enableLogging?: boolean;
     redactHeaders?: string[];
+    httpsCA?: string;
     httpsKey?: string;
     httpsCert?: string;
   }) {
@@ -99,6 +100,7 @@ export class RecordReplayServer {
     let httpsServer: https.Server | null = null;
     if (options.httpsKey && options.httpsCert) {
       const httpsOptions = {
+        ca: options.httpsCA ? fs.readFileSync(options.httpsCA) : undefined,
         key: fs.readFileSync(options.httpsKey),
         cert: fs.readFileSync(options.httpsCert),
       };

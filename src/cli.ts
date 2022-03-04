@@ -20,6 +20,10 @@ async function main(argv: string[]) {
     .option("-h, --host <host>", "Host to proxy (not required in replay mode)")
     .option("-p, --port <port>", "Local port to serve on", "3000")
     .option(
+      "--https-ca <filename.pem>",
+      "Enable HTTPS server with this CA certificate. Also requires --https-key and --https-cert."
+    )
+    .option(
       "--https-key <filename.pem>",
       "Enable HTTPS server with this key. Also requires --https-cert."
     )
@@ -40,6 +44,7 @@ async function main(argv: string[]) {
   const host: string = program.host;
   const port = parseInt(program.port, 10);
   const redactHeaders: string[] = program.redactHeaders;
+  const httpsCA: string = program.httpsCa || "";
   const httpsKey: string = program.httpsKey;
   const httpsCert: string = program.httpsCert;
 
@@ -82,6 +87,7 @@ async function main(argv: string[]) {
     defaultTapeName,
     enableLogging: true,
     redactHeaders,
+    httpsCA,
     httpsKey,
     httpsCert,
   });
