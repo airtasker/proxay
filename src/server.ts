@@ -64,8 +64,9 @@ export class RecordReplayServer {
         this.preventConditionalRequests &&
         (req.method === "GET" || req.method === "HEAD")
       ) {
-        delete req.headers["If-Modified-Since"];
-        delete req.headers["If-None-Match"];
+        // Headers are always coming in as lowercase.
+        delete req.headers["if-modified-since"];
+        delete req.headers["if-none-match"];
         console.log(`Attempted to delete headers. ${req.method} ${JSON.stringify(req.headers)}`);
       }
 
