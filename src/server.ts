@@ -67,7 +67,6 @@ export class RecordReplayServer {
         // Headers are always coming in as lowercase.
         delete req.headers["if-modified-since"];
         delete req.headers["if-none-match"];
-        console.log(`Attempted to delete headers. ${req.method} ${JSON.stringify(req.headers)}`);
       }
 
       try {
