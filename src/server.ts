@@ -23,6 +23,7 @@ export class RecordReplayServer {
   private loggingEnabled: boolean;
   private defaultTape: string;
   private replayedTapes: Set<TapeRecord> = new Set();
+  private preventConditionalRequests?: boolean;
 
   constructor(options: {
     initialMode: Mode;
@@ -32,6 +33,7 @@ export class RecordReplayServer {
     timeout?: number;
     enableLogging?: boolean;
     redactHeaders?: string[];
+    preventConditionalRequests?: boolean;
   }) {
     this.currentTapeRecords = [];
     this.mode = options.initialMode;
@@ -41,6 +43,7 @@ export class RecordReplayServer {
     const redactHeaders = options.redactHeaders || [];
     this.persistence = new Persistence(options.tapeDir, redactHeaders);
     this.defaultTape = options.defaultTapeName;
+    this.preventConditionalRequests = options.preventConditionalRequests;
     this.loadTape(this.defaultTape);
 
     this.server = http.createServer(async (req, res) => {
@@ -55,6 +58,14 @@ export class RecordReplayServer {
           console.error(chalk.red("Received a request without HTTP method."));
         }
         return;
+      }
+
+      if (
+        this.preventConditionalRequests &&
+        (req.method === "GET" || req.method === "HEAD")
+      ) {
+        delete req.headers["If-Modified-Since"];
+        delete req.headers["If-None-Match"];
       }
 
       try {

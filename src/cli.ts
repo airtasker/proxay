@@ -24,6 +24,11 @@ async function main(argv: string[]) {
       "Request headers to redact",
       commaSeparatedList
     )
+    .option(
+      "--prevent-conditional-requests <flag>",
+      "When running in record mode, remove `If-*` headers from outgoing requests in an attempt to prevent the suite of conditional responses being returned (304).",
+      "false"
+    )
     .parse(argv);
 
   const initialMode: string = (program.mode || "").toLowerCase();
@@ -32,6 +37,8 @@ async function main(argv: string[]) {
   const host: string = program.host;
   const port = parseInt(program.port, 10);
   const redactHeaders: string[] = program.redactHeaders;
+  const preventConditionalRequests: boolean =
+    program.preventConditionalRequests === "true";
 
   switch (initialMode) {
     case "record":
@@ -72,6 +79,7 @@ async function main(argv: string[]) {
     defaultTapeName,
     enableLogging: true,
     redactHeaders,
+    preventConditionalRequests,
   });
   await server.start(port);
   console.log(chalk.green(`Proxying in ${initialMode} mode on port ${port}.`));
