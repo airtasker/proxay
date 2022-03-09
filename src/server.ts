@@ -66,6 +66,7 @@ export class RecordReplayServer {
       ) {
         delete req.headers["If-Modified-Since"];
         delete req.headers["If-None-Match"];
+        console.log(`Attempted to delete headers. ${req.method} ${JSON.stringify(req.headers)}`);
       }
 
       try {
