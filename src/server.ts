@@ -123,7 +123,11 @@ export class RecordReplayServer {
         } else if (32 < byte && byte < 127) {
           server = httpServer;
         } else {
-          console.error(chalk.red(`Unexpected starting byte of incoming request: ${byte}. Dropping request.`));
+          console.error(
+            chalk.red(
+              `Unexpected starting byte of incoming request: ${byte}. Dropping request.`
+            )
+          );
         }
 
         if (server) {
