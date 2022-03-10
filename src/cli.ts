@@ -27,7 +27,7 @@ async function main(argv: string[]) {
     .option(
       "--prevent-conditional-requests <flag>",
       "When running in record mode, remove `If-*` headers from outgoing requests in an attempt to prevent the suite of conditional responses being returned (304).",
-      "false"
+      "true"
     )
     .parse(argv);
 
@@ -59,6 +59,12 @@ async function main(argv: string[]) {
   if (initialMode === "replay" && !fs.existsSync(tapeDir)) {
     panic(
       `No tapes found at ${tapeDir}. Did you mean to start in record mode?`
+    );
+  }
+
+  if (initialMode === "record" && preventConditionalRequests) {
+    console.info(
+      "The prevent conditional requests flag is enabled in record mode. All received `If-*` headers will not be forwarded on upstream and will not be recorded in tapes."
     );
   }
 
