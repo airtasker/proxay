@@ -122,6 +122,8 @@ export class RecordReplayServer {
           server = httpsServer;
         } else if (32 < byte && byte < 127) {
           server = httpServer;
+        } else {
+          console.error(chalk.red(`Unexpected starting byte of incoming request: ${byte}. Dropping request.`));
         }
 
         if (server) {
@@ -238,7 +240,6 @@ export class RecordReplayServer {
   private async fetchReplayResponse(
     request: Request
   ): Promise<TapeRecord | null> {
-    console.log(`fetchReplayResponse(${JSON.stringify(request)})`);
     const record = findNextRecordToReplay(
       findRecordMatches(
         this.currentTapeRecords,
