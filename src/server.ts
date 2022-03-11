@@ -26,6 +26,7 @@ export class RecordReplayServer {
   private loggingEnabled: boolean;
   private defaultTape: string;
   private replayedTapes: Set<TapeRecord> = new Set();
+  private preventConditionalRequests?: boolean;
 
   constructor(options: {
     initialMode: Mode;
@@ -35,6 +36,7 @@ export class RecordReplayServer {
     timeout?: number;
     enableLogging?: boolean;
     redactHeaders?: string[];
+    preventConditionalRequests?: boolean;
     httpsCA?: string;
     httpsKey?: string;
     httpsCert?: string;
@@ -47,6 +49,7 @@ export class RecordReplayServer {
     const redactHeaders = options.redactHeaders || [];
     this.persistence = new Persistence(options.tapeDir, redactHeaders);
     this.defaultTape = options.defaultTapeName;
+    this.preventConditionalRequests = options.preventConditionalRequests;
     this.loadTape(this.defaultTape);
 
     const handler = async (
@@ -64,6 +67,15 @@ export class RecordReplayServer {
           console.error(chalk.red("Received a request without HTTP method."));
         }
         return;
+      }
+
+      if (
+        this.preventConditionalRequests &&
+        (req.method === "GET" || req.method === "HEAD")
+      ) {
+        // Headers are always coming in as lowercase.
+        delete req.headers["if-modified-since"];
+        delete req.headers["if-none-match"];
       }
 
       try {

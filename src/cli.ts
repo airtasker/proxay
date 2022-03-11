@@ -36,6 +36,10 @@ async function main(argv: string[]) {
       "Request headers to redact",
       commaSeparatedList
     )
+    .option(
+      "--no-drop-conditional-request-headers",
+      "When running in record mode, by default, `If-*` headers from outgoing requests are dropped in an attempt to prevent the suite of conditional responses being returned (e.g. 304). Supplying this flag disables this default behaviour"
+    )
     .parse(argv);
 
   const initialMode: string = (program.mode || "").toLowerCase();
@@ -44,6 +48,7 @@ async function main(argv: string[]) {
   const host: string = program.host;
   const port = parseInt(program.port, 10);
   const redactHeaders: string[] = program.redactHeaders;
+  const preventConditionalRequests: boolean = !!program.dropConditionalRequestHeaders;
   const httpsCA: string = program.httpsCa || "";
   const httpsKey: string = program.httpsKey;
   const httpsCert: string = program.httpsCert;
@@ -70,6 +75,12 @@ async function main(argv: string[]) {
     );
   }
 
+  if (preventConditionalRequests && initialMode === "record") {
+    console.info(
+      "The prevent conditional requests flag is enabled in record mode. All received `If-*` headers will not be forwarded on upstream and will not be recorded in tapes."
+    );
+  }
+
   // Expect a host unless we're in replay mode.
   if (initialMode !== "replay") {
     if (!host) {
@@ -87,6 +98,7 @@ async function main(argv: string[]) {
     defaultTapeName,
     enableLogging: true,
     redactHeaders,
+    preventConditionalRequests,
     httpsCA,
     httpsKey,
     httpsCert,
