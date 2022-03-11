@@ -25,9 +25,8 @@ async function main(argv: string[]) {
       commaSeparatedList
     )
     .option(
-      "--prevent-conditional-requests <flag>",
-      "When running in record mode, remove `If-*` headers from outgoing requests in an attempt to prevent the suite of conditional responses being returned (304).",
-      "true"
+      "--no-drop-conditional-request-headers",
+      "When running in record mode, by default, `If-*` headers from outgoing requests are dropped in an attempt to prevent the suite of conditional responses being returned (e.g. 304). Supplying this flag disables this default behaviour"
     )
     .parse(argv);
 
@@ -37,8 +36,7 @@ async function main(argv: string[]) {
   const host: string = program.host;
   const port = parseInt(program.port, 10);
   const redactHeaders: string[] = program.redactHeaders;
-  const preventConditionalRequests: boolean =
-    program.preventConditionalRequests === "true";
+  const preventConditionalRequests: boolean = !!program.dropConditionalRequestHeaders;
 
   switch (initialMode) {
     case "record":
@@ -62,7 +60,7 @@ async function main(argv: string[]) {
     );
   }
 
-  if (initialMode === "record" && preventConditionalRequests) {
+  if (preventConditionalRequests && initialMode === "record") {
     console.info(
       "The prevent conditional requests flag is enabled in record mode. All received `If-*` headers will not be forwarded on upstream and will not be recorded in tapes."
     );
