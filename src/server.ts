@@ -1,6 +1,9 @@
 import assertNever from "assert-never";
 import chalk from "chalk";
+import fs from "fs";
 import http from "http";
+import https from "https";
+import net from "net";
 import { ensureBuffer } from "./buffer";
 import { findNextRecordToReplay, findRecordMatches } from "./matcher";
 import { Mode } from "./modes";
@@ -12,7 +15,7 @@ import { TapeRecord } from "./tape";
  * A server that proxies or replays requests depending on the mode.
  */
 export class RecordReplayServer {
-  private server: http.Server;
+  private server: net.Server;
   private persistence: Persistence;
 
   private mode: Mode;
@@ -34,6 +37,9 @@ export class RecordReplayServer {
     enableLogging?: boolean;
     redactHeaders?: string[];
     preventConditionalRequests?: boolean;
+    httpsCA?: string;
+    httpsKey?: string;
+    httpsCert?: string;
   }) {
     this.currentTapeRecords = [];
     this.mode = options.initialMode;
@@ -46,7 +52,10 @@ export class RecordReplayServer {
     this.preventConditionalRequests = options.preventConditionalRequests;
     this.loadTape(this.defaultTape);
 
-    this.server = http.createServer(async (req, res) => {
+    const handler = async (
+      req: http.IncomingMessage,
+      res: http.ServerResponse
+    ) => {
       if (!req.url) {
         if (this.loggingEnabled) {
           console.error(chalk.red("Received a request without URL."));
@@ -97,6 +106,57 @@ export class RecordReplayServer {
         res.statusCode = 500;
         res.end();
       }
+    };
+
+    const httpServer = http.createServer(handler);
+    let httpsServer: https.Server | null = null;
+    if (options.httpsKey && options.httpsCert) {
+      const httpsOptions = {
+        ca: options.httpsCA ? fs.readFileSync(options.httpsCA) : undefined,
+        key: fs.readFileSync(options.httpsKey),
+        cert: fs.readFileSync(options.httpsCert),
+      };
+      httpsServer = https.createServer(httpsOptions, handler);
+    }
+
+    // Copied from https://stackoverflow.com/a/42019773/16286019
+    this.server = net.createServer((socket) => {
+      socket.once("data", (buffer) => {
+        // Pause the socket
+        socket.pause();
+
+        // Determine if this is an HTTP(s) request
+        const byte = buffer[0];
+
+        let server;
+        // First byte of HTTPS is a 22.
+        if (byte === 22) {
+          server = httpsServer;
+        } else if (32 < byte && byte < 127) {
+          server = httpServer;
+        } else {
+          console.error(
+            chalk.red(
+              `Unexpected starting byte of incoming request: ${byte}. Dropping request.`
+            )
+          );
+        }
+
+        if (server) {
+          // Push the buffer back onto the front of the data stream
+          socket.unshift(buffer);
+
+          // Emit the socket to the HTTP(s) server
+          server.emit("connection", socket);
+        }
+
+        // As of NodeJS 10.x the socket must be
+        // resumed asynchronously or the socket
+        // connection hangs, potentially crashing
+        // the process. Prior to NodeJS 10.x
+        // the socket may be resumed synchronously.
+        process.nextTick(() => socket.resume());
+      });
     });
   }
 
@@ -125,6 +185,7 @@ export class RecordReplayServer {
       request.path === "/__proxay"
     ) {
       res.end("Proxay!");
+      return;
     }
 
     // Sending a request to /__proxay/tape will pick a specific tape and/or a new mode.
@@ -166,7 +227,12 @@ export class RecordReplayServer {
         this.unloadTape();
         res.end(`Unloaded tape`);
       }
+      return;
     }
+
+    // If we got here, we don't know what to do. Return a 404.
+    res.statusCode = 404;
+    res.end(`Unhandled proxay request.\n\n${JSON.stringify(request)}`);
   }
 
   private async fetchResponse(request: Request): Promise<TapeRecord | null> {

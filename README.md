@@ -45,6 +45,8 @@ proxay --mode passthrough --host https://api.website.com
 You can also run several instances of Proxay simultaneously on different ports (for example to proxy
 multiple backends). Just pick a different port (e.g. `--port 3001`).
 
+If you want proxay to accept incoming requests on HTTPS in addition to HTTP, you can provide the HTTPS key and certificate files in PEM format on the `--https-key` and `--https-cert` arguments respectively. If the HTTPS certificate is self-signed, you probably also want to provide the CA certificate in PEM format on `--https-ca`. See the `key`, `cert`, and `ca` arguments to [`tls.createSecureContext`](https://nodejs.org/api/tls.html#tlscreatesecurecontextoptions) for what these mean.
+
 ## Specifying a tape
 
 If you have several tests, you likely want to save recorded interactions into one tape per test,
