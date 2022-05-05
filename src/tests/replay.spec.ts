@@ -11,7 +11,7 @@ import {
 } from "./testserver";
 
 describe("Replay", () => {
-  setupServers({ mode: "replay" });
+  const servers = setupServers({ mode: "replay" });
 
   test("response: simple text", async () => {
     const response = await axios.get(`${PROXAY_HOST}${SIMPLE_TEXT_PATH}`);
@@ -36,11 +36,17 @@ describe("Replay", () => {
     });
   });
 
-  test("cannot pick a tape that does not exist", async () => {
-    await expect(
-      axios.post(`${PROXAY_HOST}/__proxay/tape`, {
-        tape: "does-not-exist-tape",
-      })
-    ).rejects.toEqual(new Error("Request failed with status code 404"));
+  test("makes the original request if no tape is found", async () => {
+    const requestCount = servers.backend.requestCount;
+
+    // Neither calls will be recorded.
+    expect((await axios.get(`${PROXAY_HOST}/only-records`)).data).toBe(
+        "/only-records"
+    );
+    expect((await axios.get(`${PROXAY_HOST}/only-records`)).data).toBe(
+        "/only-records"
+    );
+    expect(servers.backend.requestCount).toBe(requestCount + 2); // Unchanged.
   });
+
 });

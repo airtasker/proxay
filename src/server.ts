@@ -279,6 +279,8 @@ export class RecordReplayServer {
           )
         );
       }
+      // If no tape is found attempt to make the original request
+      return this.fetchPassthroughResponse(request)
     }
     return record;
   }
