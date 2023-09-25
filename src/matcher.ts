@@ -1,4 +1,4 @@
-import { RewriteRule } from "./rewrite";
+import { RewriteRules } from "./rewrite";
 import { computeSimilarity } from "./similarity";
 import { Headers, TapeRecord } from "./tape";
 
@@ -47,7 +47,7 @@ export function findRecordMatches(
   requestPath: string,
   requestHeaders: Headers,
   requestBody: Buffer,
-  rewriteBeforeDiffRules: RewriteRule[]
+  rewriteBeforeDiffRules: RewriteRules
 ): TapeRecord[] {
   let bestSimilarityScore = +Infinity;
   let bestMatches: TapeRecord[] = [];

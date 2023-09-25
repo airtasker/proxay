@@ -1,7 +1,7 @@
 import { diff } from "deep-diff";
 import queryString from "query-string";
 import { compareTwoStrings } from "string-similarity";
-import { RewriteRule } from "./rewrite";
+import { RewriteRules } from "./rewrite";
 import { serialiseBuffer } from "./persistence";
 import { Headers, PersistedBuffer, TapeRecord } from "./tape";
 
@@ -18,7 +18,7 @@ export function computeSimilarity(
   requestHeaders: Headers,
   requestBody: Buffer,
   compareTo: TapeRecord,
-  rewriteBeforeDiffRules: RewriteRule[]
+  rewriteBeforeDiffRules: RewriteRules
 ): number {
   if (requestMethod !== compareTo.request.method) {
     // If the HTTP method is different, no match.
@@ -61,7 +61,7 @@ export function computeSimilarity(
 function countBodyDifferences(
   a: PersistedBuffer,
   b: PersistedBuffer,
-  rewriteBeforeDiffRules: RewriteRule[]
+  rewriteBeforeDiffRules: RewriteRules
 ): number {
   if (a.encoding === "utf8" && b.encoding === "utf8") {
     try {
@@ -84,42 +84,16 @@ function countBodyDifferences(
   return +Infinity;
 }
 
-function applyRewriteRules<T>(value: T, rewriteRules: RewriteRule[]): T {
-  if (typeof value === "object" && value !== null) {
-    // If the object is an array, iterate through each element and call the function recursively
-    if (Array.isArray(value)) {
-      return (value.map((v) => applyRewriteRules(v, rewriteRules)) as any) as T;
-    }
-
-    // If the object is not an array, create a new object with the same keys,
-    // and call the function recursively on each value
-    const oldObj = value as { [key: string]: any };
-    const newObj: { [key: string]: any } = {};
-    for (const key of Object.keys(oldObj)) {
-      newObj[key] = applyRewriteRules(oldObj[key], rewriteRules);
-    }
-    return newObj as T;
-  } else if (typeof value === "string") {
-    let s = value as string;
-    for (const rule of rewriteRules) {
-      s = rule.apply(value);
-    }
-    return (s as any) as T;
-  } else {
-    return value;
-  }
-}
-
 /**
  * Returns the number of fields that differ between two objects.
  */
 function countObjectDifferences(
   a: object,
   b: object,
-  rewriteRules: RewriteRule[]
+  rewriteRules: RewriteRules
 ) {
-  a = applyRewriteRules(a, rewriteRules);
-  b = applyRewriteRules(b, rewriteRules);
+  a = rewriteRules.apply(a);
+  b = rewriteRules.apply(b);
 
   return (diff(a, b) || []).length;
 }
@@ -130,13 +104,11 @@ function countObjectDifferences(
 function countStringDifferences(
   a: string,
   b: string,
-  rewriteRules: RewriteRule[]
+  rewriteRules: RewriteRules
 ) {
   // Apply the rewrite rules before computing any differences.
-  for (const rule of rewriteRules) {
-    a = rule.apply(a);
-    b = rule.apply(b);
-  }
+  a = rewriteRules.apply(a);
+  b = rewriteRules.apply(b);
 
   // It looks like it's not JSON, so compare as strings.
   const stringSimilarityScore = compareTwoStrings(a, b);

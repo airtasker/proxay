@@ -8,7 +8,7 @@ import { ensureBuffer } from "./buffer";
 import { findNextRecordToReplay, findRecordMatches } from "./matcher";
 import { Mode } from "./modes";
 import { Persistence } from "./persistence";
-import { RewriteRule } from "./rewrite";
+import { RewriteRules } from "./rewrite";
 import { Request, send } from "./sender";
 import { TapeRecord } from "./tape";
 
@@ -28,7 +28,7 @@ export class RecordReplayServer {
   private defaultTape: string;
   private replayedTapes: Set<TapeRecord> = new Set();
   private preventConditionalRequests?: boolean;
-  private rewriteBeforeDiffRules: RewriteRule[];
+  private rewriteBeforeDiffRules: RewriteRules;
 
   constructor(options: {
     initialMode: Mode;
@@ -42,7 +42,7 @@ export class RecordReplayServer {
     httpsCA?: string;
     httpsKey?: string;
     httpsCert?: string;
-    rewriteBeforeDiffRules: RewriteRule[];
+    rewriteBeforeDiffRules: RewriteRules;
   }) {
     this.currentTapeRecords = [];
     this.mode = options.initialMode;
