@@ -8,6 +8,7 @@ import { ensureBuffer } from "./buffer";
 import { findNextRecordToReplay, findRecordMatches } from "./matcher";
 import { Mode } from "./modes";
 import { Persistence } from "./persistence";
+import { RewriteRule } from "./rewrite";
 import { Request, send } from "./sender";
 import { TapeRecord } from "./tape";
 
@@ -27,6 +28,7 @@ export class RecordReplayServer {
   private defaultTape: string;
   private replayedTapes: Set<TapeRecord> = new Set();
   private preventConditionalRequests?: boolean;
+  private rewriteBeforeDiffRules: RewriteRule[];
 
   constructor(options: {
     initialMode: Mode;
@@ -40,6 +42,7 @@ export class RecordReplayServer {
     httpsCA?: string;
     httpsKey?: string;
     httpsCert?: string;
+    rewriteBeforeDiffRules: RewriteRule[];
   }) {
     this.currentTapeRecords = [];
     this.mode = options.initialMode;
@@ -50,6 +53,7 @@ export class RecordReplayServer {
     this.persistence = new Persistence(options.tapeDir, redactHeaders);
     this.defaultTape = options.defaultTapeName;
     this.preventConditionalRequests = options.preventConditionalRequests;
+    this.rewriteBeforeDiffRules = options.rewriteBeforeDiffRules;
     this.loadTape(this.defaultTape);
 
     const handler = async (
@@ -262,7 +266,8 @@ export class RecordReplayServer {
         request.method,
         request.path,
         request.headers,
-        request.body
+        request.body,
+        this.rewriteBeforeDiffRules
       ),
       this.replayedTapes
     );
@@ -324,7 +329,8 @@ export class RecordReplayServer {
         request.method,
         request.path,
         request.headers,
-        request.body
+        request.body,
+        this.rewriteBeforeDiffRules
       ),
       this.replayedTapes
     );

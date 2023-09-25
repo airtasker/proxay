@@ -13,101 +13,157 @@ const DUMMY_RESPONSE = {
 describe("similarity", () => {
   it("detects exact matches", () => {
     expect(
-      computeSimilarity("POST", "/test", {}, Buffer.from([]), {
-        request: {
-          method: "POST",
-          path: "/test",
-          headers: {},
-          body: Buffer.from([]),
+      computeSimilarity(
+        "POST",
+        "/test",
+        {},
+        Buffer.from([]),
+        {
+          request: {
+            method: "POST",
+            path: "/test",
+            headers: {},
+            body: Buffer.from([]),
+          },
+          response: DUMMY_RESPONSE,
         },
-        response: DUMMY_RESPONSE,
-      })
+        []
+      )
     ).toBe(0);
   });
 
   it("excludes mismatching methods", () => {
     expect(
-      computeSimilarity("GET", "/test", {}, Buffer.from([]), {
-        request: {
-          method: "POST",
-          path: "/test",
-          headers: {},
-          body: Buffer.from([]),
+      computeSimilarity(
+        "GET",
+        "/test",
+        {},
+        Buffer.from([]),
+        {
+          request: {
+            method: "POST",
+            path: "/test",
+            headers: {},
+            body: Buffer.from([]),
+          },
+          response: DUMMY_RESPONSE,
         },
-        response: DUMMY_RESPONSE,
-      })
+        []
+      )
     ).toBe(Infinity);
   });
 
   it("excludes mismatching paths", () => {
     expect(
-      computeSimilarity("POST", "/test", {}, Buffer.from([]), {
-        request: {
-          method: "POST",
-          path: "/test/other",
-          headers: {},
-          body: Buffer.from([]),
+      computeSimilarity(
+        "POST",
+        "/test",
+        {},
+        Buffer.from([]),
+        {
+          request: {
+            method: "POST",
+            path: "/test/other",
+            headers: {},
+            body: Buffer.from([]),
+          },
+          response: DUMMY_RESPONSE,
         },
-        response: DUMMY_RESPONSE,
-      })
+        []
+      )
     ).toBe(Infinity);
   });
 
   it("counts query parameters differences", () => {
     expect(
-      computeSimilarity("POST", "/test", {}, Buffer.from([]), {
-        request: {
-          method: "POST",
-          path: "/test?c=d",
-          headers: {},
-          body: Buffer.from([]),
+      computeSimilarity(
+        "POST",
+        "/test",
+        {},
+        Buffer.from([]),
+        {
+          request: {
+            method: "POST",
+            path: "/test?c=d",
+            headers: {},
+            body: Buffer.from([]),
+          },
+          response: DUMMY_RESPONSE,
         },
-        response: DUMMY_RESPONSE,
-      })
+        []
+      )
     ).toBe(1);
     expect(
-      computeSimilarity("POST", "/test?a=b", {}, Buffer.from([]), {
-        request: {
-          method: "POST",
-          path: "/test",
-          headers: {},
-          body: Buffer.from([]),
+      computeSimilarity(
+        "POST",
+        "/test?a=b",
+        {},
+        Buffer.from([]),
+        {
+          request: {
+            method: "POST",
+            path: "/test",
+            headers: {},
+            body: Buffer.from([]),
+          },
+          response: DUMMY_RESPONSE,
         },
-        response: DUMMY_RESPONSE,
-      })
+        []
+      )
     ).toBe(1);
     expect(
-      computeSimilarity("POST", "/test?a=b", {}, Buffer.from([]), {
-        request: {
-          method: "POST",
-          path: "/test?c=d",
-          headers: {},
-          body: Buffer.from([]),
+      computeSimilarity(
+        "POST",
+        "/test?a=b",
+        {},
+        Buffer.from([]),
+        {
+          request: {
+            method: "POST",
+            path: "/test?c=d",
+            headers: {},
+            body: Buffer.from([]),
+          },
+          response: DUMMY_RESPONSE,
         },
-        response: DUMMY_RESPONSE,
-      })
+        []
+      )
     ).toBe(2);
     expect(
-      computeSimilarity("POST", "/test?a=b&c=d", {}, Buffer.from([]), {
-        request: {
-          method: "POST",
-          path: "/test?a=b&c=d",
-          headers: {},
-          body: Buffer.from([]),
+      computeSimilarity(
+        "POST",
+        "/test?a=b&c=d",
+        {},
+        Buffer.from([]),
+        {
+          request: {
+            method: "POST",
+            path: "/test?a=b&c=d",
+            headers: {},
+            body: Buffer.from([]),
+          },
+          response: DUMMY_RESPONSE,
         },
-        response: DUMMY_RESPONSE,
-      })
+        []
+      )
     ).toBe(0);
     expect(
-      computeSimilarity("POST", "/test?c=f&a=b", {}, Buffer.from([]), {
-        request: {
-          method: "POST",
-          path: "/test?a=b&c=d",
-          headers: {},
-          body: Buffer.from([]),
+      computeSimilarity(
+        "POST",
+        "/test?c=f&a=b",
+        {},
+        Buffer.from([]),
+        {
+          request: {
+            method: "POST",
+            path: "/test?a=b&c=d",
+            headers: {},
+            body: Buffer.from([]),
+          },
+          response: DUMMY_RESPONSE,
         },
-        response: DUMMY_RESPONSE,
-      })
+        []
+      )
     ).toBe(1);
   });
 
@@ -137,7 +193,8 @@ describe("similarity", () => {
             body: Buffer.from([]),
           },
           response: DUMMY_RESPONSE,
-        }
+        },
+        []
       )
     ).toBe(0);
     expect(
@@ -164,7 +221,8 @@ describe("similarity", () => {
             body: Buffer.from([]),
           },
           response: DUMMY_RESPONSE,
-        }
+        },
+        []
       )
     ).toBe(1);
     expect(
@@ -192,7 +250,8 @@ describe("similarity", () => {
             body: Buffer.from([]),
           },
           response: DUMMY_RESPONSE,
-        }
+        },
+        []
       )
     ).toBe(1);
   });
@@ -221,7 +280,8 @@ describe("similarity", () => {
             }),
           },
           response: DUMMY_RESPONSE,
-        }
+        },
+        []
       )
     ).toBe(0);
 
@@ -251,7 +311,8 @@ describe("similarity", () => {
             }),
           },
           response: DUMMY_RESPONSE,
-        }
+        },
+        []
       )
     ).toBe(1);
 
@@ -278,33 +339,48 @@ describe("similarity", () => {
             }),
           },
           response: DUMMY_RESPONSE,
-        }
+        },
+        []
       )
     ).toBe(6);
   });
 
   it("relies on string similarity", () => {
     expect(
-      computeSimilarity("POST", "/test", {}, Buffer.from("abc"), {
-        request: {
-          method: "POST",
-          path: "/test",
-          headers: {},
-          body: Buffer.from("abc"),
+      computeSimilarity(
+        "POST",
+        "/test",
+        {},
+        Buffer.from("abc"),
+        {
+          request: {
+            method: "POST",
+            path: "/test",
+            headers: {},
+            body: Buffer.from("abc"),
+          },
+          response: DUMMY_RESPONSE,
         },
-        response: DUMMY_RESPONSE,
-      })
+        []
+      )
     ).toBe(0);
     expect(
-      computeSimilarity("POST", "/test", {}, Buffer.from("hello world"), {
-        request: {
-          method: "POST",
-          path: "/test",
-          headers: {},
-          body: Buffer.from("hello Kevin"),
+      computeSimilarity(
+        "POST",
+        "/test",
+        {},
+        Buffer.from("hello world"),
+        {
+          request: {
+            method: "POST",
+            path: "/test",
+            headers: {},
+            body: Buffer.from("hello Kevin"),
+          },
+          response: DUMMY_RESPONSE,
         },
-        response: DUMMY_RESPONSE,
-      })
+        []
+      )
     ).toBe(6);
   });
 
@@ -316,26 +392,40 @@ describe("similarity", () => {
       path.join(__dirname, "..", "testdata", "avatar-small.jpg")
     );
     expect(
-      computeSimilarity("POST", "/test", {}, avatarFile1, {
-        request: {
-          method: "POST",
-          path: "/test",
-          headers: {},
-          body: avatarFile1,
+      computeSimilarity(
+        "POST",
+        "/test",
+        {},
+        avatarFile1,
+        {
+          request: {
+            method: "POST",
+            path: "/test",
+            headers: {},
+            body: avatarFile1,
+          },
+          response: DUMMY_RESPONSE,
         },
-        response: DUMMY_RESPONSE,
-      })
+        []
+      )
     ).toBe(0);
     expect(
-      computeSimilarity("POST", "/test", {}, avatarFile1, {
-        request: {
-          method: "POST",
-          path: "/test",
-          headers: {},
-          body: avatarFile2,
+      computeSimilarity(
+        "POST",
+        "/test",
+        {},
+        avatarFile1,
+        {
+          request: {
+            method: "POST",
+            path: "/test",
+            headers: {},
+            body: avatarFile2,
+          },
+          response: DUMMY_RESPONSE,
         },
-        response: DUMMY_RESPONSE,
-      })
+        []
+      )
     ).toBe(5149);
   });
 });

@@ -1,6 +1,7 @@
 import { diff } from "deep-diff";
 import queryString from "query-string";
 import { compareTwoStrings } from "string-similarity";
+import { RewriteRule } from "./rewrite";
 import { serialiseBuffer } from "./persistence";
 import { Headers, PersistedBuffer, TapeRecord } from "./tape";
 
@@ -16,7 +17,8 @@ export function computeSimilarity(
   requestPath: string,
   requestHeaders: Headers,
   requestBody: Buffer,
-  compareTo: TapeRecord
+  compareTo: TapeRecord,
+  rewriteBeforeDiffRules: RewriteRule[]
 ): number {
   if (requestMethod !== compareTo.request.method) {
     // If the HTTP method is different, no match.
@@ -39,44 +41,102 @@ export function computeSimilarity(
     compareTo.request.headers
   );
   return (
-    countObjectDifferences(parsedQuery, parsedCompareToQuery) +
-    countObjectDifferences(headers, compareToHeaders) +
-    countBodyDifferences(serialisedRequestBody, serialisedCompareToRequestBody)
+    countObjectDifferences(
+      parsedQuery,
+      parsedCompareToQuery,
+      rewriteBeforeDiffRules
+    ) +
+    countObjectDifferences(headers, compareToHeaders, rewriteBeforeDiffRules) +
+    countBodyDifferences(
+      serialisedRequestBody,
+      serialisedCompareToRequestBody,
+      rewriteBeforeDiffRules
+    )
   );
 }
 
 /**
  * Returns the numbers of differences between two persisted body buffers.
  */
-function countBodyDifferences(a: PersistedBuffer, b: PersistedBuffer): number {
+function countBodyDifferences(
+  a: PersistedBuffer,
+  b: PersistedBuffer,
+  rewriteBeforeDiffRules: RewriteRule[]
+): number {
   if (a.encoding === "utf8" && b.encoding === "utf8") {
     try {
       const requestBodyJson = JSON.parse(a.data || "{}");
       const recordBodyJson = JSON.parse(b.data || "{}");
       // Return the number of fields that differ in JSON.
-      return countObjectDifferences(requestBodyJson, recordBodyJson);
+      return countObjectDifferences(
+        requestBodyJson,
+        recordBodyJson,
+        rewriteBeforeDiffRules
+      );
     } catch (e) {
-      return countStringDifferences(a.data, b.data);
+      return countStringDifferences(a.data, b.data, rewriteBeforeDiffRules);
     }
   }
   if (a.encoding === "base64" && b.encoding === "base64") {
-    return countStringDifferences(a.data, b.data);
+    return countStringDifferences(a.data, b.data, rewriteBeforeDiffRules);
   }
   // If we couldn't compare, then we'll assume they don't match.
   return +Infinity;
 }
 
+function applyRewriteRules<T>(value: T, rewriteRules: RewriteRule[]): T {
+  if (typeof value === "object" && value !== null) {
+    // If the object is an array, iterate through each element and call the function recursively
+    if (Array.isArray(value)) {
+      return (value.map((v) => applyRewriteRules(v, rewriteRules)) as any) as T;
+    }
+
+    // If the object is not an array, create a new object with the same keys,
+    // and call the function recursively on each value
+    const newObj: { [key: string]: any } = {};
+    for (const key in value) {
+      newObj[key] = applyRewriteRules(value[key], rewriteRules);
+    }
+    return newObj as T;
+  } else if (typeof value === "string") {
+    let s = value as string;
+    for (const rule of rewriteRules) {
+      s = rule.apply(value);
+    }
+    return (s as any) as T;
+  } else {
+    return value;
+  }
+}
+
 /**
  * Returns the number of fields that differ between two objects.
  */
-function countObjectDifferences(a: object, b: object) {
+function countObjectDifferences(
+  a: object,
+  b: object,
+  rewriteRules: RewriteRule[]
+) {
+  a = applyRewriteRules(a, rewriteRules);
+  b = applyRewriteRules(b, rewriteRules);
+
   return (diff(a, b) || []).length;
 }
 
 /**
  * Returns the number of characters that differ between two strings.
  */
-function countStringDifferences(a: string, b: string) {
+function countStringDifferences(
+  a: string,
+  b: string,
+  rewriteRules: RewriteRule[]
+) {
+  // Apply the rewrite rules before computing any differences.
+  for (const rule of rewriteRules) {
+    a = rule.apply(a);
+    b = rule.apply(b);
+  }
+
   // It looks like it's not JSON, so compare as strings.
   const stringSimilarityScore = compareTwoStrings(a, b);
   // compareTwoStrings() returns 0 for completely different strings,

@@ -35,6 +35,7 @@ export function setupServers({
       defaultTapeName,
       host: TEST_SERVER_HOST,
       timeout: 100,
+      rewriteBeforeDiffRules: [],
     });
     await Promise.all([
       servers.proxy.start(PROXAY_PORT),
