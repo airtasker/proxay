@@ -22,7 +22,7 @@ function rewriteRule(value: string): RewriteRule {
     );
   }
 
-  var find: RegExp;
+  let find: RegExp;
   try {
     find = new RegExp(match[1], match[3]);
   } catch (e) {

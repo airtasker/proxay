@@ -93,9 +93,10 @@ function applyRewriteRules<T>(value: T, rewriteRules: RewriteRule[]): T {
 
     // If the object is not an array, create a new object with the same keys,
     // and call the function recursively on each value
+    const oldObj = value as { [key: string]: any }
     const newObj: { [key: string]: any } = {};
-    for (const key in value) {
-      newObj[key] = applyRewriteRules(value[key], rewriteRules);
+    for (const key of Object.keys(oldObj)) {
+      newObj[key] = applyRewriteRules(oldObj[key], rewriteRules);
     }
     return newObj as T;
   } else if (typeof value === "string") {
