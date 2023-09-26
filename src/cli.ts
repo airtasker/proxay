@@ -21,10 +21,12 @@ function rewriteRule(value: string, rewriteRules: RewriteRules): RewriteRules {
       `Provided rewrite rule ${value} does not look like a sed-like rewrite rule.`
     );
   }
+  const [rawFind, rawReplace, rawFlags] = match.slice(1, 4);
 
+  // Parse the find regex with the given regex flags.
   let find: RegExp;
   try {
-    find = new RegExp(match[1], match[3]);
+    find = new RegExp(rawFind, rawFlags);
   } catch (e) {
     if (e instanceof SyntaxError) {
       throw new Error(`Find regex is syntactically invalid: ${e}`);
@@ -33,13 +35,16 @@ function rewriteRule(value: string, rewriteRules: RewriteRules): RewriteRules {
     }
   }
 
-  const replace = match[2].replace(
+  // Convert sed-style \N capture group replacement values into JavaScript regex $N
+  // capture group replacement values.
+  const replace = rawReplace.replace(
     RE_REPLACE_RULE,
     (m) => "$" + m.substring(1)
   );
 
-  rewriteRules.appendRule(new RewriteRule(find, replace));
-  return rewriteRules;
+  // Append the new rule to the set of rules.
+  const rule = new RewriteRule(find, replace);
+  return rewriteRules.appendRule(rule);
 }
 
 async function main(argv: string[]) {
@@ -75,7 +80,7 @@ async function main(argv: string[]) {
     )
     .option<RewriteRules>(
       "--rewrite-before-diff [s/find/replace/g...]",
-      "Provide regex-based rewrite rules over strings before passing them to the diffing algorithm. The regex rules use sed-style syntax. s/find/replace/ with an optional global modifier suffix. Capture groups can be used using sed-style \\N syntax.",
+      "Provide regex-based rewrite rules over strings before passing them to the diffing algorithm. The regex rules use sed-style syntax. s/find/replace/ with an optional regex modifier suffixes. Capture groups can be used using sed-style \\N syntax. This only is only used during replaying existing tapes.",
       rewriteRule,
       new RewriteRules()
     )

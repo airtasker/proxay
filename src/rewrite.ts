@@ -19,8 +19,9 @@ export class RewriteRules {
     this.rules = [];
   }
 
-  appendRule(rule: RewriteRule) {
+  appendRule(rule: RewriteRule): RewriteRules {
     this.rules.push(rule);
+    return this;
   }
 
   apply<T>(value: T): T {
