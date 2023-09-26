@@ -25,10 +25,19 @@ export class RewriteRules {
   }
 
   apply<T>(value: T): T {
+    // Bail early if we have no rules to apply.
+    if (this.rules.length === 0) {
+      return value;
+    }
+
+    return this._apply(value);
+  }
+
+  private _apply<T>(value: T): T {
     if (typeof value === "object" && value !== null) {
       // If the object is an array, iterate through each element and call the function recursively
       if (Array.isArray(value)) {
-        return (value.map((v) => this.apply(v)) as any) as T;
+        return (value.map((v) => this._apply(v)) as any) as T;
       }
 
       // If the object is not an array, create a new object with the same keys,
@@ -36,8 +45,8 @@ export class RewriteRules {
       const oldObj = value as { [key: string]: any };
       const newObj: { [key: string]: any } = {};
       for (const key of Object.keys(oldObj)) {
-        const newKey = this.apply(key);
-        const newValue = this.apply(oldObj[key]);
+        const newKey = this._apply(key);
+        const newValue = this._apply(oldObj[key]);
         newObj[newKey] = newValue;
       }
       return newObj as T;

@@ -12,12 +12,27 @@ describe("RewriteRule", () => {
 
   describe("with capture groups", () => {
     it("applies the expected changes", () => {
-      const rule = new RewriteRule(/\$([0-9]+)(\.[0-9]+)?/g, "£$1");
-      expect(rule.apply("")).toEqual("");
-      expect(rule.apply("chicken")).toEqual("chicken");
-      expect(rule.apply("They are $5, $7.90, and $1024.9876.")).toEqual(
+      const rule1 = new RewriteRule(/\$([0-9]+)(\.[0-9]+)?/g, "£$1");
+      expect(rule1.apply("")).toEqual("");
+      expect(rule1.apply("chicken")).toEqual("chicken");
+      expect(rule1.apply("They are $5, $7.90, and $1024.9876.")).toEqual(
         "They are £5, £7, and £1024."
       );
+
+      const rule2 = new RewriteRule(
+        /-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(@example.com)$/gi,
+        "$1"
+      );
+      expect(
+        rule2.apply(
+          "jane.doe-some-test-6f82fbbe-d36a-4c5c-b47b-84100122fbbc@example.com"
+        )
+      ).toEqual("jane.doe-some-test@example.com");
+      expect(
+        rule2.apply(
+          "jane.doe-some-test-6F82FBBE-D36A-4C5C-B47B-84100122FBBC@example.com"
+        )
+      ).toEqual("jane.doe-some-test@example.com");
     });
   });
 });

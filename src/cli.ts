@@ -10,12 +10,12 @@ function commaSeparatedList(value: string) {
   return value ? value.split(",") : [];
 }
 
-const RE_REWRITE_RULE = /s\/(.+(?<!\\))\/(.+(?<!\\))\/([gims]*)/;
-const RE_REPLACE_RULE = /(\\[1-9][0-9]*)/;
+const RE_SED_INPUT_VALIDATION = /s\/(.+(?<!\\))\/(.+(?<!\\))\/([gims]*)/;
+const RE_REPLACE_SED_CAPTURE_GROUPS = /(\\[1-9][0-9]*)/;
 
 function rewriteRule(value: string, rewriteRules: RewriteRules): RewriteRules {
   // Does the given value match a sed-style regex expression?
-  const match = RE_REWRITE_RULE.exec(value);
+  const match = RE_SED_INPUT_VALIDATION.exec(value);
   if (match === null) {
     throw new Error(
       `Provided rewrite rule ${value} does not look like a sed-like rewrite rule.`
@@ -38,7 +38,7 @@ function rewriteRule(value: string, rewriteRules: RewriteRules): RewriteRules {
   // Convert sed-style \N capture group replacement values into JavaScript regex $N
   // capture group replacement values.
   const replace = rawReplace.replace(
-    RE_REPLACE_RULE,
+    RE_REPLACE_SED_CAPTURE_GROUPS,
     (m) => "$" + m.substring(1)
   );
 
