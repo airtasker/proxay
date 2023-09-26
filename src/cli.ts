@@ -23,7 +23,7 @@ function rewriteRule(value: string, rewriteRules: RewriteRules): RewriteRules {
   }
   const [rawFind, rawReplace, rawFlags] = match.slice(1, 4);
 
-  // Parse the find regex with the given regex flags.
+  // Parse the found regex with the given regex flags.
   let find: RegExp;
   try {
     find = new RegExp(rawFind, rawFlags);
@@ -80,7 +80,7 @@ async function main(argv: string[]) {
     )
     .option<RewriteRules>(
       "--rewrite-before-diff [s/find/replace/g...]",
-      "Provide regex-based rewrite rules over strings before passing them to the diffing algorithm. The regex rules use sed-style syntax. s/find/replace/ with an optional regex modifier suffixes. Capture groups can be used using sed-style \\N syntax. This only is only used during replaying existing tapes.",
+      "Provide regex-based rewrite rules over strings before passing them to the diffing algorithm. The regex rules use sed-style syntax. s/find/replace/ with an optional regex modifier suffixes. Capture groups can be used using sed-style \\N syntax. This is only used during replaying existing tapes.",
       rewriteRule,
       new RewriteRules()
     )
