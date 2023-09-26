@@ -36,7 +36,9 @@ export class RewriteRules {
       const oldObj = value as { [key: string]: any };
       const newObj: { [key: string]: any } = {};
       for (const key of Object.keys(oldObj)) {
-        newObj[key] = this.apply(oldObj[key]);
+        const newKey = this.apply(key);
+        const newValue = this.apply(oldObj[key]);
+        newObj[newKey] = newValue;
       }
       return newObj as T;
     } else if (typeof value === "string") {
