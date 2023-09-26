@@ -4,7 +4,6 @@ import { Mode } from "../modes";
 import { RecordReplayServer } from "../server";
 import { PROXAY_PORT, TEST_SERVER_HOST, TEST_SERVER_PORT } from "./config";
 import { TestServer } from "./testserver";
-import { RewriteRules } from "../rewrite";
 
 export function setupServers({
   mode,
@@ -36,7 +35,6 @@ export function setupServers({
       defaultTapeName,
       host: TEST_SERVER_HOST,
       timeout: 100,
-      rewriteBeforeDiffRules: new RewriteRules(),
     });
     await Promise.all([
       servers.proxy.start(PROXAY_PORT),

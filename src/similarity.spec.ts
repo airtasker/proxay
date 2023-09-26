@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { computeSimilarity } from "./similarity";
-import { RewriteRules } from "./rewrite";
+import { RewriteRule, RewriteRules } from "./rewrite";
 
 const DUMMY_RESPONSE = {
   headers: {},
@@ -344,6 +344,40 @@ describe("similarity", () => {
         new RewriteRules()
       )
     ).toBe(6);
+
+    // The following payloads are identical after rewrite rules have been applied.
+    expect(
+      computeSimilarity(
+        "POST",
+        "/test",
+        {},
+        compactJsonBuffer({
+          name: "Jane Doe",
+          email:
+            "jane.doe-some-test-6f82fbbe-d36a-4c5c-b47b-84100122fbbc@example.com",
+          age: 42,
+        }),
+        {
+          request: {
+            method: "POST",
+            path: "/test",
+            headers: {},
+            body: wellFormattedJsonBuffer({
+              name: "Jane Doe",
+              email: "jane.doe-some-test@example.com",
+              age: 42,
+            }),
+          },
+          response: DUMMY_RESPONSE,
+        },
+        new RewriteRules().appendRule(
+          new RewriteRule(
+            /-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(@example.com)$/gi,
+            "$1"
+          )
+        )
+      )
+    ).toBe(0);
   });
 
   it("relies on string similarity", () => {

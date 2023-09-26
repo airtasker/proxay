@@ -42,7 +42,7 @@ export class RecordReplayServer {
     httpsCA?: string;
     httpsKey?: string;
     httpsCert?: string;
-    rewriteBeforeDiffRules: RewriteRules;
+    rewriteBeforeDiffRules?: RewriteRules;
   }) {
     this.currentTapeRecords = [];
     this.mode = options.initialMode;
@@ -53,7 +53,8 @@ export class RecordReplayServer {
     this.persistence = new Persistence(options.tapeDir, redactHeaders);
     this.defaultTape = options.defaultTapeName;
     this.preventConditionalRequests = options.preventConditionalRequests;
-    this.rewriteBeforeDiffRules = options.rewriteBeforeDiffRules;
+    this.rewriteBeforeDiffRules =
+      options.rewriteBeforeDiffRules || new RewriteRules();
     this.loadTape(this.defaultTape);
 
     const handler = async (
