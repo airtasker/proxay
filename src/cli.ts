@@ -100,7 +100,7 @@ async function main(argv: string[]) {
   const httpsCA: string = program.httpsCa || "";
   const httpsKey: string = program.httpsKey;
   const httpsCert: string = program.httpsCert;
-  const unframeGrpcWebJsonRequests: boolean = !!program.unframeGrpcWebJsonRequests
+  const unframeGrpcWebJsonRequests: boolean = !!program.unframeGrpcWebJsonRequests;
   const rewriteBeforeDiffRules: RewriteRules = program.rewriteBeforeDiff;
 
   switch (initialMode) {
