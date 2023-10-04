@@ -255,7 +255,7 @@ export class RecordReplayServer {
    * Potentially rewrite the request before processing it.
    */
   private rewriteRequest(request: Request) {
-    const hostname = (request.headers["host"] || null) as string | null;
+    const hostname = (request.headers.host || null) as string | null;
 
     // Potentially unframe a grpc-web+json request.
     if (
