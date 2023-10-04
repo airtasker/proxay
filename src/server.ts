@@ -78,15 +78,6 @@ export class RecordReplayServer {
         return;
       }
 
-      if (
-        this.preventConditionalRequests &&
-        (req.method === "GET" || req.method === "HEAD")
-      ) {
-        // Headers are always coming in as lowercase.
-        delete req.headers["if-modified-since"];
-        delete req.headers["if-none-match"];
-      }
-
       try {
         const request: Request = {
           method: req.method,
@@ -255,7 +246,18 @@ export class RecordReplayServer {
    * Potentially rewrite the request before processing it.
    */
   private rewriteRequest(request: Request) {
+    // Grab the `host` header of the request.
     const hostname = (request.headers.host || null) as string | null;
+
+    // Potentially prevent 304 responses from being able to be generated.
+    if (
+      this.preventConditionalRequests &&
+      (request.method === "GET" || request.method === "HEAD")
+    ) {
+      // Headers are always coming in as lowercase.
+      delete request.headers["if-modified-since"];
+      delete request.headers["if-none-match"];
+    }
 
     // Potentially unframe a grpc-web+json request.
     if (
