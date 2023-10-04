@@ -22,6 +22,8 @@ export const BINARY_RESPONSE = Buffer.from([
   179,
 ]);
 
+export const GRPC_WEB_JSON_PATH = "/grpc-web-json";
+
 /**
  * A test server used as a fake backend.
  */
@@ -33,6 +35,7 @@ export class TestServer {
   constructor() {
     this.app = express();
     this.app.use(express.json());
+    this.app.use(express.raw({ type: () => true }));
     this.app.use((_req, _res, next) => {
       this.requestCount += 1;
       next();
@@ -45,6 +48,10 @@ export class TestServer {
     });
     this.app.get(BINARY_PATH, (_req, res) => {
       res.send(BINARY_RESPONSE);
+    });
+    this.app.post(GRPC_WEB_JSON_PATH, (req, res) => {
+      res.setHeader("content-type", req.headers["content-type"] as string);
+      res.send(req.body);
     });
     this.app.get(JSON_IDENTITY_PATH, (req, res) => {
       res.json({ data: req.path, requestCount: this.requestCount });
