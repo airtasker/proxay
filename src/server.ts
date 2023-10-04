@@ -28,7 +28,7 @@ export class RecordReplayServer {
   private defaultTape: string;
   private replayedTapes: Set<TapeRecord> = new Set();
   private preventConditionalRequests?: boolean;
-  private unframeGrpcWebJsonRequests: boolean;
+  private unframeGrpcWebJsonRequestsHostnames: string[];
   private rewriteBeforeDiffRules: RewriteRules;
 
   constructor(options: {
@@ -43,7 +43,7 @@ export class RecordReplayServer {
     httpsCA?: string;
     httpsKey?: string;
     httpsCert?: string;
-    unframeGrpcWebJsonRequests?: boolean;
+    unframeGrpcWebJsonRequestsHostnames?: string[];
     rewriteBeforeDiffRules?: RewriteRules;
   }) {
     this.currentTapeRecords = [];
@@ -55,8 +55,8 @@ export class RecordReplayServer {
     this.persistence = new Persistence(options.tapeDir, redactHeaders);
     this.defaultTape = options.defaultTapeName;
     this.preventConditionalRequests = options.preventConditionalRequests;
-    this.unframeGrpcWebJsonRequests =
-      options.unframeGrpcWebJsonRequests || false;
+    this.unframeGrpcWebJsonRequestsHostnames =
+      options.unframeGrpcWebJsonRequestsHostnames || [];
     this.rewriteBeforeDiffRules =
       options.rewriteBeforeDiffRules || new RewriteRules();
     this.loadTape(this.defaultTape);
@@ -251,12 +251,18 @@ export class RecordReplayServer {
     res.end(`Unhandled proxay request.\n\n${JSON.stringify(request)}`);
   }
 
+  /**
+   * Potentially rewrite the request before processing it.
+   */
   private rewriteRequest(request: Request) {
-    // Should we rewrite the request before processing it?
+    const hostname = (request.headers["host"] || null) as string | null;
+
+    // Potentially unframe a grpc-web+json request.
     if (
-      this.unframeGrpcWebJsonRequests &&
       request.method === "POST" &&
-      request.headers["content-type"] === "application/grpc-web+json"
+      request.headers["content-type"] === "application/grpc-web+json" &&
+      hostname != null &&
+      this.unframeGrpcWebJsonRequestsHostnames.includes(hostname)
     ) {
       this.rewriteGrpcWebJsonRequest(request);
     }
@@ -285,17 +291,14 @@ export class RecordReplayServer {
     }
 
     // Sanity check the content length.
-    const rawRequestHeaderContentLength = request.headers["content-length"] as
+    const rawContentLength = request.headers["content-length"] as
       | string
       | undefined;
-    if (rawRequestHeaderContentLength !== undefined) {
-      const requestHeaderContentLength = parseInt(
-        rawRequestHeaderContentLength,
-        10
-      );
-      if (requestHeaderContentLength !== messageLength + 5) {
+    if (rawContentLength !== undefined) {
+      const contentLength = parseInt(rawContentLength, 10);
+      if (contentLength !== messageLength + 5) {
         console.log(
-          `Unexpected content length. Header says "${rawRequestHeaderContentLength}". gRPC payload length preamble says "${messageLength}".`
+          `Unexpected content length. Header says "${rawContentLength}". gRPC payload length preamble says "${messageLength}".`
         );
       }
     }
