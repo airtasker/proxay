@@ -263,8 +263,9 @@ export class RecordReplayServer {
     if (
       request.method === "POST" &&
       request.headers["content-type"] === "application/grpc-web+json" &&
-      hostname != null &&
-      this.unframeGrpcWebJsonRequestsHostnames.includes(hostname)
+      (this.unframeGrpcWebJsonRequestsHostnames.includes("*") ||
+        (hostname != null &&
+          this.unframeGrpcWebJsonRequestsHostnames.includes(hostname)))
     ) {
       this.rewriteGrpcWebJsonRequest(request);
     }
