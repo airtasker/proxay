@@ -9,7 +9,7 @@ export function setupServers({
   mode,
   tapeDirName = mode,
   defaultTapeName = "default",
-  unframeGrpcWebJsonRequestsHostnames = undefined,
+  unframeGrpcWebJsonRequestsHostnames,
 }: {
   mode: Mode;
   tapeDirName?: string;
@@ -37,7 +37,7 @@ export function setupServers({
       defaultTapeName,
       host: TEST_SERVER_HOST,
       timeout: 100,
-      unframeGrpcWebJsonRequestsHostnames: unframeGrpcWebJsonRequestsHostnames,
+      unframeGrpcWebJsonRequestsHostnames,
     });
     await Promise.all([
       servers.proxy.start(PROXAY_PORT),
