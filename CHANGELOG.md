@@ -1,3 +1,7 @@
+# 1.6.0
+
+* Optional support for unframing `application/grpc-web+json` requests to whitelisted hostnames (#501).
+
 # 1.5.0
 
 * Allow optional rewrite rules before computing similarity scores during replay (#499).
