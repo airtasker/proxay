@@ -80,7 +80,7 @@ async function main(argv: string[]) {
     )
     .option(
       "--unframe-grpc-web-json-requests-hostname [hostname...]",
-      "Rewrite received requests whose content-type is application/grpc-web+json to be application/json, mutating the body of the request accordingly. This is useful if you want plain text tape records rather than binary data. The gRPC server needs to support receiving unframed requests for this option to be useful."
+      "Rewrite received requests whose content-type is application/grpc-web+json to be application/json, mutating the body of the request accordingly. This is useful if you want plain text tape records rather than binary data. The gRPC server needs to support receiving unframed requests for this option to be useful. To accept all host headers, use `*`, otherwise specifiy one or more host header values to whitelist."
     )
     .option<RewriteRules>(
       "--rewrite-before-diff [s/find/replace/g...]",
