@@ -1,3 +1,7 @@
+# 1.6.1
+
+* Extend unframing support to allow a wildcard hostname `*` (#503).
+
 # 1.6.0
 
 * Optional support for unframing `application/grpc-web+json` requests to whitelisted hostnames (#501).
