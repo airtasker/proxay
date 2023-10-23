@@ -14,7 +14,13 @@
     "start": "ts-node src/cli.ts",
     "start:hot": "ts-node-dev --respawn src/cli.ts",
     "test": "jest --runInBand",
-    "build": "rm -rf dist && tsc"
+    "build": "rm -rf dist && tsc",
+    "lint:check": "yarn prettier:check && yarn tslint:check",
+    "tslint:check": "tslint -p .",
+    "prettier:check": "prettier --list-different \"**/*.ts\"",
+    "lint:fix": "yarn prettier:fix && yarn tslint:fix",
+    "tslint:fix": "tslint -p . --fix",
+    "prettier:fix": "prettier --write \"**/*.ts\""
   },
   "bin": {
     "proxay": "./dist/cli.js"
