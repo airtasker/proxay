@@ -13,8 +13,8 @@
   "scripts": {
     "start": "ts-node src/cli.ts",
     "start:hot": "ts-node-dev --respawn src/cli.ts",
-    "test": "jest",
-    "ci:test": "jest --ci",
+    "test": "jest --runInBand",
+    "ci:test": "jest --runInBand --ci",
     "build": "rm -rf dist && tsc",
     "lint:check": "yarn prettier:check && yarn tslint:check",
     "tslint:check": "tslint -p .",
