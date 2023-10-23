@@ -13,7 +13,8 @@
   "scripts": {
     "start": "ts-node src/cli.ts",
     "start:hot": "ts-node-dev --respawn src/cli.ts",
-    "test": "jest --runInBand",
+    "test": "jest",
+    "ci:test": "jest --ci",
     "build": "rm -rf dist && tsc",
     "lint:check": "yarn prettier:check && yarn tslint:check",
     "tslint:check": "tslint -p .",
@@ -26,6 +27,7 @@
     "proxay": "./dist/cli.js"
   },
   "jest": {
+    "reporters": ["default", "jest-junit"],
     "transform": {
       "^.+\\.tsx?$": "ts-jest"
     },
@@ -67,6 +69,7 @@
     "@types/string-similarity": "^4.0.0",
     "express": "^4.17.1",
     "jest": "^25.5.4",
+    "jest-junit": "^16.0.0",
     "prettier": "^2.2.1",
     "rimraf": "^3.0.2",
     "ts-jest": "^25.5.1",

@@ -61,7 +61,13 @@ commands:
       - install-dependencies
       - run:
           name: Run the unit tests
-          command: yarn test
+          environment:
+            JEST_JUNIT_OUTPUT_DIR: ./test-reports/jest
+            JEST_JUNIT_OUTPUT_NAME: results.xml
+            JEST_JUNIT_CLASSNAME: "{filepath}"
+          command: yarn ci:test
+      - store_test_results:
+          path: ./test-reports
 
 
 jobs:
