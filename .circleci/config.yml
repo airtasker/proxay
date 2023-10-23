@@ -31,12 +31,6 @@ executors:
     resource_class: medium
     working_directory: ~/repo
 
-  node20:
-    docker:
-      - image: cimg/node:20.4.0
-    resource_class: medium
-    working_directory: ~/repo
-
 
 commands:
   install-dependencies:
@@ -93,11 +87,6 @@ jobs:
 
   test-node18:
     executor: node18
-    steps:
-      - run-tests
-
-  test-node20:
-    executor: node20
     steps:
       - run-tests
 
@@ -163,10 +152,6 @@ workflows:
           filters:
             tags:
               only: /^v[0-9]+\.[0-9]+\.[0-9]+$/
-      - test-node20:
-          filters:
-            tags:
-              only: /^v[0-9]+\.[0-9]+\.[0-9]+$/
       - build-and-run:
           filters:
             tags:
@@ -182,7 +167,6 @@ workflows:
             - test-node14
             - test-node16
             - test-node18
-            - test-node20
             - build-and-run
             - lint-check
           filters:
