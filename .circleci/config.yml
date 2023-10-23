@@ -4,31 +4,31 @@ executors:
   node10:
     docker:
       - image: cimg/node:10.24.0
-    resource_class: medium
+    resource_class: small
     working_directory: ~/repo
 
   node12:
     docker:
       - image: cimg/node:12.13.1
-    resource_class: medium
+    resource_class: small
     working_directory: ~/repo
 
   node14:
     docker:
       - image: cimg/node:14.21.3
-    resource_class: medium
+    resource_class: small
     working_directory: ~/repo
 
   node16:
     docker:
       - image: cimg/node:16.20.1
-    resource_class: medium
+    resource_class: small
     working_directory: ~/repo
 
   node18:
     docker:
       - image: cimg/node:18.18.1
-    resource_class: medium
+    resource_class: small
     working_directory: ~/repo
 
 
