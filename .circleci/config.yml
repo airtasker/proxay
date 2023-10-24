@@ -1,12 +1,6 @@
 version: 2.1
 
 executors:
-  node12:
-    docker:
-      - image: cimg/node:12.13.1
-    resource_class: small
-    working_directory: ~/repo
-
   node14:
     docker:
       - image: cimg/node:14.21.3
@@ -59,11 +53,6 @@ commands:
 
 
 jobs:
-  test-node12:
-    executor: node12
-    steps:
-      - run-tests
-
   test-node14:
     executor: node14
     steps:
@@ -80,7 +69,7 @@ jobs:
       - run-tests
 
   build-and-run:
-    executor: node12
+    executor: node14
     steps:
       - checkout
       - install-dependencies
@@ -97,7 +86,7 @@ jobs:
           done
 
   lint-check:
-    executor: node12
+    executor: node14
     steps:
       - checkout
       - install-dependencies
@@ -106,7 +95,7 @@ jobs:
           command: yarn lint:check
 
   publish:
-    executor: node12
+    executor: node14
     steps:
       - checkout
       - install-dependencies
@@ -122,10 +111,6 @@ jobs:
 workflows:
   build-and-test:
     jobs:
-      - test-node12:
-          filters:
-            tags:
-              only: /^v[0-9]+\.[0-9]+\.[0-9]+$/
       - test-node14:
           filters:
             tags:
@@ -148,7 +133,6 @@ workflows:
               only: /^v[0-9]+\.[0-9]+\.[0-9]+$/
       - publish:
           requires:
-            - test-node12
             - test-node14
             - test-node16
             - test-node18
