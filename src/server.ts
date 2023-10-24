@@ -171,7 +171,9 @@ export class RecordReplayServer {
    * Starts the server.
    */
   async start(port: number) {
-    await new Promise((resolve) => this.server.listen(port, resolve));
+    await new Promise((resolve) =>
+      this.server.listen(port, resolve as () => void)
+    );
   }
 
   /**
@@ -488,7 +490,7 @@ export class RecordReplayServer {
           return true;
         } catch (e) {
           if (this.loggingEnabled) {
-            console.warn(chalk.yellow(e.message));
+            console.warn(chalk.yellow((e as Error)?.message));
           }
           return false;
         }
