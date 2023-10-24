@@ -75,9 +75,9 @@ jobs:
       - install-dependencies
       - run: yarn build
       - run: npm link
-      - run: proxy --help
+      - run: npx proxy --help
       - run: |
-          proxay -m record -h https://www.google.com -t tapes/ &
+          npx proxay -m record -h https://www.google.com -t tapes/ &
           # Wait until it loads.
           until (curl http://localhost:3000 2>&1 | grep Google &>/dev/null)
           do
