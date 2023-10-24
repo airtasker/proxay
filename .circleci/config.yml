@@ -96,7 +96,8 @@ jobs:
       - checkout
       - install-dependencies
       - run: yarn build
-      - run: sudo npm link
+      - run: npm link
+      - run: proxy --help
       - run: |
           proxay -m record -h https://www.google.com -t tapes/ &
           # Wait until it loads.
