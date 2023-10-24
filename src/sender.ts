@@ -64,10 +64,11 @@ export async function send(
     };
   } catch (e) {
     if (options.loggingEnabled) {
+      const errorCode = (e as Record<string, any>)?.code;
       console.error(
         chalk.red(
           `Could not send request ${request.method} ${request.path} (error: ${
-            e.code || "unknown"
+            errorCode || "unknown"
           })`
         )
       );
