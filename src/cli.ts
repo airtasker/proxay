@@ -96,7 +96,8 @@ async function main(argv: string[]) {
   const host: string = program.host;
   const port = parseInt(program.port, 10);
   const redactHeaders: string[] = program.redactHeaders;
-  const preventConditionalRequests: boolean = !!program.dropConditionalRequestHeaders;
+  const preventConditionalRequests: boolean =
+    !!program.dropConditionalRequestHeaders;
   const httpsCA: string = program.httpsCa || "";
   const httpsKey: string = program.httpsKey;
   const httpsCert: string = program.httpsCert;
