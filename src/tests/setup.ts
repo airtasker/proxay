@@ -1,5 +1,5 @@
 import path from "path";
-import rimraf from "rimraf";
+import { rimrafSync } from "rimraf";
 import { Mode } from "../modes";
 import { RecordReplayServer } from "../server";
 import { PROXAY_PORT, TEST_SERVER_HOST, TEST_SERVER_PORT } from "./config";
@@ -25,7 +25,7 @@ export function setupServers({
 
   beforeEach(() => {
     if (mode !== "replay") {
-      rimraf.sync(tapeDir);
+      rimrafSync(tapeDir);
     }
   });
 
