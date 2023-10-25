@@ -57,7 +57,7 @@ describe("Match requests", () => {
           field2: "d",
           field3: 1,
         })
-      ).data
+      ).data,
     ).toEqual({
       field1: {
         key1: "z",
@@ -77,7 +77,7 @@ describe("Match requests", () => {
           field2: "d",
           field3: 1,
         })
-      ).data
+      ).data,
     ).toEqual({
       field1: {
         key1: "a",
@@ -97,7 +97,7 @@ describe("Match requests", () => {
           },
           unrelatedField: "abc",
         })
-      ).data
+      ).data,
     ).toEqual({
       field1: {
         key1: "a",
@@ -118,7 +118,7 @@ describe("Match requests", () => {
           },
           unrelatedField: "abc",
         })
-      ).data
+      ).data,
     ).toEqual({
       field1: {
         key1: "a",
@@ -151,15 +151,15 @@ describe("Match requests", () => {
         });
 
         const response1 = await axios.get(
-          `${PROXAY_HOST}${JSON_IDENTITY_PATH}`
+          `${PROXAY_HOST}${JSON_IDENTITY_PATH}`,
         );
 
         const response2 = await axios.get(
-          `${PROXAY_HOST}${JSON_IDENTITY_PATH}`
+          `${PROXAY_HOST}${JSON_IDENTITY_PATH}`,
         );
 
         expect(response1.data.requestCount).not.toEqual(
-          response2.data.requestCount
+          response2.data.requestCount,
         );
       });
     });
@@ -190,18 +190,18 @@ describe("Match requests", () => {
           `${PROXAY_HOST}${JSON_IDENTITY_PATH}`,
           {
             field3: 1,
-          }
+          },
         );
 
         const response2 = await axios.post(
           `${PROXAY_HOST}${JSON_IDENTITY_PATH}`,
           {
             field3: 1,
-          }
+          },
         );
 
         expect(response1.data.requestCount).not.toEqual(
-          response2.data.requestCount
+          response2.data.requestCount,
         );
       });
 
@@ -235,18 +235,18 @@ describe("Match requests", () => {
             `${PROXAY_HOST}${JSON_IDENTITY_PATH}`,
             {
               field3: 1,
-            }
+            },
           );
 
           const response3 = await axios.post(
             `${PROXAY_HOST}${JSON_IDENTITY_PATH}`,
             {
               field3: 1,
-            }
+            },
           );
 
           expect(response3.data.requestCount).toEqual(
-            response2.data.requestCount
+            response2.data.requestCount,
           );
         });
       });

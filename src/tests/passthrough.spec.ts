@@ -81,10 +81,10 @@ describe("Passthrough with grpc-web+json unframing with explicit whitelisted hos
           "content-type": "application/grpc-web+json",
           host: `localhost:${TEST_SERVER_PORT}`,
         },
-      }
+      },
     );
     expect(response.headers["content-type"]).toBe(
-      "application/json; charset=utf-8"
+      "application/json; charset=utf-8",
     );
     expect(response.data).toEqual({ email: "foo.bar@example.com" });
   });
@@ -133,10 +133,10 @@ describe("Passthrough with grpc-web+json unframing with wildcard whitelisted hos
           "content-type": "application/grpc-web+json",
           host: `localhost:${TEST_SERVER_PORT}`,
         },
-      }
+      },
     );
     expect(response.headers["content-type"]).toBe(
-      "application/json; charset=utf-8"
+      "application/json; charset=utf-8",
     );
     expect(response.data).toEqual({ email: "foo.bar@example.com" });
   });

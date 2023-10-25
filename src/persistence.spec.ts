@@ -20,10 +20,10 @@ const BINARY_RESPONSE = Buffer.from([
 ]);
 
 const UTF8_REQUEST_BROTLI = Buffer.from(
-  brotli.compress(Buffer.from(UTF8_REQUEST, "utf8"))!
+  brotli.compress(Buffer.from(UTF8_REQUEST, "utf8"))!,
 );
 const UTF8_RESPONSE_BROTLI = Buffer.from(
-  brotli.compress(Buffer.from(UTF8_RESPONSE, "utf8"))!
+  brotli.compress(Buffer.from(UTF8_RESPONSE, "utf8"))!,
 );
 const BINARY_REQUEST_BROTLI = Buffer.from(brotli.compress(BINARY_REQUEST)!);
 const BINARY_RESPONSE_BROTLI = Buffer.from(brotli.compress(BINARY_RESPONSE)!);
@@ -75,7 +75,7 @@ describe("Persistence", () => {
           headers: {},
           body: Buffer.from(UTF8_RESPONSE, "utf8"),
         },
-      })
+      }),
     ).toEqual({
       request: {
         method: "GET",
@@ -117,7 +117,7 @@ describe("Persistence", () => {
           headers: {},
           body: BINARY_RESPONSE,
         },
-      })
+      }),
     ).toEqual({
       request: {
         method: "GET",
@@ -161,7 +161,7 @@ describe("Persistence", () => {
           },
           body: UTF8_RESPONSE_BROTLI,
         },
-      })
+      }),
     ).toEqual({
       request: {
         method: "GET",
@@ -211,7 +211,7 @@ describe("Persistence", () => {
           },
           body: BINARY_RESPONSE_BROTLI,
         },
-      })
+      }),
     ).toEqual({
       request: {
         method: "GET",
@@ -259,7 +259,7 @@ describe("Persistence", () => {
           },
           body: UTF8_RESPONSE_GZIP,
         },
-      })
+      }),
     ).toEqual({
       request: {
         method: "GET",
@@ -309,7 +309,7 @@ describe("Persistence", () => {
           },
           body: BINARY_RESPONSE_GZIP,
         },
-      })
+      }),
     ).toEqual({
       request: {
         method: "GET",
@@ -361,7 +361,7 @@ describe("Persistence", () => {
             compression: "none",
           },
         },
-      })
+      }),
     ).toEqual({
       request: {
         method: "GET",
@@ -401,7 +401,7 @@ describe("Persistence", () => {
             data: "DDD5aP8hy7MMMPlo/yHLswww+Wj/Icuz",
           },
         },
-      })
+      }),
     ).toEqual({
       request: {
         method: "GET",
@@ -443,7 +443,7 @@ describe("Persistence", () => {
             compression: "br",
           },
         },
-      })
+      }),
     ).toEqual({
       request: {
         method: "GET",
@@ -485,7 +485,7 @@ describe("Persistence", () => {
             compression: "gzip",
           },
         },
-      })
+      }),
     ).toEqual({
       request: {
         method: "GET",

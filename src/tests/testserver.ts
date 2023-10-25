@@ -62,7 +62,7 @@ export class TestServer {
    */
   async start(port: number) {
     await new Promise(
-      (resolve) => (this.server = this.app.listen(port, resolve as () => void))
+      (resolve) => (this.server = this.app.listen(port, resolve as () => void)),
     );
   }
 

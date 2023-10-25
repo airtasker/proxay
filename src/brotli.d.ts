@@ -11,6 +11,6 @@ declare module "brotli" {
    */
   function decompress(
     compressedData: Uint8Array,
-    decompressedLength?: number
+    decompressedLength?: number,
   ): Uint8Array;
 }

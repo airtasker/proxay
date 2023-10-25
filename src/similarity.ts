@@ -18,7 +18,7 @@ export function computeSimilarity(
   requestHeaders: Headers,
   requestBody: Buffer,
   compareTo: TapeRecord,
-  rewriteBeforeDiffRules: RewriteRules
+  rewriteBeforeDiffRules: RewriteRules,
 ): number {
   if (requestMethod !== compareTo.request.method) {
     // If the HTTP method is different, no match.
@@ -38,19 +38,19 @@ export function computeSimilarity(
   const serialisedRequestBody = serialiseBuffer(requestBody, requestHeaders);
   const serialisedCompareToRequestBody = serialiseBuffer(
     compareTo.request.body,
-    compareTo.request.headers
+    compareTo.request.headers,
   );
   return (
     countObjectDifferences(
       parsedQuery,
       parsedCompareToQuery,
-      rewriteBeforeDiffRules
+      rewriteBeforeDiffRules,
     ) +
     countObjectDifferences(headers, compareToHeaders, rewriteBeforeDiffRules) +
     countBodyDifferences(
       serialisedRequestBody,
       serialisedCompareToRequestBody,
-      rewriteBeforeDiffRules
+      rewriteBeforeDiffRules,
     )
   );
 }
@@ -61,7 +61,7 @@ export function computeSimilarity(
 function countBodyDifferences(
   a: PersistedBuffer,
   b: PersistedBuffer,
-  rewriteBeforeDiffRules: RewriteRules
+  rewriteBeforeDiffRules: RewriteRules,
 ): number {
   if (a.encoding === "utf8" && b.encoding === "utf8") {
     try {
@@ -71,7 +71,7 @@ function countBodyDifferences(
       return countObjectDifferences(
         requestBodyJson,
         recordBodyJson,
-        rewriteBeforeDiffRules
+        rewriteBeforeDiffRules,
       );
     } catch (e) {
       return countStringDifferences(a.data, b.data, rewriteBeforeDiffRules);
@@ -90,7 +90,7 @@ function countBodyDifferences(
 function countObjectDifferences(
   a: object,
   b: object,
-  rewriteRules: RewriteRules
+  rewriteRules: RewriteRules,
 ) {
   a = rewriteRules.apply(a);
   b = rewriteRules.apply(b);
@@ -104,7 +104,7 @@ function countObjectDifferences(
 function countStringDifferences(
   a: string,
   b: string,
-  rewriteRules: RewriteRules
+  rewriteRules: RewriteRules,
 ) {
   // Apply the rewrite rules before computing any differences.
   a = rewriteRules.apply(a);
@@ -115,7 +115,7 @@ function countStringDifferences(
   // compareTwoStrings() returns 0 for completely different strings,
   // and 1 for identical strings, and a number in between otherwise.
   const numberOfDifferentCharacters = Math.round(
-    ((1 - stringSimilarityScore) * (a.length + b.length)) / 2
+    ((1 - stringSimilarityScore) * (a.length + b.length)) / 2,
   );
   return numberOfDifferentCharacters;
 }

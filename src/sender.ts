@@ -12,7 +12,7 @@ export async function send(
   options: {
     loggingEnabled?: boolean;
     timeout?: number;
-  }
+  },
 ): Promise<TapeRecord> {
   try {
     const [scheme, hostnameWithPort] = request.host.split("://");
@@ -37,7 +37,7 @@ export async function send(
         proxyRequest.on("error", reject);
         proxyRequest.write(request.body);
         proxyRequest.end();
-      }
+      },
     );
     const statusCode = response.statusCode || 200;
     const responseBody = await new Promise<Buffer>((resolve) => {
@@ -69,8 +69,8 @@ export async function send(
         chalk.red(
           `Could not send request ${request.method} ${request.path} (error: ${
             errorCode || "unknown"
-          })`
-        )
+          })`,
+        ),
       );
     }
     throw e;
