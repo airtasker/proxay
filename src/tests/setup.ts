@@ -29,7 +29,7 @@ export function setupServers({
     }
   });
 
-  beforeAll(async (done) => {
+  beforeAll(async () => {
     servers.backend = new TestServer();
     servers.proxy = new RecordReplayServer({
       initialMode: mode,
@@ -43,12 +43,10 @@ export function setupServers({
       servers.proxy.start(PROXAY_PORT),
       servers.backend.start(TEST_SERVER_PORT),
     ]);
-    done();
   });
 
-  afterAll(async (done) => {
+  afterAll(async () => {
     await Promise.all([servers.backend.stop(), servers.proxy.stop()]);
-    done();
   });
 
   return servers;

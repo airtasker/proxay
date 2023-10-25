@@ -12,14 +12,7 @@ export const JSON_IDENTITY_PATH = "/json/identity";
 export const BINARY_PATH = "/binary";
 export const BINARY_RESPONSE = Buffer.from([
   // These are not valid UTF-8 characters, on purpose.
-  12,
-  48,
-  249,
-  104,
-  255,
-  33,
-  203,
-  179,
+  12, 48, 249, 104, 255, 33, 203, 179,
 ]);
 
 export const GRPC_WEB_JSON_PATH = "/grpc-web-json";

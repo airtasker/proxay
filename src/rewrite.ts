@@ -37,7 +37,7 @@ export class RewriteRules {
     if (typeof value === "object" && value !== null) {
       // If the object is an array, iterate through each element and call the function recursively
       if (Array.isArray(value)) {
-        return (value.map((v) => this._apply(v)) as any) as T;
+        return value.map((v) => this._apply(v)) as any as T;
       }
 
       // If the object is not an array, create a new object with the same keys,
@@ -55,7 +55,7 @@ export class RewriteRules {
       for (const rule of this.rules) {
         s = rule.apply(value);
       }
-      return (s as any) as T;
+      return s as any as T;
     } else {
       return value;
     }

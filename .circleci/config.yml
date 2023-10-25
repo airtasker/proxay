@@ -1,18 +1,6 @@
 version: 2.1
 
 executors:
-  node10:
-    docker:
-      - image: cimg/node:10.24.0
-    resource_class: small
-    working_directory: ~/repo
-
-  node12:
-    docker:
-      - image: cimg/node:12.13.1
-    resource_class: small
-    working_directory: ~/repo
-
   node14:
     docker:
       - image: cimg/node:14.21.3
@@ -65,16 +53,6 @@ commands:
 
 
 jobs:
-  test-node10:
-    executor: node10
-    steps:
-      - run-tests
-
-  test-node12:
-    executor: node12
-    steps:
-      - run-tests
-
   test-node14:
     executor: node14
     steps:
@@ -91,14 +69,15 @@ jobs:
       - run-tests
 
   build-and-run:
-    executor: node10
+    executor: node14
     steps:
       - checkout
       - install-dependencies
       - run: yarn build
-      - run: sudo npm link
+      - run: npm link
+      - run: npx proxay --help
       - run: |
-          proxay -m record -h https://www.google.com -t tapes/ &
+          npx proxay -m record -h https://www.google.com -t tapes/ &
           # Wait until it loads.
           until (curl http://localhost:3000 2>&1 | grep Google &>/dev/null)
           do
@@ -107,7 +86,7 @@ jobs:
           done
 
   lint-check:
-    executor: node10
+    executor: node14
     steps:
       - checkout
       - install-dependencies
@@ -116,7 +95,7 @@ jobs:
           command: yarn lint:check
 
   publish:
-    executor: node10
+    executor: node14
     steps:
       - checkout
       - install-dependencies
@@ -132,14 +111,6 @@ jobs:
 workflows:
   build-and-test:
     jobs:
-      - test-node10:
-          filters:
-            tags:
-              only: /^v[0-9]+\.[0-9]+\.[0-9]+$/
-      - test-node12:
-          filters:
-            tags:
-              only: /^v[0-9]+\.[0-9]+\.[0-9]+$/
       - test-node14:
           filters:
             tags:
@@ -162,8 +133,6 @@ workflows:
               only: /^v[0-9]+\.[0-9]+\.[0-9]+$/
       - publish:
           requires:
-            - test-node10
-            - test-node12
             - test-node14
             - test-node16
             - test-node18
