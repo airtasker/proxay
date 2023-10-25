@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import chalk from "chalk";
-import program from "commander";
+import { program } from "commander";
 import fs from "fs-extra";
 import { RewriteRule, RewriteRules } from "./rewrite";
 import { RecordReplayServer } from "./server";
@@ -90,20 +90,21 @@ async function main(argv: string[]) {
     )
     .parse(argv);
 
-  const initialMode: string = (program.mode || "").toLowerCase();
-  const tapeDir: string = program.tapesDir;
-  const defaultTapeName: string = program.defaultTape;
-  const host: string = program.host;
-  const port = parseInt(program.port, 10);
-  const redactHeaders: string[] = program.redactHeaders;
+  const options = program.opts();
+  const initialMode: string = (options.mode || "").toLowerCase();
+  const tapeDir: string = options.tapesDir;
+  const defaultTapeName: string = options.defaultTape;
+  const host: string = options.host;
+  const port = parseInt(options.port, 10);
+  const redactHeaders: string[] = options.redactHeaders;
   const preventConditionalRequests: boolean =
-    !!program.dropConditionalRequestHeaders;
-  const httpsCA: string = program.httpsCa || "";
-  const httpsKey: string = program.httpsKey;
-  const httpsCert: string = program.httpsCert;
+    !!options.dropConditionalRequestHeaders;
+  const httpsCA: string = options.httpsCa || "";
+  const httpsKey: string = options.httpsKey;
+  const httpsCert: string = options.httpsCert;
   const unframeGrpcWebJsonRequestsHostnames: string[] =
-    program.unframeGrpcWebJsonRequestsHostname;
-  const rewriteBeforeDiffRules: RewriteRules = program.rewriteBeforeDiff;
+    options.unframeGrpcWebJsonRequestsHostname;
+  const rewriteBeforeDiffRules: RewriteRules = options.rewriteBeforeDiff;
 
   switch (initialMode) {
     case "record":
