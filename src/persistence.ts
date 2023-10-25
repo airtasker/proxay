@@ -31,7 +31,7 @@ export class Persistence {
     fs.ensureDirSync(path.dirname(tapePath));
     fs.writeFileSync(
       tapePath,
-      yaml.safeDump({
+      yaml.dump({
         http_interactions: persistedTapeRecords,
       }),
       "utf8",
@@ -55,7 +55,7 @@ export class Persistence {
       throw new Error(`No tape found with name ${tapeName}`);
     }
     const persistedTapeRecords = (
-      yaml.safeLoad(fs.readFileSync(tapePath, "utf8")) as Record<string, any>
+      yaml.load(fs.readFileSync(tapePath, "utf8")) as Record<string, any>
     ).http_interactions as PersistedTapeRecord[];
     return persistedTapeRecords.map(reviveTape);
   }
@@ -140,7 +140,7 @@ export function serialiseBuffer(
   try {
     // Can it be safely stored and recreated in YAML?
     const recreatedBuffer = Buffer.from(
-      yaml.safeLoad(yaml.safeDump(utf8Representation)) as string,
+      yaml.load(yaml.dump(utf8Representation)) as string,
       "utf8",
     );
     if (Buffer.compare(buffer, recreatedBuffer) === 0) {
