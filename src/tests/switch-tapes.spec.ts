@@ -18,7 +18,7 @@ describe("Switching tapes", () => {
 
     // First call should be recorded.
     expect((await axios.get(`${PROXAY_HOST}/recorded-path`)).data).toBe(
-      "/recorded-path"
+      "/recorded-path",
     );
     expect(servers.backend.requestCount).toBe(1);
 
@@ -30,7 +30,7 @@ describe("Switching tapes", () => {
 
     // Second call should be replayed.
     expect((await axios.get(`${PROXAY_HOST}/recorded-path`)).data).toBe(
-      "/recorded-path"
+      "/recorded-path",
     );
     expect(servers.backend.requestCount).toBe(1);
   });

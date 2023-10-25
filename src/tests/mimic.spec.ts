@@ -44,11 +44,11 @@ describe("Mimic", () => {
     const requestCount = servers.backend.requestCount;
     // First call will be recorded.
     expect((await axios.get(`${PROXAY_HOST}/only-records`)).data).toBe(
-      "/only-records"
+      "/only-records",
     );
     // Second call will be replayed.
     expect((await axios.get(`${PROXAY_HOST}/only-records`)).data).toBe(
-      "/only-records"
+      "/only-records",
     );
     expect(servers.backend.requestCount).toBe(requestCount + 1); // Unchanged.
   });

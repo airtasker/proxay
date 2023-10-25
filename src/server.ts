@@ -63,7 +63,7 @@ export class RecordReplayServer {
 
     const handler = async (
       req: http.IncomingMessage,
-      res: http.ServerResponse
+      res: http.ServerResponse,
     ) => {
       if (!req.url) {
         if (this.loggingEnabled) {
@@ -144,8 +144,8 @@ export class RecordReplayServer {
         } else {
           console.error(
             chalk.red(
-              `Unexpected starting byte of incoming request: ${byte}. Dropping request.`
-            )
+              `Unexpected starting byte of incoming request: ${byte}. Dropping request.`,
+            ),
           );
         }
 
@@ -172,7 +172,7 @@ export class RecordReplayServer {
    */
   async start(port: number) {
     await new Promise((resolve) =>
-      this.server.listen(port, resolve as () => void)
+      this.server.listen(port, resolve as () => void),
     );
   }
 
@@ -290,7 +290,7 @@ export class RecordReplayServer {
     const messageLength = request.body.readUInt32BE(1);
     if (compressionFlag !== 0) {
       console.error(
-        `The gRPC-web compression flag was set to 1. Do not know how to handle compressed request paylods. Aborting gRPC-web+json rewrite.`
+        `The gRPC-web compression flag was set to 1. Do not know how to handle compressed request paylods. Aborting gRPC-web+json rewrite.`,
       );
       return;
     }
@@ -303,7 +303,7 @@ export class RecordReplayServer {
       const contentLength = parseInt(rawContentLength, 10);
       if (contentLength !== messageLength + 5) {
         console.log(
-          `Unexpected content length. Header says "${rawContentLength}". gRPC payload length preamble says "${messageLength}".`
+          `Unexpected content length. Header says "${rawContentLength}". gRPC payload length preamble says "${messageLength}".`,
         );
       }
     }
@@ -333,7 +333,7 @@ export class RecordReplayServer {
    * Fetches the response from the tape, returning null otherwise.
    */
   private async fetchReplayResponse(
-    request: Request
+    request: Request,
   ): Promise<TapeRecord | null> {
     const record = findNextRecordToReplay(
       findRecordMatches(
@@ -342,9 +342,9 @@ export class RecordReplayServer {
         request.path,
         request.headers,
         request.body,
-        this.rewriteBeforeDiffRules
+        this.rewriteBeforeDiffRules,
       ),
-      this.replayedTapes
+      this.replayedTapes,
     );
     if (record) {
       this.replayedTapes.add(record);
@@ -355,8 +355,8 @@ export class RecordReplayServer {
       if (this.loggingEnabled) {
         console.warn(
           chalk.yellow(
-            `Unexpected request ${request.method} ${request.path} has no matching record in tapes.`
-          )
+            `Unexpected request ${request.method} ${request.path} has no matching record in tapes.`,
+          ),
         );
       }
     }
@@ -367,7 +367,7 @@ export class RecordReplayServer {
    * Fetches the response directly from the proxied host and records it.
    */
   private async fetchRecordResponse(
-    request: Request
+    request: Request,
   ): Promise<TapeRecord | null> {
     if (!this.proxiedHost) {
       throw new Error("Missing proxied host");
@@ -383,7 +383,7 @@ export class RecordReplayServer {
       {
         loggingEnabled: this.loggingEnabled,
         timeout: this.timeout,
-      }
+      },
     );
     this.addRecordToTape(record);
     if (this.loggingEnabled) {
@@ -396,7 +396,7 @@ export class RecordReplayServer {
    * Fetches the response from the tape if present, otherwise from the proxied host.
    */
   private async fetchMimicResponse(
-    request: Request
+    request: Request,
   ): Promise<TapeRecord | null> {
     let record = findNextRecordToReplay(
       findRecordMatches(
@@ -405,9 +405,9 @@ export class RecordReplayServer {
         request.path,
         request.headers,
         request.body,
-        this.rewriteBeforeDiffRules
+        this.rewriteBeforeDiffRules,
       ),
-      this.replayedTapes
+      this.replayedTapes,
     );
     if (record) {
       this.replayedTapes.add(record);
@@ -429,7 +429,7 @@ export class RecordReplayServer {
         {
           loggingEnabled: this.loggingEnabled,
           timeout: this.timeout,
-        }
+        },
       );
       this.addRecordToTape(record);
       if (this.loggingEnabled) {
@@ -443,7 +443,7 @@ export class RecordReplayServer {
    * Fetches the response directly from the proxied host without recording it.
    */
   private async fetchPassthroughResponse(
-    request: Request
+    request: Request,
   ): Promise<TapeRecord | null> {
     if (!this.proxiedHost) {
       throw new Error("Missing proxied host");
@@ -459,7 +459,7 @@ export class RecordReplayServer {
       {
         loggingEnabled: this.loggingEnabled,
         timeout: this.timeout,
-      }
+      },
     );
     if (this.loggingEnabled) {
       console.log(`Proxied: ${request.method} ${request.path}`);
@@ -485,7 +485,7 @@ export class RecordReplayServer {
       case "replay":
         try {
           this.currentTapeRecords = this.persistence.loadTapeFromDisk(
-            this.currentTape
+            this.currentTape,
           );
           return true;
         } catch (e) {
@@ -497,7 +497,7 @@ export class RecordReplayServer {
       case "mimic":
         try {
           this.currentTapeRecords = this.persistence.loadTapeFromDisk(
-            this.currentTape
+            this.currentTape,
           );
         } catch (e) {
           this.currentTapeRecords = [];

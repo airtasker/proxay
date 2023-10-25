@@ -28,8 +28,8 @@ describe("similarity", () => {
           },
           response: DUMMY_RESPONSE,
         },
-        new RewriteRules()
-      )
+        new RewriteRules(),
+      ),
     ).toBe(0);
   });
 
@@ -49,8 +49,8 @@ describe("similarity", () => {
           },
           response: DUMMY_RESPONSE,
         },
-        new RewriteRules()
-      )
+        new RewriteRules(),
+      ),
     ).toBe(Infinity);
   });
 
@@ -70,8 +70,8 @@ describe("similarity", () => {
           },
           response: DUMMY_RESPONSE,
         },
-        new RewriteRules()
-      )
+        new RewriteRules(),
+      ),
     ).toBe(Infinity);
   });
 
@@ -91,8 +91,8 @@ describe("similarity", () => {
           },
           response: DUMMY_RESPONSE,
         },
-        new RewriteRules()
-      )
+        new RewriteRules(),
+      ),
     ).toBe(1);
     expect(
       computeSimilarity(
@@ -109,8 +109,8 @@ describe("similarity", () => {
           },
           response: DUMMY_RESPONSE,
         },
-        new RewriteRules()
-      )
+        new RewriteRules(),
+      ),
     ).toBe(1);
     expect(
       computeSimilarity(
@@ -127,8 +127,8 @@ describe("similarity", () => {
           },
           response: DUMMY_RESPONSE,
         },
-        new RewriteRules()
-      )
+        new RewriteRules(),
+      ),
     ).toBe(2);
     expect(
       computeSimilarity(
@@ -145,8 +145,8 @@ describe("similarity", () => {
           },
           response: DUMMY_RESPONSE,
         },
-        new RewriteRules()
-      )
+        new RewriteRules(),
+      ),
     ).toBe(0);
     expect(
       computeSimilarity(
@@ -163,8 +163,8 @@ describe("similarity", () => {
           },
           response: DUMMY_RESPONSE,
         },
-        new RewriteRules()
-      )
+        new RewriteRules(),
+      ),
     ).toBe(1);
   });
 
@@ -195,8 +195,8 @@ describe("similarity", () => {
           },
           response: DUMMY_RESPONSE,
         },
-        new RewriteRules()
-      )
+        new RewriteRules(),
+      ),
     ).toBe(0);
     expect(
       computeSimilarity(
@@ -223,8 +223,8 @@ describe("similarity", () => {
           },
           response: DUMMY_RESPONSE,
         },
-        new RewriteRules()
-      )
+        new RewriteRules(),
+      ),
     ).toBe(1);
     expect(
       computeSimilarity(
@@ -252,8 +252,8 @@ describe("similarity", () => {
           },
           response: DUMMY_RESPONSE,
         },
-        new RewriteRules()
-      )
+        new RewriteRules(),
+      ),
     ).toBe(1);
   });
 
@@ -282,8 +282,8 @@ describe("similarity", () => {
           },
           response: DUMMY_RESPONSE,
         },
-        new RewriteRules()
-      )
+        new RewriteRules(),
+      ),
     ).toBe(0);
 
     // The following payloads only have one field that differs (c).
@@ -313,8 +313,8 @@ describe("similarity", () => {
           },
           response: DUMMY_RESPONSE,
         },
-        new RewriteRules()
-      )
+        new RewriteRules(),
+      ),
     ).toBe(1);
 
     // The following payloads have all different fields.
@@ -341,8 +341,8 @@ describe("similarity", () => {
           },
           response: DUMMY_RESPONSE,
         },
-        new RewriteRules()
-      )
+        new RewriteRules(),
+      ),
     ).toBe(6);
 
     // The following payloads are identical after rewrite rules have been applied.
@@ -373,10 +373,10 @@ describe("similarity", () => {
         new RewriteRules().appendRule(
           new RewriteRule(
             /-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(@example.com)$/gi,
-            "$1"
-          )
-        )
-      )
+            "$1",
+          ),
+        ),
+      ),
     ).toBe(0);
   });
 
@@ -396,8 +396,8 @@ describe("similarity", () => {
           },
           response: DUMMY_RESPONSE,
         },
-        new RewriteRules()
-      )
+        new RewriteRules(),
+      ),
     ).toBe(0);
     expect(
       computeSimilarity(
@@ -414,17 +414,17 @@ describe("similarity", () => {
           },
           response: DUMMY_RESPONSE,
         },
-        new RewriteRules()
-      )
+        new RewriteRules(),
+      ),
     ).toBe(6);
   });
 
   it("relies on file payload similarity", () => {
     const avatarFile1 = fs.readFileSync(
-      path.join(__dirname, "..", "testdata", "avatar.jpg")
+      path.join(__dirname, "..", "testdata", "avatar.jpg"),
     );
     const avatarFile2 = fs.readFileSync(
-      path.join(__dirname, "..", "testdata", "avatar-small.jpg")
+      path.join(__dirname, "..", "testdata", "avatar-small.jpg"),
     );
     expect(
       computeSimilarity(
@@ -441,8 +441,8 @@ describe("similarity", () => {
           },
           response: DUMMY_RESPONSE,
         },
-        new RewriteRules()
-      )
+        new RewriteRules(),
+      ),
     ).toBe(0);
     expect(
       computeSimilarity(
@@ -459,8 +459,8 @@ describe("similarity", () => {
           },
           response: DUMMY_RESPONSE,
         },
-        new RewriteRules()
-      )
+        new RewriteRules(),
+      ),
     ).toBe(5149);
   });
 });

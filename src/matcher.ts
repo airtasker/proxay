@@ -16,7 +16,7 @@ import { Headers, TapeRecord } from "./tape";
  */
 export function findNextRecordToReplay(
   records: TapeRecord[],
-  replayedTapes: Set<TapeRecord>
+  replayedTapes: Set<TapeRecord>,
 ): TapeRecord | null {
   // Look for a record that hasn't been replayed yet.
   for (const record of records) {
@@ -47,7 +47,7 @@ export function findRecordMatches(
   requestPath: string,
   requestHeaders: Headers,
   requestBody: Buffer,
-  rewriteBeforeDiffRules: RewriteRules
+  rewriteBeforeDiffRules: RewriteRules,
 ): TapeRecord[] {
   let bestSimilarityScore = +Infinity;
   let bestMatches: TapeRecord[] = [];
@@ -58,7 +58,7 @@ export function findRecordMatches(
       requestHeaders,
       requestBody,
       potentialMatch,
-      rewriteBeforeDiffRules
+      rewriteBeforeDiffRules,
     );
 
     if (similarityScore < bestSimilarityScore) {

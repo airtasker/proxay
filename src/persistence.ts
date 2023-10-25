@@ -17,7 +17,7 @@ import {
 export class Persistence {
   constructor(
     private readonly tapeDir: string,
-    private readonly redactHeaders: string[]
+    private readonly redactHeaders: string[],
   ) {}
 
   /**
@@ -34,7 +34,7 @@ export class Persistence {
       yaml.safeDump({
         http_interactions: persistedTapeRecords,
       }),
-      "utf8"
+      "utf8",
     );
   }
 
@@ -79,7 +79,7 @@ export class Persistence {
  */
 export function redactRequestHeaders(
   record: TapeRecord,
-  redactHeaders: string[]
+  redactHeaders: string[],
 ) {
   redactHeaders.forEach((header) => {
     if (record.request.headers[header]) {
@@ -122,7 +122,7 @@ export function reviveTape(persistedRecord: PersistedTapeRecord): TapeRecord {
 
 export function serialiseBuffer(
   buffer: Buffer,
-  headers: Headers
+  headers: Headers,
 ): PersistedBuffer {
   const header = headers["content-encoding"];
   const contentEncoding = typeof header === "string" ? header : undefined;
@@ -141,7 +141,7 @@ export function serialiseBuffer(
     // Can it be safely stored and recreated in YAML?
     const recreatedBuffer = Buffer.from(
       yaml.safeLoad(yaml.safeDump(utf8Representation)) as string,
-      "utf8"
+      "utf8",
     );
     if (Buffer.compare(buffer, recreatedBuffer) === 0) {
       // Yes, we can store it in YAML.
