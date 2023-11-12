@@ -810,10 +810,10 @@
   resolved "https://registry.yarnpkg.com/@types/stack-utils/-/stack-utils-2.0.2.tgz#01284dde9ef4e6d8cef6422798d9a3ad18a66f8b"
   integrity sha512-g7CK9nHdwjK2n0ymT2CW698FuWJRIx+RP6embAzZ2Qi8/ilIrA1Imt2LVSeHUzKvpoi7BhmmQcXz95eS0f2JXw==
 
-"@types/string-similarity@^4.0.1":
-  version "4.0.1"
-  resolved "https://registry.yarnpkg.com/@types/string-similarity/-/string-similarity-4.0.1.tgz#6bcbc481883ff60b9c7b3369fba025ac7cb25f9d"
-  integrity sha512-aUPUr+8RUgQH33o+DKPecDCJg1Z967Xwsqgjqfz6ZFpy6d8VDayMT7JmVMKaVAekGgRZpZmxxLS/jGQqk1kzTg==
+"@types/string-similarity@^4.0.2":
+  version "4.0.2"
+  resolved "https://registry.yarnpkg.com/@types/string-similarity/-/string-similarity-4.0.2.tgz#a730ba46d112bced8ccfc33d3f70182f607511a3"
+  integrity sha512-LkJQ/jsXtCVMK+sKYAmX/8zEq+/46f1PTQw7YtmQwb74jemS1SlNLmARM2Zml9DgdDTWKAtc5L13WorpHPDjDA==
 
 "@types/strip-bom@^3.0.0":
   version "3.0.0"
