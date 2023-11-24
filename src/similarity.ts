@@ -1,9 +1,14 @@
+import brotli from "brotli";
+import {
+  parse as parseContentType,
+  ParsedMediaType as ParsedContentType,
+} from "content-type";
 import { diff } from "deep-diff";
 import { parse as parseQueryString, ParsedUrlQuery } from "querystring";
 import { compareTwoStrings } from "string-similarity";
+import { gunzipSync } from "zlib";
 import { RewriteRules } from "./rewrite";
-import { serialiseBuffer } from "./persistence";
-import { PersistedBuffer, TapeRecord } from "./tape";
+import { TapeRecord } from "./tape";
 import { HttpHeaders, HttpRequest } from "./core";
 
 /**
@@ -54,28 +59,86 @@ export function computeSimilarity(
   );
 
   // Compare the bodies.
-  const serialisedRequestBody = serialiseBuffer(request.body, request.headers);
-  const serialisedCompareToRequestBody = serialiseBuffer(
-    compareTo.request.body,
-    compareTo.request.headers,
-  );
   const differencesBody = countBodyDifferences(
-    serialisedRequestBody,
-    serialisedCompareToRequestBody,
+    request,
+    compareTo.request,
     rewriteBeforeDiffRules,
   );
 
   return differencesQueryParameters + differencesHeaders + differencesBody;
 }
 
+function getHeaderAsString(headers: HttpHeaders, headerName: string): string {
+  const rawValue = headers[headerName];
+  if (rawValue === undefined) {
+    return "";
+  } else if (typeof rawValue === "string") {
+    return rawValue;
+  } else {
+    return rawValue[0];
+  }
+}
+
+function getHttpRequestContentType(request: HttpRequest): string {
+  return getHeaderAsString(request.headers, "content-type");
+}
+
+function getHttpRequestBodyDecoded(request: HttpRequest): Buffer {
+  // Process the content-encoding before looking at the content-type.
+  const contentEncoding = getHeaderAsString(
+    request.headers,
+    "content-encoding",
+  );
+  switch (contentEncoding) {
+    case "":
+      return request.body;
+    case "br":
+      return Buffer.from(brotli.decompress(request.body));
+    case "gzip":
+      return gunzipSync(request.body);
+    default:
+      throw Error(`Unhandled content-encoding value "${contentEncoding}"`);
+  }
+}
+
 /**
- * Returns the numbers of differences between two persisted body buffers.
+ * Returns the numbers of differences between the bodies of two HTTP requests.
  */
 function countBodyDifferences(
-  a: PersistedBuffer,
-  b: PersistedBuffer,
+  request1: HttpRequest,
+  request2: HttpRequest,
   rewriteBeforeDiffRules: RewriteRules,
 ): number {
+  const contentType1 = parseContentType(getHttpRequestContentType(request1));
+  const contentType2 = parseContentType(getHttpRequestContentType(request1));
+
+  // If the content types are not the same, we cannot compare.
+  if (contentType1.type !== contentType2.type) {
+    return +Infinity;
+  }
+
+  const contentType = contentType1.type;
+  if (contentType === "application/json") {
+    return countBodyDifferencesApplicationJson(
+      request1,
+      contentType1,
+      request2,
+      contentType2,
+      rewriteBeforeDiffRules,
+    );
+    return 0; // TODO
+  } else if (contentType === "application/grpc-web+json") {
+    return 0; // TODO
+  } else if (contentType === "application/grpc-web+proto") {
+    return 0; // TODO
+  } else if (contentType.startsWith("text/")) {
+    return 0; // TODO
+  } else {
+    // No special cases. Assume binary data.
+    return countBodyDifferencesBinary(request1, request2);
+  }
+
+  /*
   if (a.encoding === "utf8" && b.encoding === "utf8") {
     try {
       const requestBodyJson = JSON.parse(a.data || "{}");
@@ -95,6 +158,55 @@ function countBodyDifferences(
     // If we couldn't compare, then we'll assume they don't match.
     return +Infinity;
   }
+  */
+}
+
+function countBodyDifferencesApplicationJson(
+  request1: HttpRequest,
+  contentType1: ParsedContentType,
+  request2: HttpRequest,
+  contentType2: ParsedContentType,
+  rewriteBeforeDiffRules: RewriteRules,
+): number {
+  const encoding1 =
+    (contentType1.parameters.charset as BufferEncoding | undefined) ||
+    "utf-8";
+  const body1 = getHttpRequestBodyDecoded(request1).toString(encoding1);
+  const encoding2 =
+    (contentType2.parameters.charset as BufferEncoding | undefined) ||
+    "utf-8";
+  const body2 = getHttpRequestBodyDecoded(request2).toString(encoding2);
+
+  // Early bail if bodies are empty.
+  if (body1.length === 0 && body1.length === body2.length) {
+    return 0;
+  }
+
+  let json1: any;
+  let json2: any;
+  try {
+    json1 = JSON.parse(body1);
+    json2 = JSON.parse(body2);
+  } catch (e) {
+    return countBodyDifferencesBinary(request1, request2);
+  }
+
+  // Return the number of fields that differ in JSON.
+  return countObjectDifferences(json1, json2, rewriteBeforeDiffRules);
+}
+
+function countBodyDifferencesBinary(
+  request1: HttpRequest,
+  request2: HttpRequest,
+): number {
+  // Compare the bytes of each of the bodies using a textual edit distance comparison.
+  const body1 = Array.from(request1.body)
+    .map((v) => v.toString(16).padStart(2, "0"))
+    .join(" ");
+  const body2 = Array.from(request2.body)
+    .map((v) => v.toString(16).padStart(2, "0"))
+    .join(" ");
+  return countStringDifferences(body1, body2, new RewriteRules());
 }
 
 /**
