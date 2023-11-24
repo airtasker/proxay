@@ -147,7 +147,7 @@ function pathWithoutQueryParameters(path: string) {
 function parseQueryParameters(path: string): ParsedUrlQuery {
   const questionMarkPosition = path.indexOf("?");
   if (questionMarkPosition !== -1) {
-    return parseQueryString(path.substring(questionMarkPosition));
+    return parseQueryString(path.substring(questionMarkPosition + 1));
   } else {
     return {};
   }
