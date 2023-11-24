@@ -1,5 +1,5 @@
 import { diff } from "deep-diff";
-import queryString from "query-string";
+import { parse as parseQueryString, ParsedUrlQuery } from "querystring";
 import { compareTwoStrings } from "string-similarity";
 import { RewriteRules } from "./rewrite";
 import { serialiseBuffer } from "./persistence";
@@ -20,39 +20,54 @@ export function computeSimilarity(
   compareTo: TapeRecord,
   rewriteBeforeDiffRules: RewriteRules,
 ): number {
+  // If the HTTP method is different, no match.
   if (requestMethod !== compareTo.request.method) {
-    // If the HTTP method is different, no match.
     return +Infinity;
   }
+
+  // If the path is different (apart from query parameters), no match.
   if (
     pathWithoutQueryParameters(requestPath) !==
     pathWithoutQueryParameters(compareTo.request.path)
   ) {
-    // If the path is different (apart from query parameters), no match.
     return +Infinity;
   }
-  const parsedQuery = queryParameters(requestPath);
-  const parsedCompareToQuery = queryParameters(compareTo.request.path);
-  const headers = stripExtraneousHeaders(requestHeaders);
-  const compareToHeaders = stripExtraneousHeaders(compareTo.request.headers);
+
+  // Compare the query parameters.
+  const parsedQueryParameters = parseQueryParameters(requestPath);
+  const parsedCompareToQueryParameters = parseQueryParameters(
+    compareTo.request.path,
+  );
+  const differencesQueryParameters = countObjectDifferences(
+    parsedQueryParameters,
+    parsedCompareToQueryParameters,
+    rewriteBeforeDiffRules,
+  );
+
+  // Compare the cleaned headers.
+  const cleanedHeaders = stripExtraneousHeaders(requestHeaders);
+  const cleanedCompareToHeaders = stripExtraneousHeaders(
+    compareTo.request.headers,
+  );
+  const differencesHeaders = countObjectDifferences(
+    cleanedHeaders,
+    cleanedCompareToHeaders,
+    rewriteBeforeDiffRules,
+  );
+
+  // Compare the bodies.
   const serialisedRequestBody = serialiseBuffer(requestBody, requestHeaders);
   const serialisedCompareToRequestBody = serialiseBuffer(
     compareTo.request.body,
     compareTo.request.headers,
   );
-  return (
-    countObjectDifferences(
-      parsedQuery,
-      parsedCompareToQuery,
-      rewriteBeforeDiffRules,
-    ) +
-    countObjectDifferences(headers, compareToHeaders, rewriteBeforeDiffRules) +
-    countBodyDifferences(
-      serialisedRequestBody,
-      serialisedCompareToRequestBody,
-      rewriteBeforeDiffRules,
-    )
+  const differencesBody = countBodyDifferences(
+    serialisedRequestBody,
+    serialisedCompareToRequestBody,
+    rewriteBeforeDiffRules,
   );
+
+  return differencesQueryParameters + differencesHeaders + differencesBody;
 }
 
 /**
@@ -123,16 +138,16 @@ function countStringDifferences(
 function pathWithoutQueryParameters(path: string) {
   const questionMarkPosition = path.indexOf("?");
   if (questionMarkPosition !== -1) {
-    return path.substr(0, questionMarkPosition);
+    return path.substring(0, questionMarkPosition);
   } else {
     return path;
   }
 }
 
-function queryParameters(path: string) {
+function parseQueryParameters(path: string): ParsedUrlQuery {
   const questionMarkPosition = path.indexOf("?");
   if (questionMarkPosition !== -1) {
-    return queryString.parse(path.substr(questionMarkPosition));
+    return parseQueryString(path.substring(questionMarkPosition));
   } else {
     return {};
   }
