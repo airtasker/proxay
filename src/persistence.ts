@@ -3,9 +3,9 @@ import fs from "fs-extra";
 import yaml from "js-yaml";
 import path from "path";
 import { gunzipSync, gzipSync } from "zlib";
+import { HttpHeaders } from "./core";
 import {
   CompressionAlgorithm,
-  Headers,
   PersistedBuffer,
   PersistedTapeRecord,
   TapeRecord,
@@ -122,7 +122,7 @@ export function reviveTape(persistedRecord: PersistedTapeRecord): TapeRecord {
 
 export function serialiseBuffer(
   buffer: Buffer,
-  headers: Headers,
+  headers: HttpHeaders,
 ): PersistedBuffer {
   const header = headers["content-encoding"];
   const contentEncoding = typeof header === "string" ? header : undefined;

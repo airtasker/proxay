@@ -15,10 +15,12 @@ describe("similarity", () => {
   it("detects exact matches", () => {
     expect(
       computeSimilarity(
-        "POST",
-        "/test",
-        {},
-        Buffer.from([]),
+        {
+          method: "POST",
+          path: "/test",
+          headers: {},
+          body: Buffer.from([]),
+        },
         {
           request: {
             method: "POST",
@@ -36,10 +38,12 @@ describe("similarity", () => {
   it("excludes mismatching methods", () => {
     expect(
       computeSimilarity(
-        "GET",
-        "/test",
-        {},
-        Buffer.from([]),
+        {
+          method: "GET",
+          path: "/test",
+          headers: {},
+          body: Buffer.from([]),
+        },
         {
           request: {
             method: "POST",
@@ -57,10 +61,12 @@ describe("similarity", () => {
   it("excludes mismatching paths", () => {
     expect(
       computeSimilarity(
-        "POST",
-        "/test",
-        {},
-        Buffer.from([]),
+        {
+          method: "POST",
+          path: "/test",
+          headers: {},
+          body: Buffer.from([]),
+        },
         {
           request: {
             method: "POST",
@@ -78,10 +84,12 @@ describe("similarity", () => {
   it("counts query parameters differences", () => {
     expect(
       computeSimilarity(
-        "POST",
-        "/test",
-        {},
-        Buffer.from([]),
+        {
+          method: "POST",
+          path: "/test",
+          headers: {},
+          body: Buffer.from([]),
+        },
         {
           request: {
             method: "POST",
@@ -96,10 +104,12 @@ describe("similarity", () => {
     ).toBe(1);
     expect(
       computeSimilarity(
-        "POST",
-        "/test?a=b",
-        {},
-        Buffer.from([]),
+        {
+          method: "POST",
+          path: "/test?a=b",
+          headers: {},
+          body: Buffer.from([]),
+        },
         {
           request: {
             method: "POST",
@@ -114,10 +124,12 @@ describe("similarity", () => {
     ).toBe(1);
     expect(
       computeSimilarity(
-        "POST",
-        "/test?a=b",
-        {},
-        Buffer.from([]),
+        {
+          method: "POST",
+          path: "/test?a=b",
+          headers: {},
+          body: Buffer.from([]),
+        },
         {
           request: {
             method: "POST",
@@ -132,10 +144,12 @@ describe("similarity", () => {
     ).toBe(2);
     expect(
       computeSimilarity(
-        "POST",
-        "/test?a=b&c=d",
-        {},
-        Buffer.from([]),
+        {
+          method: "POST",
+          path: "/test?a=b&c=d",
+          headers: {},
+          body: Buffer.from([]),
+        },
         {
           request: {
             method: "POST",
@@ -150,10 +164,12 @@ describe("similarity", () => {
     ).toBe(0);
     expect(
       computeSimilarity(
-        "POST",
-        "/test?c=f&a=b",
-        {},
-        Buffer.from([]),
+        {
+          method: "POST",
+          path: "/test?c=f&a=b",
+          headers: {},
+          body: Buffer.from([]),
+        },
         {
           request: {
             method: "POST",
@@ -171,16 +187,18 @@ describe("similarity", () => {
   it("counts headers differences (ignoring extraneous ones)", () => {
     expect(
       computeSimilarity(
-        "POST",
-        "/test",
         {
-          accept: "application/json",
-          "user-agent": "Chrome",
-          host: "local",
-          connection: "persist",
-          "x-region": "australia",
+          method: "POST",
+          path: "/test",
+          headers: {
+            accept: "application/json",
+            "user-agent": "Chrome",
+            host: "local",
+            connection: "persist",
+            "x-region": "australia",
+          },
+          body: Buffer.from([]),
         },
-        Buffer.from([]),
         {
           request: {
             method: "POST",
@@ -200,15 +218,17 @@ describe("similarity", () => {
     ).toBe(0);
     expect(
       computeSimilarity(
-        "POST",
-        "/test",
         {
-          accept: "application/json",
-          "user-agent": "Chrome",
-          host: "local",
-          connection: "persist",
+          method: "POST",
+          path: "/test",
+          headers: {
+            accept: "application/json",
+            "user-agent": "Chrome",
+            host: "local",
+            connection: "persist",
+          },
+          body: Buffer.from([]),
         },
-        Buffer.from([]),
         {
           request: {
             method: "POST",
@@ -228,16 +248,18 @@ describe("similarity", () => {
     ).toBe(1);
     expect(
       computeSimilarity(
-        "POST",
-        "/test",
         {
-          accept: "application/json",
-          "user-agent": "Chrome",
-          host: "local",
-          connection: "persist",
-          "x-region": "australia",
+          method: "POST",
+          path: "/test",
+          headers: {
+            accept: "application/json",
+            "user-agent": "Chrome",
+            host: "local",
+            connection: "persist",
+            "x-region": "australia",
+          },
+          body: Buffer.from([]),
         },
-        Buffer.from([]),
         {
           request: {
             method: "POST",
@@ -261,14 +283,16 @@ describe("similarity", () => {
     // The following payloads are identical, but formatted differently.
     expect(
       computeSimilarity(
-        "POST",
-        "/test",
-        {},
-        compactJsonBuffer({
-          a: 1,
-          b: 2,
-          c: 3,
-        }),
+        {
+          method: "POST",
+          path: "/test",
+          headers: {},
+          body: compactJsonBuffer({
+            a: 1,
+            b: 2,
+            c: 3,
+          }),
+        },
         {
           request: {
             method: "POST",
@@ -289,14 +313,16 @@ describe("similarity", () => {
     // The following payloads only have one field that differs (c).
     expect(
       computeSimilarity(
-        "POST",
-        "/test",
-        {},
-        compactJsonBuffer({
-          a: 1,
-          b: 2,
-          c: 3,
-        }),
+        {
+          method: "POST",
+          path: "/test",
+          headers: {},
+          body: compactJsonBuffer({
+            a: 1,
+            b: 2,
+            c: 3,
+          }),
+        },
         {
           request: {
             method: "POST",
@@ -320,14 +346,16 @@ describe("similarity", () => {
     // The following payloads have all different fields.
     expect(
       computeSimilarity(
-        "POST",
-        "/test",
-        {},
-        compactJsonBuffer({
-          a: 1,
-          b: 2,
-          c: 3,
-        }),
+        {
+          method: "POST",
+          path: "/test",
+          headers: {},
+          body: compactJsonBuffer({
+            a: 1,
+            b: 2,
+            c: 3,
+          }),
+        },
         {
           request: {
             method: "POST",
@@ -348,15 +376,17 @@ describe("similarity", () => {
     // The following payloads are identical after rewrite rules have been applied.
     expect(
       computeSimilarity(
-        "POST",
-        "/test",
-        {},
-        compactJsonBuffer({
-          name: "Jane Doe",
-          email:
-            "jane.doe-some-test-6f82fbbe-d36a-4c5c-b47b-84100122fbbc@example.com",
-          age: 42,
-        }),
+        {
+          method: "POST",
+          path: "/test",
+          headers: {},
+          body: compactJsonBuffer({
+            name: "Jane Doe",
+            email:
+              "jane.doe-some-test-6f82fbbe-d36a-4c5c-b47b-84100122fbbc@example.com",
+            age: 42,
+          }),
+        },
         {
           request: {
             method: "POST",
@@ -383,10 +413,12 @@ describe("similarity", () => {
   it("relies on string similarity", () => {
     expect(
       computeSimilarity(
-        "POST",
-        "/test",
-        {},
-        Buffer.from("abc"),
+        {
+          method: "POST",
+          path: "/test",
+          headers: {},
+          body: Buffer.from("abc"),
+        },
         {
           request: {
             method: "POST",
@@ -401,10 +433,12 @@ describe("similarity", () => {
     ).toBe(0);
     expect(
       computeSimilarity(
-        "POST",
-        "/test",
-        {},
-        Buffer.from("hello world"),
+        {
+          method: "POST",
+          path: "/test",
+          headers: {},
+          body: Buffer.from("hello world"),
+        },
         {
           request: {
             method: "POST",
@@ -428,10 +462,12 @@ describe("similarity", () => {
     );
     expect(
       computeSimilarity(
-        "POST",
-        "/test",
-        {},
-        avatarFile1,
+        {
+          method: "POST",
+          path: "/test",
+          headers: {},
+          body: avatarFile1,
+        },
         {
           request: {
             method: "POST",
@@ -446,10 +482,12 @@ describe("similarity", () => {
     ).toBe(0);
     expect(
       computeSimilarity(
-        "POST",
-        "/test",
-        {},
-        avatarFile1,
+        {
+          method: "POST",
+          path: "/test",
+          headers: {},
+          body: avatarFile1,
+        },
         {
           request: {
             method: "POST",

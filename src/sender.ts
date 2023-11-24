@@ -2,13 +2,14 @@ import chalk from "chalk";
 import http from "http";
 import https from "https";
 import { ensureBuffer } from "./buffer";
-import { Headers, TapeRecord } from "./tape";
+import { HttpRequestWithHost } from "./core";
+import { TapeRecord } from "./tape";
 
 /**
  * Sends a network request and returns the recorded tape.
  */
 export async function send(
-  request: RequestWithHost,
+  request: HttpRequestWithHost,
   options: {
     loggingEnabled?: boolean;
     timeout?: number;
@@ -75,16 +76,4 @@ export async function send(
     }
     throw e;
   }
-}
-
-export interface Request {
-  host?: string;
-  method: string;
-  path: string;
-  headers: Headers;
-  body: Buffer;
-}
-
-export interface RequestWithHost extends Request {
-  host: string;
 }

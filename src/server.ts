@@ -5,11 +5,12 @@ import http from "http";
 import https from "https";
 import net from "net";
 import { ensureBuffer } from "./buffer";
+import { HttpRequest } from "./core";
 import { findNextRecordToReplay, findRecordMatches } from "./matcher";
 import { Mode } from "./modes";
 import { Persistence } from "./persistence";
 import { RewriteRules } from "./rewrite";
-import { Request, send } from "./sender";
+import { send } from "./sender";
 import { TapeRecord } from "./tape";
 
 /**
@@ -79,7 +80,7 @@ export class RecordReplayServer {
       }
 
       try {
-        const request: Request = {
+        const request: HttpRequest = {
           method: req.method,
           path: extractPath(req.url),
           headers: req.headers,
@@ -186,7 +187,7 @@ export class RecordReplayServer {
   /**
    * Handles requests that are intended for Proxay itself.
    */
-  private handleProxayApi(request: Request, res: http.ServerResponse) {
+  private handleProxayApi(request: HttpRequest, res: http.ServerResponse) {
     // Sending a request to /__proxay will return a 200 (so tests can identify whether
     // their backend is Proxay or not).
     if (
@@ -247,7 +248,7 @@ export class RecordReplayServer {
   /**
    * Potentially rewrite the request before processing it.
    */
-  private rewriteRequest(request: Request) {
+  private rewriteRequest(request: HttpRequest) {
     // Grab the `host` header of the request.
     const hostname = (request.headers.host || null) as string | null;
 
@@ -276,7 +277,7 @@ export class RecordReplayServer {
   /**
    * Rewrite a gRPC-web+json request to be unframed.
    */
-  private rewriteGrpcWebJsonRequest(request: Request) {
+  private rewriteGrpcWebJsonRequest(request: HttpRequest) {
     /**
      * From the gRPC specification (https://github.com/grpc/grpc/blob/master/doc/PROTOCOL-HTTP2.md)
      *
@@ -314,7 +315,9 @@ export class RecordReplayServer {
     request.body = request.body.subarray(5);
   }
 
-  private async fetchResponse(request: Request): Promise<TapeRecord | null> {
+  private async fetchResponse(
+    request: HttpRequest,
+  ): Promise<TapeRecord | null> {
     switch (this.mode) {
       case "replay":
         return this.fetchReplayResponse(request);
@@ -333,15 +336,12 @@ export class RecordReplayServer {
    * Fetches the response from the tape, returning null otherwise.
    */
   private async fetchReplayResponse(
-    request: Request,
+    request: HttpRequest,
   ): Promise<TapeRecord | null> {
     const record = findNextRecordToReplay(
       findRecordMatches(
+        request,
         this.currentTapeRecords,
-        request.method,
-        request.path,
-        request.headers,
-        request.body,
         this.rewriteBeforeDiffRules,
       ),
       this.replayedTapes,
@@ -367,7 +367,7 @@ export class RecordReplayServer {
    * Fetches the response directly from the proxied host and records it.
    */
   private async fetchRecordResponse(
-    request: Request,
+    request: HttpRequest,
   ): Promise<TapeRecord | null> {
     if (!this.proxiedHost) {
       throw new Error("Missing proxied host");
@@ -396,15 +396,12 @@ export class RecordReplayServer {
    * Fetches the response from the tape if present, otherwise from the proxied host.
    */
   private async fetchMimicResponse(
-    request: Request,
+    request: HttpRequest,
   ): Promise<TapeRecord | null> {
     let record = findNextRecordToReplay(
       findRecordMatches(
+        request,
         this.currentTapeRecords,
-        request.method,
-        request.path,
-        request.headers,
-        request.body,
         this.rewriteBeforeDiffRules,
       ),
       this.replayedTapes,
@@ -443,7 +440,7 @@ export class RecordReplayServer {
    * Fetches the response directly from the proxied host without recording it.
    */
   private async fetchPassthroughResponse(
-    request: Request,
+    request: HttpRequest,
   ): Promise<TapeRecord | null> {
     if (!this.proxiedHost) {
       throw new Error("Missing proxied host");

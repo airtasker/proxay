@@ -3,7 +3,8 @@ import { parse as parseQueryString, ParsedUrlQuery } from "querystring";
 import { compareTwoStrings } from "string-similarity";
 import { RewriteRules } from "./rewrite";
 import { serialiseBuffer } from "./persistence";
-import { Headers, PersistedBuffer, TapeRecord } from "./tape";
+import { PersistedBuffer, TapeRecord } from "./tape";
+import { HttpHeaders, HttpRequest } from "./core";
 
 /**
  * Returns a "similarity score" between a request and an existing record.
@@ -13,28 +14,25 @@ import { Headers, PersistedBuffer, TapeRecord } from "./tape";
  * - +Infinity means "very different" (no match)
  */
 export function computeSimilarity(
-  requestMethod: string,
-  requestPath: string,
-  requestHeaders: Headers,
-  requestBody: Buffer,
+  request: HttpRequest,
   compareTo: TapeRecord,
   rewriteBeforeDiffRules: RewriteRules,
 ): number {
   // If the HTTP method is different, no match.
-  if (requestMethod !== compareTo.request.method) {
+  if (request.method !== compareTo.request.method) {
     return +Infinity;
   }
 
   // If the path is different (apart from query parameters), no match.
   if (
-    pathWithoutQueryParameters(requestPath) !==
+    pathWithoutQueryParameters(request.path) !==
     pathWithoutQueryParameters(compareTo.request.path)
   ) {
     return +Infinity;
   }
 
   // Compare the query parameters.
-  const parsedQueryParameters = parseQueryParameters(requestPath);
+  const parsedQueryParameters = parseQueryParameters(request.path);
   const parsedCompareToQueryParameters = parseQueryParameters(
     compareTo.request.path,
   );
@@ -45,7 +43,7 @@ export function computeSimilarity(
   );
 
   // Compare the cleaned headers.
-  const cleanedHeaders = stripExtraneousHeaders(requestHeaders);
+  const cleanedHeaders = stripExtraneousHeaders(request.headers);
   const cleanedCompareToHeaders = stripExtraneousHeaders(
     compareTo.request.headers,
   );
@@ -56,7 +54,7 @@ export function computeSimilarity(
   );
 
   // Compare the bodies.
-  const serialisedRequestBody = serialiseBuffer(requestBody, requestHeaders);
+  const serialisedRequestBody = serialiseBuffer(request.body, request.headers);
   const serialisedCompareToRequestBody = serialiseBuffer(
     compareTo.request.body,
     compareTo.request.headers,
@@ -91,12 +89,12 @@ function countBodyDifferences(
     } catch (e) {
       return countStringDifferences(a.data, b.data, rewriteBeforeDiffRules);
     }
-  }
-  if (a.encoding === "base64" && b.encoding === "base64") {
+  } else if (a.encoding === "base64" && b.encoding === "base64") {
     return countStringDifferences(a.data, b.data, rewriteBeforeDiffRules);
+  } else {
+    // If we couldn't compare, then we'll assume they don't match.
+    return +Infinity;
   }
-  // If we couldn't compare, then we'll assume they don't match.
-  return +Infinity;
 }
 
 /**
@@ -106,7 +104,7 @@ function countObjectDifferences(
   a: object,
   b: object,
   rewriteRules: RewriteRules,
-) {
+): number {
   a = rewriteRules.apply(a);
   b = rewriteRules.apply(b);
 
@@ -120,7 +118,7 @@ function countStringDifferences(
   a: string,
   b: string,
   rewriteRules: RewriteRules,
-) {
+): number {
   // Apply the rewrite rules before computing any differences.
   a = rewriteRules.apply(a);
   b = rewriteRules.apply(b);
@@ -135,7 +133,7 @@ function countStringDifferences(
   return numberOfDifferentCharacters;
 }
 
-function pathWithoutQueryParameters(path: string) {
+function pathWithoutQueryParameters(path: string): string {
   const questionMarkPosition = path.indexOf("?");
   if (questionMarkPosition !== -1) {
     return path.substring(0, questionMarkPosition);
@@ -156,8 +154,8 @@ function parseQueryParameters(path: string): ParsedUrlQuery {
 /**
  * Strips out headers that are likely to result in false negatives.
  */
-function stripExtraneousHeaders(headers: Headers): Headers {
-  const safeHeaders: Headers = {};
+function stripExtraneousHeaders(headers: HttpHeaders): HttpHeaders {
+  const safeHeaders: HttpHeaders = {};
   for (const key of Object.keys(headers)) {
     switch (key) {
       case "accept":
