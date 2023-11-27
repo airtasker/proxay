@@ -286,7 +286,9 @@ describe("similarity", () => {
         {
           method: "POST",
           path: "/test",
-          headers: {},
+          headers: {
+            "content-type": "application/json",
+          },
           body: compactJsonBuffer({
             a: 1,
             b: 2,
@@ -297,7 +299,9 @@ describe("similarity", () => {
           request: {
             method: "POST",
             path: "/test",
-            headers: {},
+            headers: {
+              "content-type": "application/json",
+            },
             body: wellFormattedJsonBuffer({
               a: 1,
               b: 2,
@@ -316,7 +320,9 @@ describe("similarity", () => {
         {
           method: "POST",
           path: "/test",
-          headers: {},
+          headers: {
+            "content-type": "application/json",
+          },
           body: compactJsonBuffer({
             a: 1,
             b: 2,
@@ -327,7 +333,9 @@ describe("similarity", () => {
           request: {
             method: "POST",
             path: "/test",
-            headers: {},
+            headers: {
+              "content-type": "application/json",
+            },
             body: wellFormattedJsonBuffer({
               a: 1,
               b: 2,
@@ -349,7 +357,9 @@ describe("similarity", () => {
         {
           method: "POST",
           path: "/test",
-          headers: {},
+          headers: {
+            "content-type": "application/json",
+          },
           body: compactJsonBuffer({
             a: 1,
             b: 2,
@@ -360,7 +370,9 @@ describe("similarity", () => {
           request: {
             method: "POST",
             path: "/test",
-            headers: {},
+            headers: {
+              "content-type": "application/json",
+            },
             body: wellFormattedJsonBuffer({
               d: 1,
               e: 2,
@@ -379,7 +391,9 @@ describe("similarity", () => {
         {
           method: "POST",
           path: "/test",
-          headers: {},
+          headers: {
+            "content-type": "application/json",
+          },
           body: compactJsonBuffer({
             name: "Jane Doe",
             email:
@@ -391,7 +405,9 @@ describe("similarity", () => {
           request: {
             method: "POST",
             path: "/test",
-            headers: {},
+            headers: {
+              "content-type": "application/json",
+            },
             body: wellFormattedJsonBuffer({
               name: "Jane Doe",
               email: "jane.doe-some-test@example.com",
@@ -416,14 +432,18 @@ describe("similarity", () => {
         {
           method: "POST",
           path: "/test",
-          headers: {},
+          headers: {
+            "content-type": "text/plain",
+          },
           body: Buffer.from("abc"),
         },
         {
           request: {
             method: "POST",
             path: "/test",
-            headers: {},
+            headers: {
+              "content-type": "text/plain",
+            },
             body: Buffer.from("abc"),
           },
           response: DUMMY_RESPONSE,
@@ -436,14 +456,18 @@ describe("similarity", () => {
         {
           method: "POST",
           path: "/test",
-          headers: {},
+          headers: {
+            "content-type": "text/plain",
+          },
           body: Buffer.from("hello world"),
         },
         {
           request: {
             method: "POST",
             path: "/test",
-            headers: {},
+            headers: {
+              "content-type": "text/plain",
+            },
             body: Buffer.from("hello Kevin"),
           },
           response: DUMMY_RESPONSE,
@@ -465,14 +489,18 @@ describe("similarity", () => {
         {
           method: "POST",
           path: "/test",
-          headers: {},
+          headers: {
+            "content-type": "image/jpeg",
+          },
           body: avatarFile1,
         },
         {
           request: {
             method: "POST",
             path: "/test",
-            headers: {},
+            headers: {
+              "content-type": "image/jpeg",
+            },
             body: avatarFile1,
           },
           response: DUMMY_RESPONSE,
@@ -485,14 +513,18 @@ describe("similarity", () => {
         {
           method: "POST",
           path: "/test",
-          headers: {},
+          headers: {
+            "content-type": "image/jpeg",
+          },
           body: avatarFile1,
         },
         {
           request: {
             method: "POST",
             path: "/test",
-            headers: {},
+            headers: {
+              "content-type": "image/jpeg",
+            },
             body: avatarFile2,
           },
           response: DUMMY_RESPONSE,

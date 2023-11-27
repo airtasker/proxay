@@ -80,7 +80,10 @@ function getHeaderAsString(headers: HttpHeaders, headerName: string): string {
 }
 
 function getHttpRequestContentType(request: HttpRequest): string {
-  return getHeaderAsString(request.headers, "content-type");
+  return (
+    getHeaderAsString(request.headers, "content-type") ||
+    "application/octet-stream"
+  );
 }
 
 function getHttpRequestBodyDecoded(request: HttpRequest): Buffer {
@@ -99,6 +102,14 @@ function getHttpRequestBodyDecoded(request: HttpRequest): Buffer {
     default:
       throw Error(`Unhandled content-encoding value "${contentEncoding}"`);
   }
+}
+
+function decodeHttpRequestBodyToString(
+  request: HttpRequest,
+  contentType: ParsedContentType,
+): string {
+  const encoding = contentType.parameters.charset as BufferEncoding | undefined;
+  return getHttpRequestBodyDecoded(request).toString(encoding || "utf-8");
 }
 
 /**
@@ -126,39 +137,22 @@ function countBodyDifferences(
       contentType2,
       rewriteBeforeDiffRules,
     );
-    return 0; // TODO
   } else if (contentType === "application/grpc-web+json") {
     return 0; // TODO
   } else if (contentType === "application/grpc-web+proto") {
     return 0; // TODO
   } else if (contentType.startsWith("text/")) {
-    return 0; // TODO
+    return countBodyDifferencesText(
+      request1,
+      contentType1,
+      request2,
+      contentType2,
+      rewriteBeforeDiffRules,
+    );
   } else {
-    // No special cases. Assume binary data.
+    // No more special cases to consider. Assume binary data for all other content types.
     return countBodyDifferencesBinary(request1, request2);
   }
-
-  /*
-  if (a.encoding === "utf8" && b.encoding === "utf8") {
-    try {
-      const requestBodyJson = JSON.parse(a.data || "{}");
-      const recordBodyJson = JSON.parse(b.data || "{}");
-      // Return the number of fields that differ in JSON.
-      return countObjectDifferences(
-        requestBodyJson,
-        recordBodyJson,
-        rewriteBeforeDiffRules,
-      );
-    } catch (e) {
-      return countStringDifferences(a.data, b.data, rewriteBeforeDiffRules);
-    }
-  } else if (a.encoding === "base64" && b.encoding === "base64") {
-    return countStringDifferences(a.data, b.data, rewriteBeforeDiffRules);
-  } else {
-    // If we couldn't compare, then we'll assume they don't match.
-    return +Infinity;
-  }
-  */
 }
 
 function countBodyDifferencesApplicationJson(
@@ -168,31 +162,48 @@ function countBodyDifferencesApplicationJson(
   contentType2: ParsedContentType,
   rewriteBeforeDiffRules: RewriteRules,
 ): number {
-  const encoding1 =
-    (contentType1.parameters.charset as BufferEncoding | undefined) ||
-    "utf-8";
-  const body1 = getHttpRequestBodyDecoded(request1).toString(encoding1);
-  const encoding2 =
-    (contentType2.parameters.charset as BufferEncoding | undefined) ||
-    "utf-8";
-  const body2 = getHttpRequestBodyDecoded(request2).toString(encoding2);
+  // Decode the bodies to strings.
+  const body1 = decodeHttpRequestBodyToString(request1, contentType1);
+  const body2 = decodeHttpRequestBodyToString(request2, contentType2);
 
   // Early bail if bodies are empty.
   if (body1.length === 0 && body1.length === body2.length) {
     return 0;
   }
 
+  // Attempt to parse both bodies as JSON.
   let json1: any;
   let json2: any;
   try {
     json1 = JSON.parse(body1);
     json2 = JSON.parse(body2);
   } catch (e) {
+    // If we fail, fall back to a binary comparison.
     return countBodyDifferencesBinary(request1, request2);
   }
 
   // Return the number of fields that differ in JSON.
   return countObjectDifferences(json1, json2, rewriteBeforeDiffRules);
+}
+
+function countBodyDifferencesText(
+  request1: HttpRequest,
+  contentType1: ParsedContentType,
+  request2: HttpRequest,
+  contentType2: ParsedContentType,
+  rewriteBeforeDiffRules: RewriteRules,
+): number {
+  // Decode the bodies to strings.
+  const body1 = decodeHttpRequestBodyToString(request1, contentType1);
+  const body2 = decodeHttpRequestBodyToString(request2, contentType2);
+
+  // Early bail if bodies are empty.
+  if (body1.length === 0 && body1.length === body2.length) {
+    return 0;
+  }
+
+  // Return the number of differences.
+  return countStringDifferences(body1, body2, rewriteBeforeDiffRules);
 }
 
 function countBodyDifferencesBinary(
