@@ -8,6 +8,8 @@
  * Message → *{binary octet}
  */
 
+import { heuristicallyConvertProtoPayloadIntoObject } from "./protobuf";
+
 export type GrpcMessageFormat = "proto" | "json" | "other";
 
 /**
@@ -88,5 +90,5 @@ function convertJsonMessageToObject(message: Buffer): object | null {
 }
 
 function convertProtoMessageToObject(message: Buffer): object | null {
-  return null;
+  return heuristicallyConvertProtoPayloadIntoObject(message);
 }
