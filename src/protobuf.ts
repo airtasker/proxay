@@ -1,7 +1,6 @@
 /**
  * Protobuf wire encoding: https://protobuf.dev/programming-guides/encoding/
  */
-
 // From: https://protobuf.dev/programming-guides/encoding/#structure
 enum WireType {
   VARINT = 0 & 0x07,
@@ -18,6 +17,14 @@ type Tag = {
   fieldNumber: number;
   wireType: WireType;
 };
+
+type WireValue =
+  | string
+  | number
+  | bigint
+  | Buffer
+  | (number | bigint)[]
+  | { [key: number]: WireValue[] };
 
 class ParseError extends Error {}
 
@@ -97,9 +104,9 @@ export class Scanner {
  */
 export function heuristicallyConvertProtoPayloadIntoObject(
   payload: Buffer,
-): object | null {
+): Record<number, WireValue[]> | null {
   const scanner = new Scanner(payload);
-  let object: object | null;
+  let object: Record<number, WireValue[]> | null;
   try {
     object = readMessage(scanner);
   } catch (e) {
@@ -156,16 +163,72 @@ function readI64(scanner: Scanner): bigint {
 
 // len-prefix := size (message | string | bytes | packed);
 //               size encoded as int32 varint
-function readLenPrefixed(scanner: Scanner): any | null {
+function readLenPrefixed(scanner: Scanner): WireValue | null {
   const length = readVarint(scanner);
   const bytes = scanner.readBytes(length);
-  // TODO process bytes.
-  return bytes; // TODO
+
+  if (isValidMessage(bytes)) {
+    return heuristicallyConvertProtoPayloadIntoObject(bytes);
+  } else if (isLikelyString(bytes)) {
+    return readString(bytes);
+  } else {
+    // Assume it's just bytes.
+    return bytes;
+  }
+}
+
+function isLikelyString(buffer: Buffer): boolean {
+  const decoder = new TextDecoder("utf8", { fatal: true });
+  let text: string;
+  try {
+    text = decoder.decode(buffer);
+  } catch (e) {
+    return false;
+  }
+
+  // Some super rough heuristics. Count the number of characters that are control characters,
+  // as well as how many are alnum. These heuristics won't work well if the text isn't primarily
+  // English data. These heuristics could be improved or changed in the future.
+  let length: number = 0;
+  let nControlCharacters: number = 0;
+  let nAlnumCharacters: number = 0;
+  for (const char of text) {
+    length += 1;
+    const codePoint = char.codePointAt(0) || 0;
+
+    // Is it a control character?
+    if (codePoint < 0x20 || codePoint === 0x7f) {
+      nControlCharacters += 1;
+    }
+
+    // Is it an alnum character?
+    if (codePoint >= 0x20 && codePoint < 0x7f) {
+      nAlnumCharacters += 1;
+    }
+  }
+
+  if (nControlCharacters / length >= 0.1) {
+    return false;
+  } else if (nAlnumCharacters / length < 0.4) {
+    return false;
+  } else {
+    return true;
+  }
+}
+
+function readString(buffer: Buffer): string {
+  return new TextDecoder("utf8", { fatal: true }).decode(buffer);
+}
+
+function isValidMessage(buffer: Buffer): boolean {
+  return heuristicallyConvertProtoPayloadIntoObject(buffer) !== null;
 }
 
 // message    := (tag value)*
-function readMessage(scanner: Scanner): Record<number, any> | null {
-  const object: Record<number, any> = {};
+function readMessage(
+  scanner: Scanner,
+): Record<number, WireValue[]> | null {
+  const object: Record<number, WireValue[]> = {};
 
   // Read as many values as we can.
   while (true) {
@@ -179,6 +242,9 @@ function readMessage(scanner: Scanner): Record<number, any> | null {
 
     // Read the value, using the tag information.
     const value = readValue(scanner, tag);
+    if (value === null) {
+      return null;
+    }
 
     // Skip no-value values.
     if (Object.is(value, NO_VALUE)) {
@@ -186,7 +252,12 @@ function readMessage(scanner: Scanner): Record<number, any> | null {
     }
 
     // Store the value against the field number in the returned payload.
-    object[tag.fieldNumber] = value;
+    // We need to store one to many values against field numbers as `repeated` fields are
+    // represented as multiple values on the wire.
+    if (object[tag.fieldNumber] === undefined) {
+      object[tag.fieldNumber] = [];
+    }
+    object[tag.fieldNumber].push(value);
   }
 
   return object;
@@ -206,7 +277,7 @@ function readTag(scanner: Scanner): Tag {
 //               i64         for wire_type == I64,
 //               len-prefix  for wire_type == LEN,
 //               <empty>     for wire_type == SGROUP or EGROUP
-function readValue(scanner: Scanner, tag: Tag): any | null {
+function readValue(scanner: Scanner, tag: Tag): WireValue | null {
   switch (tag.wireType) {
     case WireType.VARINT:
       return readVarint(scanner);
