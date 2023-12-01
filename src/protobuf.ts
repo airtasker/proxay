@@ -18,7 +18,7 @@ type Tag = {
   wireType: WireType;
 };
 
-type WireValue =
+export type WireValue =
   | string
   | number
   | bigint
@@ -169,6 +169,8 @@ function readLenPrefixed(scanner: Scanner): WireValue | null {
 
   if (isValidMessage(bytes)) {
     return heuristicallyConvertProtoPayloadIntoObject(bytes);
+  } else if (isValidPacked(bytes)) {
+    return readPacked(bytes);
   } else if (isLikelyString(bytes)) {
     return readString(bytes);
   } else {
@@ -178,6 +180,7 @@ function readLenPrefixed(scanner: Scanner): WireValue | null {
 }
 
 function isLikelyString(buffer: Buffer): boolean {
+  // Is it valid UTF-8?
   const decoder = new TextDecoder("utf8", { fatal: true });
   let text: string;
   try {
@@ -207,6 +210,7 @@ function isLikelyString(buffer: Buffer): boolean {
     }
   }
 
+  // Dodgy heuristics.
   if (nControlCharacters / length >= 0.1) {
     return false;
   } else if (nAlnumCharacters / length < 0.4) {
@@ -220,14 +224,99 @@ function readString(buffer: Buffer): string {
   return new TextDecoder("utf8", { fatal: true }).decode(buffer);
 }
 
+function isValidPacked(buffer: Buffer): boolean {
+  return readPacked(buffer) !== null;
+}
+
+// https://protobuf.dev/programming-guides/encoding/#packed
+function readPacked(buffer: Buffer): (number | bigint)[] | null {
+  let packedValues: (number | bigint)[] | null = null;
+
+  // Technically, protobuf allows the values here to be either VARINT, I32, or I64. You need the
+  // protobuf definition itself to know the type of this packed value. Here, we assume it is
+  // VARINT and roll with it. If that fails, we check if it's a multiple of 8 in length. If it is,
+  // we assume it is I64. If that fails, we acheck if it's a multiple of 4 in length. If it is, we
+  // assume it is I32. If that fails, we give up.
+  try {
+    packedValues = readPackedVarint(buffer);
+  } catch (e) {
+    packedValues = null;
+  }
+  if (packedValues !== null) {
+    return packedValues;
+  }
+
+  try {
+    packedValues = readPackedI64(buffer);
+  } catch (e) {
+    packedValues = null;
+  }
+  if (packedValues !== null) {
+    return packedValues;
+  }
+
+  try {
+    packedValues = readPackedI32(buffer);
+  } catch (e) {
+    packedValues = null;
+  }
+  if (packedValues !== null) {
+    return packedValues;
+  }
+
+  return null;
+}
+
+function readPackedVarint(buffer: Buffer): number[] | null {
+  const scanner = new Scanner(buffer);
+  const packedValues: number[] = [];
+
+  while (!scanner.isAtEnd()) {
+    const value = readVarint(scanner);
+    packedValues.push(value);
+  }
+
+  return packedValues;
+}
+
+function readPackedI32(buffer: Buffer): number[] | null {
+  if (buffer.length % 4 !== 0) {
+    return null;
+  }
+
+  const scanner = new Scanner(buffer);
+  const packedValues: number[] = [];
+
+  while (!scanner.isAtEnd()) {
+    const value = readI32(scanner);
+    packedValues.push(value);
+  }
+
+  return packedValues;
+}
+
+function readPackedI64(buffer: Buffer): bigint[] | null {
+  if (buffer.length % 8 !== 0) {
+    return null;
+  }
+
+  const scanner = new Scanner(buffer);
+  const packedValues: bigint[] = [];
+
+  while (!scanner.isAtEnd()) {
+    const value = readI64(scanner);
+    packedValues.push(value);
+  }
+
+  return packedValues;
+}
+
 function isValidMessage(buffer: Buffer): boolean {
   return heuristicallyConvertProtoPayloadIntoObject(buffer) !== null;
 }
 
 // message    := (tag value)*
-function readMessage(
-  scanner: Scanner,
-): Record<number, WireValue[]> | null {
+function readMessage(scanner: Scanner): Record<number, WireValue[]> | null {
   const object: Record<number, WireValue[]> = {};
 
   // Read as many values as we can.
@@ -254,10 +343,19 @@ function readMessage(
     // Store the value against the field number in the returned payload.
     // We need to store one to many values against field numbers as `repeated` fields are
     // represented as multiple values on the wire.
-    if (object[tag.fieldNumber] === undefined) {
-      object[tag.fieldNumber] = [];
+    let fieldValues = object[tag.fieldNumber];
+    if (fieldValues === undefined) {
+      fieldValues = object[tag.fieldNumber] = [];
     }
-    object[tag.fieldNumber].push(value);
+
+    // Any unpacked value that's returned as an Array is multiple individual values, so we append
+    // each of them in turn to the set of values for the field, rather than appending the array
+    // itself.
+    if (Array.isArray(value)) {
+      fieldValues.push.apply(fieldValues, value);
+    } else {
+      fieldValues.push(value);
+    }
   }
 
   return object;
