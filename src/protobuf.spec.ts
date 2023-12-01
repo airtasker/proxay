@@ -26,4 +26,11 @@ describe("readVarint", () => {
     expect(value).toEqual(150);
     expect(scanner.isAtEnd()).toBeTruthy();
   });
+
+  it("works for a 3-byte varint", () => {
+    const scanner = new Scanner(Buffer.from([0xc0, 0xc4, 0x07]));
+    const value = readVarint(scanner);
+    expect(value).toEqual(123456);
+    expect(scanner.isAtEnd()).toBeTruthy();
+  });
 });
