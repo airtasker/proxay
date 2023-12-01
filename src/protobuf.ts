@@ -161,12 +161,12 @@ function readLenPrefixed(scanner: Scanner): WireValue | null {
   const length = readVarint(scanner);
   const bytes = scanner.readBytes(length);
 
-  if (isValidMessage(bytes)) {
+  if (isLikelyString(bytes)) {
+    return readString(bytes);
+  } else if (isValidMessage(bytes)) {
     return heuristicallyConvertProtoPayloadIntoObject(bytes);
   } else if (isValidPacked(bytes)) {
     return readPacked(bytes);
-  } else if (isLikelyString(bytes)) {
-    return readString(bytes);
   } else {
     // Assume it's just bytes.
     return bytes;
