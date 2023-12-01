@@ -26,8 +26,6 @@ export type WireValue =
   | (number | bigint)[]
   | { [key: number]: WireValue[] };
 
-class ParseError extends Error {}
-
 export class ScannerError extends Error {
   constructor(message: string) {
     super(message);
@@ -46,13 +44,13 @@ export class Scanner {
   ensureHasNMoreBytes(n: number) {
     if (!this.hasNMoreBytes(n)) {
       throw new ScannerError(
-        `Attempted to read ${n} byte(s) but there aren't that many bytes left to read.`,
+        `Attempted to read ${n} byte(s) but there aren't that many bytes left to read. index=${this.index} n=${n} length=${this.buffer.length}.`,
       );
     }
   }
 
   hasNMoreBytes(n: number): boolean {
-    return this.index + n < this.buffer.length;
+    return this.index + n <= this.buffer.length;
   }
 
   isAtEnd(): boolean {
@@ -62,7 +60,7 @@ export class Scanner {
   readByte(): number {
     this.ensureHasNMoreBytes(1);
 
-    const value = this.buffer.readUInt8();
+    const value = this.buffer.readUInt8(this.index);
     this.index += 1;
     return value;
   }
@@ -78,7 +76,7 @@ export class Scanner {
   read4BytesLE(): number {
     this.ensureHasNMoreBytes(4);
 
-    const value = this.buffer.readUint32LE();
+    const value = this.buffer.readUint32LE(this.index);
     this.index += 4;
     return value;
   }
@@ -86,7 +84,7 @@ export class Scanner {
   read8BytesLE(): bigint {
     this.ensureHasNMoreBytes(8);
 
-    const value = this.buffer.readBigUInt64LE();
+    const value = this.buffer.readBigUInt64LE(this.index);
     this.index += 8;
     return value;
   }
@@ -112,8 +110,6 @@ export function heuristicallyConvertProtoPayloadIntoObject(
   } catch (e) {
     if (e instanceof ScannerError) {
       return null;
-    } else if (e instanceof ParseError) {
-      return null;
     } else {
       throw e;
     }
@@ -125,10 +121,8 @@ export function heuristicallyConvertProtoPayloadIntoObject(
   }
 }
 
-/**
- * https://protobuf.dev/programming-guides/encoding/#varints
- */
-function readVarint(scanner: Scanner): number {
+// https://protobuf.dev/programming-guides/encoding/#varints
+export function readVarint(scanner: Scanner): number {
   // Variable-width integers, or varints, are at the core of the wire format.
   // They allow encoding unsigned 64-bit integers using anywhere between one and ten bytes,
   // with small values using fewer bytes.
@@ -139,10 +133,10 @@ function readVarint(scanner: Scanner): number {
   // built by appending together the 7-bit payloads of its constituent bytes.
   let value: number = 0x00;
   let readMore: boolean = true;
-  while (readMore) {
+  for (let shift = 0; readMore; shift += 7) {
     const b = scanner.readByte();
     readMore = ((b >> 7) & 0x01) === 1;
-    value = (value << 7) | (b & 0x7f);
+    value = ((b & 0x7f) << shift) | value;
   }
   return value;
 }
