@@ -163,6 +163,9 @@ function stripExtraneousHeaders(headers: Headers): Headers {
       case "transfer-encoding":
       case "user-agent":
       case "warning":
+      case "x-datadog-trace-id":
+      case "x-datadog-parent-id":
+      case "traceparent":
         // Ignore.
         continue;
       default:
