@@ -1,4 +1,3 @@
-import brotli from "brotli";
 import zlib from "zlib";
 
 export type CompressionAlgorithm = "br" | "gzip" | "none";
@@ -11,12 +10,7 @@ export function compressBuffer(
     case "none":
       return buffer;
     case "br":
-      const compressed = brotli.compress(buffer);
-      if (compressed !== null) {
-        return Buffer.from(compressed);
-      } else {
-        throw new Error(`Brotli compression failed!`);
-      }
+      return zlib.brotliCompressSync(buffer);
     case "gzip":
       return zlib.gzipSync(buffer);
     default:
@@ -32,7 +26,7 @@ export function decompressBuffer(
     case "none":
       return buffer;
     case "br":
-      return Buffer.from(brotli.decompress(buffer));
+      return zlib.brotliDecompressSync(buffer);
     case "gzip":
       return zlib.gunzipSync(buffer);
     default:
