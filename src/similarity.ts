@@ -165,13 +165,8 @@ function countBodyDifferencesBinary(
   request1: HttpRequest,
   request2: HttpRequest,
 ): number {
-  // Compare the bytes of each of the bodies using a textual edit distance comparison.
-  const body1 = Array.from(request1.body)
-    .map((v) => v.toString(16).padStart(2, "0"))
-    .join(" ");
-  const body2 = Array.from(request2.body)
-    .map((v) => v.toString(16).padStart(2, "0"))
-    .join(" ");
+  const body1 = request1.body.toString("base64");
+  const body2 = request2.body.toString("base64");
   return countStringDifferences(body1, body2, new RewriteRules());
 }
 
