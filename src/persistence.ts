@@ -1,15 +1,17 @@
-import brotli from "brotli";
 import fs from "fs-extra";
 import yaml from "js-yaml";
 import path from "path";
-import { gunzipSync, gzipSync } from "zlib";
-import { HttpHeaders } from "./http";
 import {
-  CompressionAlgorithm,
-  PersistedBuffer,
-  PersistedTapeRecord,
-  TapeRecord,
-} from "./tape";
+  compressBuffer,
+  convertHttpContentEncodingToCompressionAlgorithm,
+} from "./compression";
+import {
+  getHttpBodyDecoded,
+  getHttpContentEncoding,
+  HttpRequest,
+  HttpResponse,
+} from "./http";
+import { PersistedBuffer, PersistedTapeRecord, TapeRecord } from "./tape";
 
 /**
  * Persistence layer to save tapes to disk and read them from disk.
@@ -94,12 +96,12 @@ export function persistTape(record: TapeRecord): PersistedTapeRecord {
       method: record.request.method,
       path: record.request.path,
       headers: record.request.headers,
-      body: serialiseBuffer(record.request.body, record.request.headers),
+      body: serialiseForTape(record.request),
     },
     response: {
       status: record.response.status,
       headers: record.response.headers,
-      body: serialiseBuffer(record.response.body, record.response.headers),
+      body: serialiseForTape(record.response),
     },
   };
 }
@@ -120,22 +122,12 @@ export function reviveTape(persistedRecord: PersistedTapeRecord): TapeRecord {
   };
 }
 
-export function serialiseBuffer(
-  buffer: Buffer,
-  headers: HttpHeaders,
-): PersistedBuffer {
-  const header = headers["content-encoding"];
-  const contentEncoding = typeof header === "string" ? header : undefined;
-  const originalBuffer = buffer;
-  let compression: CompressionAlgorithm = "none";
-  if (contentEncoding === "br") {
-    buffer = Buffer.from(brotli.decompress(buffer));
-    compression = "br";
-  }
-  if (contentEncoding === "gzip") {
-    buffer = gunzipSync(buffer);
-    compression = "gzip";
-  }
+function serialiseForTape(r: HttpRequest | HttpResponse): PersistedBuffer {
+  const buffer = getHttpBodyDecoded(r);
+  const contentEncoding = getHttpContentEncoding(r);
+  const compressionAlgorithm =
+    convertHttpContentEncodingToCompressionAlgorithm(contentEncoding);
+
   const utf8Representation = buffer.toString("utf8");
   try {
     // Can it be safely stored and recreated in YAML?
@@ -148,17 +140,18 @@ export function serialiseBuffer(
       return {
         encoding: "utf8",
         data: utf8Representation,
-        compression,
+        compression: compressionAlgorithm,
       };
     }
   } catch {
     // Fall through.
   }
+
   // No luck. Fall back to Base64, persisting the original buffer
   // since we might as well store it in its compressed state.
   return {
     encoding: "base64",
-    data: originalBuffer.toString("base64"),
+    data: r.body.toString("base64"),
   };
 }
 
@@ -170,21 +163,7 @@ function unserialiseBuffer(persisted: PersistedBuffer): Buffer {
       break;
     case "utf8":
       buffer = Buffer.from(persisted.data, "utf8");
-      if (persisted.compression === "br") {
-        // TODO: Find a workaround for the new compressed message not necessarily
-        // being identical to what was originally sent (update Content-Length?).
-        const compressed = brotli.compress(buffer);
-        if (compressed) {
-          buffer = Buffer.from(compressed);
-        } else {
-          throw new Error(`Brotli compression failed!`);
-        }
-      }
-      if (persisted.compression === "gzip") {
-        // TODO: Find a workaround for the new compressed message not necessarily
-        // being identical to what was originally sent (update Content-Length?).
-        buffer = gzipSync(buffer);
-      }
+      buffer = compressBuffer(persisted.compression, buffer);
       break;
     default:
       throw new Error(`Unsupported encoding!`);

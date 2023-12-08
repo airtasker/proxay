@@ -1,3 +1,4 @@
+import { CompressionAlgorithm } from "./compression";
 import { HttpHeaders, HttpRequest, HttpResponse } from "./http";
 
 /**
@@ -40,5 +41,3 @@ export type PersistedBuffer =
       compression: CompressionAlgorithm;
       data: string;
     };
-
-export type CompressionAlgorithm = "br" | "gzip" | "none";
