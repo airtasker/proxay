@@ -91,7 +91,7 @@ describe("Match requests without passing similarity score", () => {
 });
 
 describe("Match requests with similarity score 1", () => {
-  setupServers({ mode: "replay", tapeDirName: "match-requests",score:1 });
+  setupServers({ mode: "replay", tapeDirName: "match-requests", score: 1 });
 
   it("Picks the best match for a given request", async () => {
     // Start recording in tape "tape".
@@ -178,7 +178,7 @@ describe("Match requests with similarity score 1", () => {
 });
 
 describe("Match requests with similarity score 0", () => {
-  setupServers({ mode: "replay", tapeDirName: "match-requests",score:0 });
+  setupServers({ mode: "replay", tapeDirName: "match-requests", score: 0 });
 
   it("Picks the best match for a given request", async () => {
     // Start recording in tape "tape".

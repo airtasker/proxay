@@ -106,7 +106,8 @@ async function main(argv: string[]) {
   const unframeGrpcWebJsonRequestsHostnames: string[] =
     options.unframeGrpcWebJsonRequestsHostname;
   const rewriteBeforeDiffRules: RewriteRules = options.rewriteBeforeDiff;
-  const score: number = options.score === undefined ? +Infinity : parseInt(options.score)
+  const score: number =
+    options.score === undefined ? +Infinity : parseInt(options.score, 10);
 
   switch (initialMode) {
     case "record":

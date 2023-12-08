@@ -46,7 +46,7 @@ export class RecordReplayServer {
     httpsCert?: string;
     unframeGrpcWebJsonRequestsHostnames?: string[];
     rewriteBeforeDiffRules?: RewriteRules;
-    score?: number
+    score?: number;
   }) {
     this.currentTapeRecords = [];
     this.mode = options.initialMode;
@@ -86,7 +86,7 @@ export class RecordReplayServer {
           method: req.method,
           path: extractPath(req.url),
           headers: req.headers,
-          body: await receiveRequestBody(req)
+          body: await receiveRequestBody(req),
         };
 
         // Is this a proxay API call?
