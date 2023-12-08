@@ -9,7 +9,12 @@ import { compareTwoStrings } from "string-similarity";
 import { gunzipSync } from "zlib";
 import { RewriteRules } from "./rewrite";
 import { TapeRecord } from "./tape";
-import { HttpHeaders, HttpRequest } from "./http";
+import {
+  decodeHttpRequestBodyToString,
+  getHttpRequestContentType,
+  HttpHeaders,
+  HttpRequest,
+} from "./http";
 import { convertGrpcWebRequestToObject } from "./grpc-web";
 
 /**
@@ -67,24 +72,6 @@ export function computeSimilarity(
   );
 
   return differencesQueryParameters + differencesHeaders + differencesBody;
-}
-
-function getHeaderAsString(headers: HttpHeaders, headerName: string): string {
-  const rawValue = headers[headerName];
-  if (rawValue === undefined) {
-    return "";
-  } else if (typeof rawValue === "string") {
-    return rawValue;
-  } else {
-    return rawValue[0];
-  }
-}
-
-function getHttpRequestContentType(request: HttpRequest): string {
-  return (
-    getHeaderAsString(request.headers, "content-type") ||
-    "application/octet-stream"
-  );
 }
 
 function getHttpRequestBodyDecoded(request: HttpRequest): Buffer {
@@ -295,13 +282,8 @@ function countBodyDifferencesBinary(
   request1: HttpRequest,
   request2: HttpRequest,
 ): number {
-  // Compare the bytes of each of the bodies using a textual edit distance comparison.
-  const body1 = Array.from(request1.body)
-    .map((v) => v.toString(16).padStart(2, "0"))
-    .join(" ");
-  const body2 = Array.from(request2.body)
-    .map((v) => v.toString(16).padStart(2, "0"))
-    .join(" ");
+  const body1 = request1.body.toString("base64");
+  const body2 = request2.body.toString("base64");
   return countStringDifferences(body1, body2, new RewriteRules());
 }
 
