@@ -9,7 +9,7 @@ import { compareTwoStrings } from "string-similarity";
 import { gunzipSync } from "zlib";
 import { RewriteRules } from "./rewrite";
 import { TapeRecord } from "./tape";
-import { HttpHeaders, HttpRequest } from "./core";
+import { HttpHeaders, HttpRequest } from "./http";
 import { convertGrpcWebRequestToObject } from "./grpc-web";
 
 /**

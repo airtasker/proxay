@@ -1,4 +1,4 @@
-import { HttpRequest } from "./core";
+import { HttpRequest } from "./http";
 import { RewriteRules } from "./rewrite";
 import { computeSimilarity } from "./similarity";
 import { TapeRecord } from "./tape";

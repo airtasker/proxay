@@ -2,7 +2,7 @@ import chalk from "chalk";
 import http from "http";
 import https from "https";
 import { ensureBuffer } from "./buffer";
-import { HttpRequestWithHost } from "./core";
+import { HttpRequestWithHost } from "./http";
 import { TapeRecord } from "./tape";
 
 /**

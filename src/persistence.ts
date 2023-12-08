@@ -3,7 +3,7 @@ import fs from "fs-extra";
 import yaml from "js-yaml";
 import path from "path";
 import { gunzipSync, gzipSync } from "zlib";
-import { HttpHeaders } from "./core";
+import { HttpHeaders } from "./http";
 import {
   CompressionAlgorithm,
   PersistedBuffer,

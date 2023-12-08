@@ -1,4 +1,4 @@
-import { HttpHeaders, HttpRequest, HttpResponse } from "./core";
+import { HttpHeaders, HttpRequest, HttpResponse } from "./http";
 
 /**
  * A record of a specific HTTP interaction (request + response).

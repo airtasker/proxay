@@ -5,7 +5,7 @@ import http from "http";
 import https from "https";
 import net from "net";
 import { ensureBuffer } from "./buffer";
-import { HttpRequest } from "./core";
+import { HttpRequest } from "./http";
 import { findNextRecordToReplay, findRecordMatches } from "./matcher";
 import { Mode } from "./modes";
 import { Persistence } from "./persistence";
