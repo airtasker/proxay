@@ -1,9 +1,18 @@
+import {
+  parse as parseContentType,
+  ParsedMediaType as ParsedContentType,
+} from "content-type";
 import { diff } from "deep-diff";
-import queryString from "query-string";
+import { parse as parseQueryString, ParsedUrlQuery } from "querystring";
 import { compareTwoStrings } from "string-similarity";
 import { RewriteRules } from "./rewrite";
-import { serialiseBuffer } from "./persistence";
-import { Headers, PersistedBuffer, TapeRecord } from "./tape";
+import { TapeRecord } from "./tape";
+import {
+  decodeHttpRequestBodyToString,
+  getHttpRequestContentType,
+  HttpHeaders,
+  HttpRequest,
+} from "./http";
 
 /**
  * Returns a "similarity score" between a request and an existing record.
@@ -13,75 +22,157 @@ import { Headers, PersistedBuffer, TapeRecord } from "./tape";
  * - +Infinity means "very different" (no match)
  */
 export function computeSimilarity(
-  requestMethod: string,
-  requestPath: string,
-  requestHeaders: Headers,
-  requestBody: Buffer,
+  request: HttpRequest,
   compareTo: TapeRecord,
   rewriteBeforeDiffRules: RewriteRules,
 ): number {
-  if (requestMethod !== compareTo.request.method) {
-    // If the HTTP method is different, no match.
+  // If the HTTP method is different, no match.
+  if (request.method !== compareTo.request.method) {
     return +Infinity;
   }
+
+  // If the path is different (apart from query parameters), no match.
   if (
-    pathWithoutQueryParameters(requestPath) !==
+    pathWithoutQueryParameters(request.path) !==
     pathWithoutQueryParameters(compareTo.request.path)
   ) {
-    // If the path is different (apart from query parameters), no match.
     return +Infinity;
   }
-  const parsedQuery = queryParameters(requestPath);
-  const parsedCompareToQuery = queryParameters(compareTo.request.path);
-  const headers = stripExtraneousHeaders(requestHeaders);
-  const compareToHeaders = stripExtraneousHeaders(compareTo.request.headers);
-  const serialisedRequestBody = serialiseBuffer(requestBody, requestHeaders);
-  const serialisedCompareToRequestBody = serialiseBuffer(
-    compareTo.request.body,
+
+  // Compare the query parameters.
+  const parsedQueryParameters = parseQueryParameters(request.path);
+  const parsedCompareToQueryParameters = parseQueryParameters(
+    compareTo.request.path,
+  );
+  const differencesQueryParameters = countObjectDifferences(
+    parsedQueryParameters,
+    parsedCompareToQueryParameters,
+    rewriteBeforeDiffRules,
+  );
+
+  // Compare the cleaned headers.
+  const cleanedHeaders = stripExtraneousHeaders(request.headers);
+  const cleanedCompareToHeaders = stripExtraneousHeaders(
     compareTo.request.headers,
   );
-  return (
-    countObjectDifferences(
-      parsedQuery,
-      parsedCompareToQuery,
-      rewriteBeforeDiffRules,
-    ) +
-    countObjectDifferences(headers, compareToHeaders, rewriteBeforeDiffRules) +
-    countBodyDifferences(
-      serialisedRequestBody,
-      serialisedCompareToRequestBody,
-      rewriteBeforeDiffRules,
-    )
+  const differencesHeaders = countObjectDifferences(
+    cleanedHeaders,
+    cleanedCompareToHeaders,
+    rewriteBeforeDiffRules,
   );
+
+  // Compare the bodies.
+  const differencesBody = countBodyDifferences(
+    request,
+    compareTo.request,
+    rewriteBeforeDiffRules,
+  );
+
+  return differencesQueryParameters + differencesHeaders + differencesBody;
 }
 
 /**
- * Returns the numbers of differences between two persisted body buffers.
+ * Returns the numbers of differences between the bodies of two HTTP requests.
  */
 function countBodyDifferences(
-  a: PersistedBuffer,
-  b: PersistedBuffer,
+  request1: HttpRequest,
+  request2: HttpRequest,
   rewriteBeforeDiffRules: RewriteRules,
 ): number {
-  if (a.encoding === "utf8" && b.encoding === "utf8") {
-    try {
-      const requestBodyJson = JSON.parse(a.data || "{}");
-      const recordBodyJson = JSON.parse(b.data || "{}");
-      // Return the number of fields that differ in JSON.
-      return countObjectDifferences(
-        requestBodyJson,
-        recordBodyJson,
-        rewriteBeforeDiffRules,
-      );
-    } catch (e) {
-      return countStringDifferences(a.data, b.data, rewriteBeforeDiffRules);
-    }
+  const contentType1 = parseContentType(getHttpRequestContentType(request1));
+  const contentType2 = parseContentType(getHttpRequestContentType(request1));
+
+  // If the content types are not the same, we cannot compare.
+  if (contentType1.type !== contentType2.type) {
+    return +Infinity;
   }
-  if (a.encoding === "base64" && b.encoding === "base64") {
-    return countStringDifferences(a.data, b.data, rewriteBeforeDiffRules);
+
+  const contentType = contentType1.type;
+  if (contentType === "application/json") {
+    return countBodyDifferencesApplicationJson(
+      request1,
+      contentType1,
+      request2,
+      contentType2,
+      rewriteBeforeDiffRules,
+    );
+  } else if (contentType.startsWith("text/")) {
+    return countBodyDifferencesText(
+      request1,
+      contentType1,
+      request2,
+      contentType2,
+      rewriteBeforeDiffRules,
+    );
+  } else {
+    // No more special cases to consider. Assume binary data for all other content types.
+    return countBodyDifferencesBinary(request1, request2);
   }
-  // If we couldn't compare, then we'll assume they don't match.
-  return +Infinity;
+}
+
+function countBodyDifferencesApplicationJson(
+  request1: HttpRequest,
+  contentType1: ParsedContentType,
+  request2: HttpRequest,
+  contentType2: ParsedContentType,
+  rewriteBeforeDiffRules: RewriteRules,
+): number {
+  // Decode the bodies to strings.
+  const body1 = decodeHttpRequestBodyToString(request1, contentType1);
+  const body2 = decodeHttpRequestBodyToString(request2, contentType2);
+
+  // Early bail if bodies are empty.
+  if (body1.length === 0 && body1.length === body2.length) {
+    return 0;
+  }
+
+  // Attempt to parse both bodies as JSON.
+  let json1: any;
+  let json2: any;
+  try {
+    json1 = JSON.parse(body1);
+    json2 = JSON.parse(body2);
+  } catch (e) {
+    // If we fail, fall back to a binary comparison.
+    return countBodyDifferencesBinary(request1, request2);
+  }
+
+  // Return the number of fields that differ in JSON.
+  return countObjectDifferences(json1, json2, rewriteBeforeDiffRules);
+}
+
+function countBodyDifferencesText(
+  request1: HttpRequest,
+  contentType1: ParsedContentType,
+  request2: HttpRequest,
+  contentType2: ParsedContentType,
+  rewriteBeforeDiffRules: RewriteRules,
+): number {
+  // Decode the bodies to strings.
+  const body1 = decodeHttpRequestBodyToString(request1, contentType1);
+  const body2 = decodeHttpRequestBodyToString(request2, contentType2);
+
+  // Early bail if bodies are empty.
+  if (body1.length === 0 && body1.length === body2.length) {
+    return 0;
+  }
+
+  // Return the number of differences.
+  return countStringDifferences(body1, body2, rewriteBeforeDiffRules);
+}
+
+function countBodyDifferencesBinary(
+  request1: HttpRequest,
+  request2: HttpRequest,
+): number {
+  // Compare the bytes of each of the bodies using a textual edit distance comparison.
+  const body1 = Array.from(request1.body)
+    .map((v) => v.toString(16).padStart(2, "0"))
+    .join(" ");
+  const body2 = Array.from(request2.body)
+    .map((v) => v.toString(16).padStart(2, "0"))
+    .join(" ");
+  return countStringDifferences(body1, body2, new RewriteRules());
 }
 
 /**
@@ -91,7 +182,7 @@ function countObjectDifferences(
   a: object,
   b: object,
   rewriteRules: RewriteRules,
-) {
+): number {
   a = rewriteRules.apply(a);
   b = rewriteRules.apply(b);
 
@@ -105,7 +196,7 @@ function countStringDifferences(
   a: string,
   b: string,
   rewriteRules: RewriteRules,
-) {
+): number {
   // Apply the rewrite rules before computing any differences.
   a = rewriteRules.apply(a);
   b = rewriteRules.apply(b);
@@ -120,19 +211,19 @@ function countStringDifferences(
   return numberOfDifferentCharacters;
 }
 
-function pathWithoutQueryParameters(path: string) {
+function pathWithoutQueryParameters(path: string): string {
   const questionMarkPosition = path.indexOf("?");
   if (questionMarkPosition !== -1) {
-    return path.substr(0, questionMarkPosition);
+    return path.substring(0, questionMarkPosition);
   } else {
     return path;
   }
 }
 
-function queryParameters(path: string) {
+function parseQueryParameters(path: string): ParsedUrlQuery {
   const questionMarkPosition = path.indexOf("?");
   if (questionMarkPosition !== -1) {
-    return queryString.parse(path.substr(questionMarkPosition));
+    return parseQueryString(path.substring(questionMarkPosition + 1));
   } else {
     return {};
   }
@@ -141,8 +232,8 @@ function queryParameters(path: string) {
 /**
  * Strips out headers that are likely to result in false negatives.
  */
-function stripExtraneousHeaders(headers: Headers): Headers {
-  const safeHeaders: Headers = {};
+function stripExtraneousHeaders(headers: HttpHeaders): HttpHeaders {
+  const safeHeaders: HttpHeaders = {};
   for (const key of Object.keys(headers)) {
     switch (key) {
       case "accept":
