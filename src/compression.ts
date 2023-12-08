@@ -19,6 +19,8 @@ export function compressBuffer(
       }
     case "gzip":
       return zlib.gzipSync(buffer);
+    default:
+      throw new Error(`Unhandled compression algorithm value "${algorithm}"`);
   }
 }
 
@@ -33,6 +35,8 @@ export function decompressBuffer(
       return Buffer.from(brotli.decompress(buffer));
     case "gzip":
       return zlib.gunzipSync(buffer);
+    default:
+      throw new Error(`Unhandled compression algorithm value "${algorithm}"`);
   }
 }
 

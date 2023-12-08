@@ -163,7 +163,7 @@ function unserialiseBuffer(persisted: PersistedBuffer): Buffer {
       break;
     case "utf8":
       buffer = Buffer.from(persisted.data, "utf8");
-      buffer = compressBuffer(persisted.compression, buffer);
+      buffer = compressBuffer(persisted.compression || "none", buffer);
       break;
     default:
       throw new Error(`Unsupported encoding!`);

@@ -38,6 +38,6 @@ export type PersistedBuffer =
     }
   | {
       encoding: "utf8";
-      compression: CompressionAlgorithm;
+      compression: CompressionAlgorithm | undefined;
       data: string;
     };
