@@ -1,4 +1,3 @@
-import brotli from "brotli";
 import {
   parse as parseContentType,
   ParsedMediaType as ParsedContentType,
@@ -6,13 +5,12 @@ import {
 import { diff } from "deep-diff";
 import { parse as parseQueryString, ParsedUrlQuery } from "querystring";
 import { compareTwoStrings } from "string-similarity";
-import { gunzipSync } from "zlib";
 import { RewriteRules } from "./rewrite";
 import { TapeRecord } from "./tape";
 import {
-  decodeHttpRequestBodyToString,
-  getHeaderAsString,
-  getHttpRequestContentType,
+  decodeHttpBodyToString,
+  getHttpBodyDecoded,
+  getHttpContentType,
   HttpHeaders,
   HttpRequest,
 } from "./http";
@@ -75,24 +73,6 @@ export function computeSimilarity(
   return differencesQueryParameters + differencesHeaders + differencesBody;
 }
 
-function getHttpRequestBodyDecoded(request: HttpRequest): Buffer {
-  // Process the content-encoding before looking at the content-type.
-  const contentEncoding = getHeaderAsString(
-    request.headers,
-    "content-encoding",
-  );
-  switch (contentEncoding) {
-    case "":
-      return request.body;
-    case "br":
-      return Buffer.from(brotli.decompress(request.body));
-    case "gzip":
-      return gunzipSync(request.body);
-    default:
-      throw Error(`Unhandled content-encoding value "${contentEncoding}"`);
-  }
-}
-
 /**
  * Returns the numbers of differences between the bodies of two HTTP requests.
  */
@@ -101,8 +81,8 @@ function countBodyDifferences(
   request2: HttpRequest,
   rewriteBeforeDiffRules: RewriteRules,
 ): number {
-  const contentType1 = parseContentType(getHttpRequestContentType(request1));
-  const contentType2 = parseContentType(getHttpRequestContentType(request1));
+  const contentType1 = parseContentType(getHttpContentType(request1));
+  const contentType2 = parseContentType(getHttpContentType(request1));
 
   // If the content types are not the same, we cannot compare.
   if (contentType1.type !== contentType2.type) {
@@ -156,8 +136,8 @@ function countBodyDifferencesApplicationJson(
   rewriteBeforeDiffRules: RewriteRules,
 ): number {
   // Decode the bodies to strings.
-  const body1 = decodeHttpRequestBodyToString(request1, contentType1);
-  const body2 = decodeHttpRequestBodyToString(request2, contentType2);
+  const body1 = decodeHttpBodyToString(request1, contentType1);
+  const body2 = decodeHttpBodyToString(request2, contentType2);
 
   // Early bail if bodies are empty.
   if (body1.length === 0 && body1.length === body2.length) {
@@ -188,11 +168,11 @@ function countBodyDifferencesGrpcWebText(
 ): number {
   // Decode the base64 bodies into their raw gRPC message bytes.
   const body1 = Buffer.from(
-    getHttpRequestBodyDecoded(request1).toString("utf-8"),
+    getHttpBodyDecoded(request1).toString("utf-8"),
     "base64",
   );
   const body2 = Buffer.from(
-    getHttpRequestBodyDecoded(request2).toString("utf-8"),
+    getHttpBodyDecoded(request2).toString("utf-8"),
     "base64",
   );
 
@@ -216,8 +196,8 @@ function countBodyDifferencesGrpcWeb(
   rewriteBeforeDiffRules: RewriteRules,
 ): number {
   // Decode the bodies into their raw gRPC message bytes.
-  const body1 = getHttpRequestBodyDecoded(request1);
-  const body2 = getHttpRequestBodyDecoded(request2);
+  const body1 = getHttpBodyDecoded(request1);
+  const body2 = getHttpBodyDecoded(request2);
 
   // Compare the gRPC requests.
   return countBodyDifferencesRawGrpcWeb(
@@ -259,8 +239,8 @@ function countBodyDifferencesText(
   rewriteBeforeDiffRules: RewriteRules,
 ): number {
   // Decode the bodies to strings.
-  const body1 = decodeHttpRequestBodyToString(request1, contentType1);
-  const body2 = decodeHttpRequestBodyToString(request2, contentType2);
+  const body1 = decodeHttpBodyToString(request1, contentType1);
+  const body2 = decodeHttpBodyToString(request2, contentType2);
 
   // Early bail if bodies are empty.
   if (body1.length === 0 && body1.length === body2.length) {

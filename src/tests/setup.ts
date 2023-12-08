@@ -37,6 +37,7 @@ export function setupServers({
       defaultTapeName,
       host: TEST_SERVER_HOST,
       timeout: 100,
+      enableLogging: true,
       unframeGrpcWebJsonRequestsHostnames,
     });
     await Promise.all([

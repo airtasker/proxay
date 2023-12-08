@@ -1,5 +1,4 @@
-import brotli from "brotli";
-import { gzipSync } from "zlib";
+import { brotliCompressSync, gzipSync } from "zlib";
 import { persistTape, reviveTape, redactRequestHeaders } from "./persistence";
 
 // Note the repetition. This is necessary otherwise Brotli compression
@@ -20,13 +19,15 @@ const BINARY_RESPONSE = Buffer.from([
 ]);
 
 const UTF8_REQUEST_BROTLI = Buffer.from(
-  brotli.compress(Buffer.from(UTF8_REQUEST, "utf8"))!,
+  brotliCompressSync(Buffer.from(UTF8_REQUEST, "utf8"))!,
 );
 const UTF8_RESPONSE_BROTLI = Buffer.from(
-  brotli.compress(Buffer.from(UTF8_RESPONSE, "utf8"))!,
+  brotliCompressSync(Buffer.from(UTF8_RESPONSE, "utf8"))!,
 );
-const BINARY_REQUEST_BROTLI = Buffer.from(brotli.compress(BINARY_REQUEST)!);
-const BINARY_RESPONSE_BROTLI = Buffer.from(brotli.compress(BINARY_RESPONSE)!);
+const BINARY_REQUEST_BROTLI = Buffer.from(brotliCompressSync(BINARY_REQUEST)!);
+const BINARY_RESPONSE_BROTLI = Buffer.from(
+  brotliCompressSync(BINARY_RESPONSE)!,
+);
 
 const UTF8_REQUEST_GZIP = gzipSync(Buffer.from(UTF8_REQUEST, "utf8"));
 const UTF8_RESPONSE_GZIP = gzipSync(Buffer.from(UTF8_RESPONSE, "utf8"));
@@ -221,7 +222,7 @@ describe("Persistence", () => {
         },
         body: {
           encoding: "base64",
-          data: "GxcAAI6UrMm1WkAERl0HoDFuCn3CIekc",
+          data: "GxcA+I+UrMm1WkAERl0HoDFuCn3CAZLOAQ==",
         },
       },
       response: {
@@ -233,7 +234,7 @@ describe("Persistence", () => {
         },
         body: {
           encoding: "base64",
-          data: "GxcAAI6UrPmFmgFmOV+HoM3+C33CIe4U",
+          data: "GxcA+I+UrPmFmgFmOV+HoM3+C33CAeJOAQ==",
         },
       },
     });
