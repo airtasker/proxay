@@ -11,6 +11,7 @@ import { RewriteRules } from "./rewrite";
 import { TapeRecord } from "./tape";
 import {
   decodeHttpRequestBodyToString,
+  getHeaderAsString,
   getHttpRequestContentType,
   HttpHeaders,
   HttpRequest,
@@ -90,14 +91,6 @@ function getHttpRequestBodyDecoded(request: HttpRequest): Buffer {
     default:
       throw Error(`Unhandled content-encoding value "${contentEncoding}"`);
   }
-}
-
-function decodeHttpRequestBodyToString(
-  request: HttpRequest,
-  contentType: ParsedContentType,
-): string {
-  const encoding = contentType.parameters.charset as BufferEncoding | undefined;
-  return getHttpRequestBodyDecoded(request).toString(encoding || "utf-8");
 }
 
 /**
