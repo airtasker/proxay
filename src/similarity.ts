@@ -8,8 +8,8 @@ import { compareTwoStrings } from "string-similarity";
 import { RewriteRules } from "./rewrite";
 import { TapeRecord } from "./tape";
 import {
-  decodeHttpRequestBodyToString,
-  getHttpRequestContentType,
+  decodeHttpBodyToString,
+  getHttpContentType,
   HttpHeaders,
   HttpRequest,
 } from "./http";
@@ -79,8 +79,8 @@ function countBodyDifferences(
   request2: HttpRequest,
   rewriteBeforeDiffRules: RewriteRules,
 ): number {
-  const contentType1 = parseContentType(getHttpRequestContentType(request1));
-  const contentType2 = parseContentType(getHttpRequestContentType(request1));
+  const contentType1 = parseContentType(getHttpContentType(request1));
+  const contentType2 = parseContentType(getHttpContentType(request1));
 
   // If the content types are not the same, we cannot compare.
   if (contentType1.type !== contentType2.type) {
@@ -118,8 +118,8 @@ function countBodyDifferencesApplicationJson(
   rewriteBeforeDiffRules: RewriteRules,
 ): number {
   // Decode the bodies to strings.
-  const body1 = decodeHttpRequestBodyToString(request1, contentType1);
-  const body2 = decodeHttpRequestBodyToString(request2, contentType2);
+  const body1 = decodeHttpBodyToString(request1, contentType1);
+  const body2 = decodeHttpBodyToString(request2, contentType2);
 
   // Early bail if bodies are empty.
   if (body1.length === 0 && body1.length === body2.length) {
@@ -149,8 +149,8 @@ function countBodyDifferencesText(
   rewriteBeforeDiffRules: RewriteRules,
 ): number {
   // Decode the bodies to strings.
-  const body1 = decodeHttpRequestBodyToString(request1, contentType1);
-  const body2 = decodeHttpRequestBodyToString(request2, contentType2);
+  const body1 = decodeHttpBodyToString(request1, contentType1);
+  const body2 = decodeHttpBodyToString(request2, contentType2);
 
   // Early bail if bodies are empty.
   if (body1.length === 0 && body1.length === body2.length) {
