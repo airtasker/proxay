@@ -1,8 +1,10 @@
+import { getCategory as getUnicodeCategory } from "unicode-properties";
+
 /**
  * Protobuf wire encoding: https://protobuf.dev/programming-guides/encoding/
  */
 // From: https://protobuf.dev/programming-guides/encoding/#structure
-enum WireType {
+export enum WireType {
   VARINT = 0 & 0x07,
   I64 = 1 & 0x07,
   LEN = 2 & 0x07,
@@ -13,7 +15,7 @@ enum WireType {
 
 const NO_VALUE = {};
 
-type Tag = {
+export type Tag = {
   fieldNumber: number;
   wireType: WireType;
 };
@@ -26,13 +28,13 @@ export type WireValue =
   | (number | bigint)[]
   | { [key: number]: WireValue[] };
 
-export class ScannerError extends Error {
+class ScannerError extends Error {
   constructor(message: string) {
     super(message);
   }
 }
 
-export class Scanner {
+class Scanner {
   private buffer: Buffer;
   private index: number;
 
@@ -76,7 +78,7 @@ export class Scanner {
   read4BytesLE(): number {
     this.ensureHasNMoreBytes(4);
 
-    const value = this.buffer.readUint32LE(this.index);
+    const value = this.buffer.readUInt32LE(this.index);
     this.index += 4;
     return value;
   }
@@ -122,7 +124,7 @@ export function heuristicallyConvertProtoPayloadIntoObject(
 }
 
 // https://protobuf.dev/programming-guides/encoding/#varints
-export function readVarint(scanner: Scanner): number {
+function readVarint(scanner: Scanner): number {
   // Variable-width integers, or varints, are at the core of the wire format.
   // They allow encoding unsigned 64-bit integers using anywhere between one and ten bytes,
   // with small values using fewer bytes.
@@ -192,14 +194,16 @@ function isLikelyString(buffer: Buffer): boolean {
   for (const char of text) {
     length += 1;
     const codePoint = char.codePointAt(0) || 0;
+    const category = getUnicodeCategory(codePoint);
+    const majorCategory = category.charAt(0);
 
     // Is it a control character?
-    if (codePoint < 0x20 || codePoint === 0x7f) {
+    if (majorCategory === "C") {
       nControlCharacters += 1;
     }
 
-    // Is it an alnum character?
-    if (codePoint >= 0x20 && codePoint < 0x7f) {
+    // Is it a letter or number or punctuation character?
+    if (majorCategory === "L" || majorCategory === "N") {
       nAlnumCharacters += 1;
     }
   }
@@ -385,4 +389,16 @@ function readValue(scanner: Scanner, tag: Tag): WireValue | null {
       return NO_VALUE;
   }
   return null;
+}
+
+export let exportsForTesting: any;
+if (process.env.NODE_ENV === "test") {
+  exportsForTesting = {
+    Scanner,
+    isLikelyString,
+    readVarint,
+    readI32,
+    readI64,
+    readTag,
+  };
 }
