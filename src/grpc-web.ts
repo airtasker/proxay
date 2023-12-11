@@ -10,7 +10,7 @@
 
 import { heuristicallyConvertProtoPayloadIntoObject } from "./protobuf";
 
-export type GrpcMessageFormat = "proto" | "json" | "other";
+type GrpcMessageFormat = "proto" | "json" | "other";
 
 /**
  * Heuristically attempts to convert a gRPC request body into an object.
@@ -43,9 +43,17 @@ export function convertGrpcWebRequestToObject(
     return null;
   }
 
+  // Extract just the message itself. There may be trailers after the message, but, for the moment,
+  // we don't care about trailers. In a future state, we may want to propagate them back to be
+  // counted as part of the comparison, as they are part of the request. They should probably be
+  // counted as HTTP headers, ot at least, in a similar way to HTTP headers.
+  const message = body.subarray(5, 5 + messageLength);
+
   // Work out what message format is being used for the message itself.
-  const message = body.subarray(5);
-  switch (getGrpcMessageFormatFromContentType(contentType)) {
+  const messageFormat = getGrpcMessageFormatFromContentType(contentType);
+
+  // Decode the message based on the format.
+  switch (messageFormat) {
     case "json":
       return convertJsonMessageToObject(message);
     case "proto":
@@ -55,7 +63,7 @@ export function convertGrpcWebRequestToObject(
   }
 }
 
-export function getGrpcMessageFormatFromContentType(
+function getGrpcMessageFormatFromContentType(
   contentType: string,
 ): GrpcMessageFormat {
   // Find the index of the `+` within the Content-Type.
@@ -91,4 +99,11 @@ function convertJsonMessageToObject(message: Buffer): object | null {
 
 function convertProtoMessageToObject(message: Buffer): object | null {
   return heuristicallyConvertProtoPayloadIntoObject(message);
+}
+
+export let exportsForTesting: any;
+if (process.env.NODE_ENV === "test") {
+  exportsForTesting = {
+    getGrpcMessageFormatFromContentType,
+  };
 }
