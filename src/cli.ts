@@ -106,8 +106,7 @@ async function main(argv: string[]) {
   const unframeGrpcWebJsonRequestsHostnames: string[] =
     options.unframeGrpcWebJsonRequestsHostname;
   const rewriteBeforeDiffRules: RewriteRules = options.rewriteBeforeDiff;
-  const match: boolean =
-    options.match === undefined ? false : options.match;
+  const match: boolean = options.match === undefined ? false : options.match;
 
   switch (initialMode) {
     case "record":

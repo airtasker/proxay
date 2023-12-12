@@ -52,7 +52,7 @@ export function findRecordMatches(
   match: boolean,
 ): TapeRecord[] {
   let bestSimilarityScore = +Infinity;
-  if(match){
+  if (match) {
     bestSimilarityScore = 0;
   }
   let bestMatches: TapeRecord[] = [];
