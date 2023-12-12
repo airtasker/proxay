@@ -40,7 +40,7 @@ export function findNextRecordToReplay(
  * For example if three requests had been recorded to /pets, there will be three
  * records returned when a request for /pets is matched (but no other records
  * against different paths).
- * Also added score for request matching.
+ * Also added boolean value match for strict request matching.
  */
 export function findRecordMatches(
   tapeRecords: TapeRecord[],
@@ -49,9 +49,12 @@ export function findRecordMatches(
   requestHeaders: Headers,
   requestBody: Buffer,
   rewriteBeforeDiffRules: RewriteRules,
-  score: number,
+  match: boolean,
 ): TapeRecord[] {
-  let bestSimilarityScore = score;
+  let bestSimilarityScore = +Infinity;
+  if(match){
+    bestSimilarityScore = 0;
+  }
   let bestMatches: TapeRecord[] = [];
   for (const potentialMatch of tapeRecords) {
     const similarityScore = computeSimilarity(

@@ -30,7 +30,7 @@ export class RecordReplayServer {
   private preventConditionalRequests?: boolean;
   private unframeGrpcWebJsonRequestsHostnames: string[];
   private rewriteBeforeDiffRules: RewriteRules;
-  private score: number;
+  private match: boolean;
 
   constructor(options: {
     initialMode: Mode;
@@ -46,7 +46,7 @@ export class RecordReplayServer {
     httpsCert?: string;
     unframeGrpcWebJsonRequestsHostnames?: string[];
     rewriteBeforeDiffRules?: RewriteRules;
-    score?: number;
+    match?: boolean;
   }) {
     this.currentTapeRecords = [];
     this.mode = options.initialMode;
@@ -61,7 +61,7 @@ export class RecordReplayServer {
       options.unframeGrpcWebJsonRequestsHostnames || [];
     this.rewriteBeforeDiffRules =
       options.rewriteBeforeDiffRules || new RewriteRules();
-    this.score = options.score === undefined ? +Infinity : options.score;
+    this.match = options.match === undefined ? false : options.match;
     this.loadTape(this.defaultTape);
 
     const handler = async (
@@ -346,7 +346,7 @@ export class RecordReplayServer {
         request.headers,
         request.body,
         this.rewriteBeforeDiffRules,
-        this.score,
+        this.match,
       ),
       this.replayedTapes,
     );
@@ -410,7 +410,7 @@ export class RecordReplayServer {
         request.headers,
         request.body,
         this.rewriteBeforeDiffRules,
-        this.score,
+        this.match,
       ),
       this.replayedTapes,
     );

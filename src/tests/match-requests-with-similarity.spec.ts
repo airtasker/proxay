@@ -3,7 +3,7 @@ import { PROXAY_HOST } from "./config";
 import { setupServers } from "./setup";
 import { JSON_IDENTITY_PATH } from "./testserver";
 
-describe("Match requests without passing similarity score", () => {
+describe("Match requests without passing match arguement", () => {
   setupServers({ mode: "replay", tapeDirName: "match-requests" });
 
   it("Picks the best match for a given request", async () => {
@@ -90,8 +90,8 @@ describe("Match requests without passing similarity score", () => {
   });
 });
 
-describe("Match requests with similarity score 1", () => {
-  setupServers({ mode: "replay", tapeDirName: "match-requests", score: 1 });
+describe("Match requests with match false", () => {
+  setupServers({ mode: "replay", tapeDirName: "match-requests", match: false });
 
   it("Picks the best match for a given request", async () => {
     // Start recording in tape "tape".
@@ -177,8 +177,8 @@ describe("Match requests with similarity score 1", () => {
   });
 });
 
-describe("Match requests with similarity score 0", () => {
-  setupServers({ mode: "replay", tapeDirName: "match-requests", score: 0 });
+describe("Match requests with match true", () => {
+  setupServers({ mode: "replay", tapeDirName: "match-requests", match: true });
 
   it("Picks the best match for a given request", async () => {
     // Start recording in tape "tape".
