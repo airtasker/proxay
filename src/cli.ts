@@ -57,7 +57,10 @@ async function main(argv: string[]) {
     .option("--default-tape <tape-name>", "Name of the default tape", "default")
     .option("-h, --host <host>", "Host to proxy (not required in replay mode)")
     .option("-p, --port <port>", "Local port to serve on", "3000")
-    .option("--match <match>", "Strict request matching")
+    .option(
+      "--exact-request-matching",
+      "Perform exact request matching instead of best-effort request matching during replay.",
+    )
     .option(
       "-r, --redact-headers <headers>",
       "Request headers to redact",
@@ -106,7 +109,10 @@ async function main(argv: string[]) {
   const unframeGrpcWebJsonRequestsHostnames: string[] =
     options.unframeGrpcWebJsonRequestsHostname;
   const rewriteBeforeDiffRules: RewriteRules = options.rewriteBeforeDiff;
-  const match: boolean = options.match === undefined ? false : options.match;
+  const exactRequestMatching: boolean =
+    options.exactRequestMatching === undefined
+      ? false
+      : options.exactRequestMatching;
 
   switch (initialMode) {
     case "record":
@@ -159,7 +165,7 @@ async function main(argv: string[]) {
     httpsCert,
     unframeGrpcWebJsonRequestsHostnames,
     rewriteBeforeDiffRules,
-    match,
+    exactRequestMatching,
   });
   await server.start(port);
   console.log(chalk.green(`Proxying in ${initialMode} mode on port ${port}.`));

@@ -49,10 +49,10 @@ export function findRecordMatches(
   requestHeaders: Headers,
   requestBody: Buffer,
   rewriteBeforeDiffRules: RewriteRules,
-  match: boolean,
+  exactRequestMatching: boolean,
 ): TapeRecord[] {
   let bestSimilarityScore = +Infinity;
-  if (match) {
+  if (exactRequestMatching) {
     bestSimilarityScore = 0;
   }
   let bestMatches: TapeRecord[] = [];
