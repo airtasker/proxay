@@ -1,20 +1,12 @@
+import { CompressionAlgorithm } from "./compression";
+import { HttpHeaders, HttpRequest, HttpResponse } from "./http";
+
 /**
  * A record of a specific HTTP interaction (request + response).
  */
 export interface TapeRecord {
-  request: {
-    method: string;
-    path: string;
-    headers: Headers;
-    body: Buffer;
-  };
-  response: {
-    status: {
-      code: number;
-    };
-    headers: Headers;
-    body: Buffer;
-  };
+  request: HttpRequest;
+  response: HttpResponse;
 }
 
 /**
@@ -24,14 +16,14 @@ export interface PersistedTapeRecord {
   request: {
     method: string;
     path: string;
-    headers: Headers;
+    headers: HttpHeaders;
     body: PersistedBuffer;
   };
   response: {
     status: {
       code: number;
     };
-    headers: Headers;
+    headers: HttpHeaders;
     body: PersistedBuffer;
   };
 }
@@ -46,15 +38,6 @@ export type PersistedBuffer =
     }
   | {
       encoding: "utf8";
-      compression: CompressionAlgorithm;
+      compression: CompressionAlgorithm | undefined;
       data: string;
     };
-
-export type CompressionAlgorithm = "br" | "gzip" | "none";
-
-/**
- * Headers of a request or response.
- */
-export interface Headers {
-  [headerName: string]: string | string[] | undefined;
-}

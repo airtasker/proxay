@@ -1,6 +1,7 @@
+import { HttpRequest } from "./http";
 import { RewriteRules } from "./rewrite";
 import { computeSimilarity } from "./similarity";
-import { Headers, TapeRecord } from "./tape";
+import { TapeRecord } from "./tape";
 
 /**
  * Returns the first of a list of records that hasn't been replayed before.
@@ -43,11 +44,8 @@ export function findNextRecordToReplay(
  * Also added boolean value match for strict request matching.
  */
 export function findRecordMatches(
+  request: HttpRequest,
   tapeRecords: TapeRecord[],
-  requestMethod: string,
-  requestPath: string,
-  requestHeaders: Headers,
-  requestBody: Buffer,
   rewriteBeforeDiffRules: RewriteRules,
   exactRequestMatching: boolean,
 ): TapeRecord[] {
@@ -58,10 +56,7 @@ export function findRecordMatches(
   let bestMatches: TapeRecord[] = [];
   for (const potentialMatch of tapeRecords) {
     const similarityScore = computeSimilarity(
-      requestMethod,
-      requestPath,
-      requestHeaders,
-      requestBody,
+      request,
       potentialMatch,
       rewriteBeforeDiffRules,
     );
