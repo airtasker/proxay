@@ -249,6 +249,9 @@ function stripExtraneousHeaders(headers: HttpHeaders): HttpHeaders {
       case "transfer-encoding":
       case "user-agent":
       case "warning":
+      case "x-datadog-trace-id":
+      case "x-datadog-parent-id":
+      case "traceparent":
         // Ignore.
         continue;
       default:

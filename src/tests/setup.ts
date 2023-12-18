@@ -10,11 +10,13 @@ export function setupServers({
   tapeDirName = mode,
   defaultTapeName = "default",
   unframeGrpcWebJsonRequestsHostnames,
+  exactRequestMatching,
 }: {
   mode: Mode;
   tapeDirName?: string;
   defaultTapeName?: string;
   unframeGrpcWebJsonRequestsHostnames?: string[];
+  exactRequestMatching?: boolean;
 }) {
   const tapeDir = path.join(__dirname, "tapes", tapeDirName);
   const servers = { tapeDir } as {
@@ -39,6 +41,7 @@ export function setupServers({
       timeout: 100,
       enableLogging: true,
       unframeGrpcWebJsonRequestsHostnames,
+      exactRequestMatching,
     });
     await Promise.all([
       servers.proxy.start(PROXAY_PORT),
