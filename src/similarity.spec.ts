@@ -314,7 +314,7 @@ describe("similarity", () => {
           new RewriteRules(),
         ),
       ).toBe(0);
-    })
+    });
 
     it("reports differences when the payloads are different", () => {
       // The following payloads only have one field that differs (c).
@@ -428,7 +428,7 @@ describe("similarity", () => {
         ),
       ).toBe(0);
     });
-  })
+  });
 
   describe("text payload types", () => {
     it("reports no differences when the payloads are the same", () => {
@@ -456,7 +456,7 @@ describe("similarity", () => {
           new RewriteRules(),
         ),
       ).toBe(0);
-    })
+    });
 
     it("reports differences when the payloads are different", () => {
       expect(
@@ -484,7 +484,7 @@ describe("similarity", () => {
         ),
       ).toBe(6);
     });
-  })
+  });
 
   describe("binary payload types", () => {
     const avatarFile1 = fs.readFileSync(
@@ -547,15 +547,11 @@ describe("similarity", () => {
         ),
       ).toBe(5149);
     });
-  })
+  });
 
-  describe("grpc-web payload types", () => {
+  describe("grpc-web payload types", () => {});
 
-  })
-
-  describe("grpc-web-text payload types", () => {
-
-  })
+  describe("grpc-web-text payload types", () => {});
 });
 
 /**
