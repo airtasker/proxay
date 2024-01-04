@@ -1,5 +1,10 @@
 import { RewriteRule, RewriteRules } from "./rewrite";
 
+const EXAMPLE_DOT_COM_UUID_RULE = new RewriteRule(
+  /-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(@example.com)$/gi,
+  "$1",
+);
+
 describe("RewriteRule", () => {
   describe("without capture groups", () => {
     it("applies the expected changes", () => {
@@ -19,17 +24,13 @@ describe("RewriteRule", () => {
         "They are £5, £7, and £1024.",
       );
 
-      const rule2 = new RewriteRule(
-        /-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(@example.com)$/gi,
-        "$1",
-      );
       expect(
-        rule2.apply(
+        EXAMPLE_DOT_COM_UUID_RULE.apply(
           "jane.doe-some-test-6f82fbbe-d36a-4c5c-b47b-84100122fbbc@example.com",
         ),
       ).toEqual("jane.doe-some-test@example.com");
       expect(
-        rule2.apply(
+        EXAMPLE_DOT_COM_UUID_RULE.apply(
           "jane.doe-some-test-6F82FBBE-D36A-4C5C-B47B-84100122FBBC@example.com",
         ),
       ).toEqual("jane.doe-some-test@example.com");
@@ -75,6 +76,25 @@ describe("RewriteRules", () => {
       });
       expect(o1).toEqual({ dog: "woof", doggie: "wuff", xyz: "I hate dogs" });
       expect(rules.apply({})).toEqual({});
+    });
+  });
+
+  describe("when there is a more complex rewrite rule", () => {
+    const rules = new RewriteRules().appendRule(EXAMPLE_DOT_COM_UUID_RULE);
+
+    it("applies the expected changes on objects", () => {
+      const o2 = {
+        "1": [
+          "application-fake_user-070c625e-5f3a-4378-8641-eb3b38d5d800@example.com",
+        ],
+        "2": ["password.070c625e-5f3a-4378-8641-eb3b38d5d800"],
+        "3": ["some value here"],
+      };
+      expect(rules.apply(o2)).toEqual({
+        "1": ["application-fake_user@example.com"],
+        "2": ["password.070c625e-5f3a-4378-8641-eb3b38d5d800"],
+        "3": ["some value here"],
+      });
     });
   });
 });

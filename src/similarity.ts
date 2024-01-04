@@ -98,7 +98,7 @@ function countBodyDifferences(
       contentType2,
       rewriteBeforeDiffRules,
     );
-  } else if (contentType === "application/grpc-web-text") {
+  } else if (contentType.startsWith("application/grpc-web-text")) {
     return countBodyDifferencesGrpcWebText(
       request1,
       contentType1,
