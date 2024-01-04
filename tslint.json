@@ -7,7 +7,6 @@
     "interface-name": false,
     "max-classes-per-file": false,
     "no-console": false,
-    "no-bitwise": false,
     "member-access": [true, "no-public"],
     "object-literal-sort-keys": false,
     "variable-name": [

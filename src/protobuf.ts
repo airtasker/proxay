@@ -1,3 +1,4 @@
+/* tslint:disable:no-bitwise */
 import { getCategory as getUnicodeCategory } from "unicode-properties";
 
 /**
@@ -163,6 +164,9 @@ function readLenPrefixed(scanner: Scanner): WireValue | null {
   const length = readVarint(scanner);
   const bytes = scanner.readBytes(length);
 
+  // The ordering of these options is pretty arbitrary. The wire format is ambiguous as to which of
+  // the possible value types are here. We use some dodgy heuristics and attempted decodings to
+  // take best guess as to what the value type is.
   if (isLikelyString(bytes)) {
     return readString(bytes);
   } else if (isValidMessage(bytes)) {
