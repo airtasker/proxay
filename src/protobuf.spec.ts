@@ -1,0 +1,139 @@
+import {
+  Tag,
+  heuristicallyConvertProtoPayloadIntoObject,
+  exportsForTesting,
+  WireType,
+} from "./protobuf";
+const { Scanner, isLikelyString, readVarint, readI32, readI64, readTag } =
+  exportsForTesting;
+
+describe("heuristicallyConvertProtoPayloadIntoObject", () => {
+  it("correctly converts a very simple case", () => {
+    const buffer = Buffer.from([0x08, 0x96, 0x01]);
+    const object = heuristicallyConvertProtoPayloadIntoObject(buffer);
+    expect(object).toEqual({ 1: [150] });
+  });
+
+  it("correctly converts a more complex case", () => {
+    const buffer = Buffer.from([
+      0xa, 0x24, 0x61, 0x32, 0x37, 0x64, 0x66, 0x61, 0x64, 0x37, 0x2d, 0x65,
+      0x33, 0x63, 0x33, 0x2d, 0x34, 0x39, 0x31, 0x62, 0x2d, 0x39, 0x61, 0x31,
+      0x34, 0x2d, 0x39, 0x63, 0x39, 0x36, 0x63, 0x62, 0x61, 0x32, 0x32, 0x38,
+      0x63, 0x61,
+    ]);
+    const object = heuristicallyConvertProtoPayloadIntoObject(buffer);
+    expect(object).toEqual({ 1: ["a27dfad7-e3c3-491b-9a14-9c96cba228ca"] });
+  });
+});
+
+describe("readVarint", () => {
+  it("works for a 1-byte varint", () => {
+    const scanner = new Scanner(Buffer.from([0x08]));
+    const value = readVarint(scanner);
+    expect(value).toEqual(8);
+    expect(scanner.isAtEnd()).toBeTruthy();
+  });
+
+  it("works for a 2-byte varint", () => {
+    const scanner = new Scanner(Buffer.from([0x96, 0x01]));
+    const value = readVarint(scanner);
+    expect(value).toEqual(150);
+    expect(scanner.isAtEnd()).toBeTruthy();
+  });
+
+  it("works for a 3-byte varint", () => {
+    const scanner = new Scanner(Buffer.from([0xc0, 0xc4, 0x07]));
+    const value = readVarint(scanner);
+    expect(value).toEqual(123456);
+    expect(scanner.isAtEnd()).toBeTruthy();
+  });
+});
+
+describe("readI32", () => {
+  it("successfully reads a little-endian 32-bit integer", () => {
+    const scanner = new Scanner(Buffer.from([0x78, 0x56, 0x34, 0x12]));
+    const value = readI32(scanner);
+    expect(value).toEqual(305419896);
+    expect(scanner.isAtEnd()).toBeTruthy();
+  });
+});
+
+describe("readI64", () => {
+  it("successfully reads a little-endian 64-bit integer", () => {
+    const scanner = new Scanner(
+      Buffer.from([0xf0, 0xde, 0xbc, 0x9a, 0x78, 0x56, 0x34, 0x12]),
+    );
+    const value = readI64(scanner);
+    expect(value).toEqual(BigInt("1311768467463790320"));
+    expect(scanner.isAtEnd()).toBeTruthy();
+  });
+});
+
+describe("readTag", () => {
+  it("successfully reads a tag value of 0", () => {
+    const scanner = new Scanner(Buffer.from([0x00]));
+    const tag = readTag(scanner) as Tag;
+    expect(tag.fieldNumber).toEqual(0);
+    expect(tag.wireType).toEqual(WireType.VARINT);
+    expect(scanner.isAtEnd()).toBeTruthy();
+  });
+
+  it("successfully reads a tag value of 12347", () => {
+    const scanner = new Scanner(Buffer.from([0xbb, 0xe0, 0x00]));
+    const tag = readTag(scanner) as Tag;
+    expect(tag.fieldNumber).toEqual(1543);
+    expect(tag.wireType).toEqual(WireType.SGROUP);
+    expect(scanner.isAtEnd()).toBeTruthy();
+  });
+});
+
+describe("isLikelyString", () => {
+  it("returns false on invalid utf-8", () => {
+    const buffer = Buffer.from([0xc3, 0x28]);
+    expect(isLikelyString(buffer)).toBeFalsy();
+  });
+
+  it("returns false on entirely punctuation", () => {
+    const buffer = Buffer.from([0x2b, 0x7b, 0x7e, 0x23]);
+    expect(isLikelyString(buffer)).toBeFalsy();
+  });
+
+  it("returns false when there's an unusual number of control characters", () => {
+    const buffer = Buffer.from([0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x01]);
+    expect(isLikelyString(buffer)).toBeFalsy();
+  });
+
+  it("returns true on a UUID", () => {
+    const buffer = Buffer.from([
+      0x32, 0x34, 0x35, 0x65, 0x36, 0x35, 0x66, 0x35, 0x2d, 0x33, 0x32, 0x62,
+      0x39, 0x2d, 0x34, 0x39, 0x30, 0x39, 0x2d, 0x38, 0x31, 0x63, 0x64, 0x2d,
+      0x34, 0x37, 0x66, 0x35, 0x34, 0x31, 0x37, 0x37, 0x37, 0x30, 0x33, 0x32,
+    ]);
+    expect(isLikelyString(buffer)).toBeTruthy();
+  });
+
+  it("returns true on a some English text", () => {
+    const buffer = Buffer.from([
+      0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x2c, 0x20, 0x77, 0x6f, 0x72, 0x6c, 0x64,
+      0x21, 0x20, 0x54, 0x68, 0x69, 0x73, 0x20, 0x69, 0x73, 0x20, 0x6d, 0x65,
+      0x2e, 0x20, 0x4c, 0x69, 0x66, 0x65, 0x20, 0x73, 0x68, 0x6f, 0x75, 0x6c,
+      0x64, 0x20, 0x62, 0x65, 0x2e, 0x20, 0x46, 0x75, 0x6e, 0x20, 0x66, 0x6f,
+      0x72, 0x20, 0x65, 0x76, 0x65, 0x72, 0x79, 0x6f, 0x6e, 0x65, 0x2e,
+    ]);
+    expect(isLikelyString(buffer)).toBeTruthy();
+  });
+
+  it("returns true on a some Chinese text", () => {
+    const buffer = Buffer.from([
+      0xe4, 0xbd, 0xa0, 0xe5, 0xa5, 0xbd, 0xe4, 0xb8, 0x96, 0xe7, 0x95, 0x8c,
+      0xef, 0xbc, 0x81, 0x20, 0xe8, 0xbf, 0x99, 0xe5, 0xb0, 0xb1, 0xe6, 0x98,
+      0xaf, 0xe6, 0x88, 0x91, 0xe3, 0x80, 0x82, 0x20, 0xe7, 0x94, 0x9f, 0xe6,
+      0xb4, 0xbb, 0xe5, 0xb0, 0xb1, 0xe5, 0xba, 0x94, 0xe8, 0xaf, 0xa5, 0xe5,
+      0xa6, 0x82, 0xe6, 0xad, 0xa4, 0xe3, 0x80, 0x82, 0x20, 0xe5, 0xaf, 0xb9,
+      0xe6, 0xaf, 0x8f, 0xe4, 0xb8, 0xaa, 0xe4, 0xba, 0xba, 0xe6, 0x9d, 0xa5,
+      0xe8, 0xaf, 0xb4, 0xe9, 0x83, 0xbd, 0xe5, 0xbe, 0x88, 0xe6, 0x9c, 0x89,
+      0xe8, 0xb6, 0xa3, 0xe3, 0x80, 0x82,
+    ]);
+    expect(isLikelyString(buffer)).toBeTruthy();
+  });
+});

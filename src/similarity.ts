@@ -9,10 +9,12 @@ import { RewriteRules } from "./rewrite";
 import { TapeRecord } from "./tape";
 import {
   decodeHttpBodyToString,
+  getHttpBodyDecoded,
   getHttpContentType,
   HttpHeaders,
   HttpRequest,
 } from "./http";
+import { convertGrpcWebRequestToObject } from "./grpc-web";
 
 /**
  * Returns a "similarity score" between a request and an existing record.
@@ -96,6 +98,22 @@ function countBodyDifferences(
       contentType2,
       rewriteBeforeDiffRules,
     );
+  } else if (contentType.startsWith("application/grpc-web-text")) {
+    return countBodyDifferencesGrpcWebText(
+      request1,
+      contentType1,
+      request2,
+      contentType2,
+      rewriteBeforeDiffRules,
+    );
+  } else if (contentType.startsWith("application/grpc-web")) {
+    return countBodyDifferencesGrpcWeb(
+      request1,
+      contentType1,
+      request2,
+      contentType2,
+      rewriteBeforeDiffRules,
+    );
   } else if (contentType.startsWith("text/")) {
     return countBodyDifferencesText(
       request1,
@@ -139,6 +157,78 @@ function countBodyDifferencesApplicationJson(
 
   // Return the number of fields that differ in JSON.
   return countObjectDifferences(json1, json2, rewriteBeforeDiffRules);
+}
+
+function countBodyDifferencesGrpcWebText(
+  request1: HttpRequest,
+  contentType1: ParsedContentType,
+  request2: HttpRequest,
+  contentType2: ParsedContentType,
+  rewriteBeforeDiffRules: RewriteRules,
+): number {
+  // Decode the base64 bodies into their raw gRPC message bytes.
+  const body1 = Buffer.from(
+    getHttpBodyDecoded(request1).toString("utf-8"),
+    "base64",
+  );
+  const body2 = Buffer.from(
+    getHttpBodyDecoded(request2).toString("utf-8"),
+    "base64",
+  );
+
+  // Compare the gRPC requests.
+  return countBodyDifferencesRawGrpcWeb(
+    request1,
+    contentType1,
+    body1,
+    request2,
+    contentType2,
+    body2,
+    rewriteBeforeDiffRules,
+  );
+}
+
+function countBodyDifferencesGrpcWeb(
+  request1: HttpRequest,
+  contentType1: ParsedContentType,
+  request2: HttpRequest,
+  contentType2: ParsedContentType,
+  rewriteBeforeDiffRules: RewriteRules,
+): number {
+  // Decode the bodies into their raw gRPC message bytes.
+  const body1 = getHttpBodyDecoded(request1);
+  const body2 = getHttpBodyDecoded(request2);
+
+  // Compare the gRPC requests.
+  return countBodyDifferencesRawGrpcWeb(
+    request1,
+    contentType1,
+    body1,
+    request2,
+    contentType2,
+    body2,
+    rewriteBeforeDiffRules,
+  );
+}
+
+function countBodyDifferencesRawGrpcWeb(
+  request1: HttpRequest,
+  contentType1: ParsedContentType,
+  body1: Buffer,
+  request2: HttpRequest,
+  contentType2: ParsedContentType,
+  body2: Buffer,
+  rewriteBeforeDiffRules: RewriteRules,
+): number {
+  // Attempt to convert both gRPC requests into objects.
+  const object1 = convertGrpcWebRequestToObject(contentType1.type, body1);
+  const object2 = convertGrpcWebRequestToObject(contentType2.type, body2);
+
+  if (object1 !== null && object2 !== null) {
+    return countObjectDifferences(object1, object2, rewriteBeforeDiffRules);
+  } else {
+    return countBodyDifferencesBinary(request1, request2);
+  }
 }
 
 function countBodyDifferencesText(
