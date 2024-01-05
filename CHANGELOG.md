@@ -1,3 +1,9 @@
+# 1.8.0
+
+* Removed support for unframing `application/grpc-web+json` requests (#567).
+* Added full support for handling grpc-web and grpc-web-text requests during request matching (#548).
+* Bumped many versions of third-party dependencies.
+
 # 1.7.0
 
 * Add new CLI option `--exact-request-matching` to force `replay` mode to only return tapes with a 100% match; best-effort matching is disabled (#556).
