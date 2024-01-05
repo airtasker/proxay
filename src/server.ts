@@ -29,7 +29,6 @@ export class RecordReplayServer {
   private defaultTape: string;
   private replayedTapes: Set<TapeRecord> = new Set();
   private preventConditionalRequests?: boolean;
-  private unframeGrpcWebJsonRequestsHostnames: string[];
   private rewriteBeforeDiffRules: RewriteRules;
   private exactRequestMatching: boolean;
 
@@ -45,7 +44,6 @@ export class RecordReplayServer {
     httpsCA?: string;
     httpsKey?: string;
     httpsCert?: string;
-    unframeGrpcWebJsonRequestsHostnames?: string[];
     rewriteBeforeDiffRules?: RewriteRules;
     exactRequestMatching?: boolean;
   }) {
@@ -58,8 +56,6 @@ export class RecordReplayServer {
     this.persistence = new Persistence(options.tapeDir, redactHeaders);
     this.defaultTape = options.defaultTapeName;
     this.preventConditionalRequests = options.preventConditionalRequests;
-    this.unframeGrpcWebJsonRequestsHostnames =
-      options.unframeGrpcWebJsonRequestsHostnames || [];
     this.rewriteBeforeDiffRules =
       options.rewriteBeforeDiffRules || new RewriteRules();
     this.exactRequestMatching =
@@ -255,9 +251,6 @@ export class RecordReplayServer {
    * Potentially rewrite the request before processing it.
    */
   private rewriteRequest(request: HttpRequest) {
-    // Grab the `host` header of the request.
-    const hostname = (request.headers.host || null) as string | null;
-
     // Potentially prevent 304 responses from being able to be generated.
     if (
       this.preventConditionalRequests &&
@@ -267,58 +260,6 @@ export class RecordReplayServer {
       delete request.headers["if-modified-since"];
       delete request.headers["if-none-match"];
     }
-
-    // Potentially unframe a grpc-web+json request.
-    if (
-      request.method === "POST" &&
-      request.headers["content-type"] === "application/grpc-web+json" &&
-      (this.unframeGrpcWebJsonRequestsHostnames.includes("*") ||
-        (hostname != null &&
-          this.unframeGrpcWebJsonRequestsHostnames.includes(hostname)))
-    ) {
-      this.rewriteGrpcWebJsonRequest(request);
-    }
-  }
-
-  /**
-   * Rewrite a gRPC-web+json request to be unframed.
-   */
-  private rewriteGrpcWebJsonRequest(request: HttpRequest) {
-    /**
-     * From the gRPC specification (https://github.com/grpc/grpc/blob/master/doc/PROTOCOL-HTTP2.md)
-     *
-     * The repeated sequence of Length-Prefixed-Message items is delivered in DATA frames:
-     *   Length-Prefixed-Message → Compressed-Flag Message-Length Message
-     *   Compressed-Flag → 0 / 1 # encoded as 1 byte unsigned integer
-     *   Message-Length → {length of Message} # encoded as 4 byte unsigned integer (big endian)
-     *   Message → *{binary octet}
-     */
-    const compressionFlag = request.body.readUInt8(0);
-    const messageLength = request.body.readUInt32BE(1);
-    if (compressionFlag !== 0) {
-      console.error(
-        `The gRPC-web compression flag was set to 1. Do not know how to handle compressed request paylods. Aborting gRPC-web+json rewrite.`,
-      );
-      return;
-    }
-
-    // Sanity check the content length.
-    const rawContentLength = request.headers["content-length"] as
-      | string
-      | undefined;
-    if (rawContentLength !== undefined) {
-      const contentLength = parseInt(rawContentLength, 10);
-      if (contentLength !== messageLength + 5) {
-        console.log(
-          `Unexpected content length. Header says "${rawContentLength}". gRPC payload length preamble says "${messageLength}".`,
-        );
-      }
-    }
-
-    // Rewrite the request to be unframed.
-    request.headers["content-length"] = messageLength.toString();
-    request.headers["content-type"] = "application/json";
-    request.body = request.body.subarray(5);
   }
 
   private async fetchResponse(
