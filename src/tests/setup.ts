@@ -9,13 +9,11 @@ export function setupServers({
   mode,
   tapeDirName = mode,
   defaultTapeName = "default",
-  unframeGrpcWebJsonRequestsHostnames,
   exactRequestMatching,
 }: {
   mode: Mode;
   tapeDirName?: string;
   defaultTapeName?: string;
-  unframeGrpcWebJsonRequestsHostnames?: string[];
   exactRequestMatching?: boolean;
 }) {
   const tapeDir = path.join(__dirname, "tapes", tapeDirName);
@@ -40,7 +38,6 @@ export function setupServers({
       host: TEST_SERVER_HOST,
       timeout: 100,
       enableLogging: true,
-      unframeGrpcWebJsonRequestsHostnames,
       exactRequestMatching,
     });
     await Promise.all([
