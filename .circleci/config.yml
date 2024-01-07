@@ -1,19 +1,19 @@
 version: 2.1
 
 executors:
-  node14:
+  node-14:
     docker:
       - image: cimg/node:14.21.3
     resource_class: small
     working_directory: ~/repo
 
-  node16:
+  node-16:
     docker:
       - image: cimg/node:16.20.1
     resource_class: small
     working_directory: ~/repo
 
-  node18:
+  node-18:
     docker:
       - image: cimg/node:18.18.1
     resource_class: small
@@ -53,23 +53,17 @@ commands:
 
 
 jobs:
-  run-tests-node-14:
-    executor: node14
-    steps:
-      - run-tests
-
-  run-tests-node-16:
-    executor: node16
-    steps:
-      - run-tests
-
-  run-tests-node-18:
-    executor: node18
+  run-tests:
+    parameters:
+      node-version:
+        type: string
+        description: The major version of NodeJS to use.
+    executor: node-<< parameters.node-version >>
     steps:
       - run-tests
 
   build-and-run:
-    executor: node14
+    executor: node-14
     steps:
       - checkout
       - install-dependencies
@@ -86,7 +80,7 @@ jobs:
           done
 
   lint-check:
-    executor: node14
+    executor: node-14
     steps:
       - checkout
       - install-dependencies
@@ -95,7 +89,7 @@ jobs:
           command: yarn lint:check
 
   publish:
-    executor: node14
+    executor: node-14
     steps:
       - checkout
       - install-dependencies
@@ -111,10 +105,8 @@ jobs:
 workflows:
   build-and-test:
     jobs:
-      - run-all-tests-across-supported-node-versions:
+      - run-tests:
           matrix:
-            alias: run-all-tests-across-supported-node-versions
-            name: run-tests-node-<< matrix.node-version >>
             parameters:
               node-version: ["14", "16", "18"]
           filters:
@@ -130,7 +122,7 @@ workflows:
               only: /^v[0-9]+\.[0-9]+\.[0-9]+$/
       - publish:
           requires:
-            - run-all-tests-across-supported-node-versions
+            - run-tests
             - build-and-run
             - lint-check
           filters:
