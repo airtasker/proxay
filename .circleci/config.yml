@@ -53,17 +53,17 @@ commands:
 
 
 jobs:
-  test-node14:
+  run-tests-node-14:
     executor: node14
     steps:
       - run-tests
 
-  test-node16:
+  run-tests-node-16:
     executor: node16
     steps:
       - run-tests
 
-  test-node18:
+  run-tests-node-18:
     executor: node18
     steps:
       - run-tests
@@ -111,15 +111,11 @@ jobs:
 workflows:
   build-and-test:
     jobs:
-      - test-node14:
-          filters:
-            tags:
-              only: /^v[0-9]+\.[0-9]+\.[0-9]+$/
-      - test-node16:
-          filters:
-            tags:
-              only: /^v[0-9]+\.[0-9]+\.[0-9]+$/
-      - test-node18:
+      - run-all-tests-across-supported-node-versions:
+          matrix:
+            name: run-tests-node-<< matrix.node-version >>
+            parameters:
+              node-version: ["14", "16", "18"]
           filters:
             tags:
               only: /^v[0-9]+\.[0-9]+\.[0-9]+$/
@@ -133,9 +129,7 @@ workflows:
               only: /^v[0-9]+\.[0-9]+\.[0-9]+$/
       - publish:
           requires:
-            - test-node14
-            - test-node16
-            - test-node18
+            - run-all-tests-across-supported-node-versions
             - build-and-run
             - lint-check
           filters:
