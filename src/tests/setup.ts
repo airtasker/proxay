@@ -48,7 +48,11 @@ export function setupServers({
 
   afterAll(async () => {
     await Promise.all([servers.backend.stop(), servers.proxy.stop()]);
-  });
+
+    // Sleep briefly to allow the OS to free up the port so that we can re-bind it again in the
+    // next test.
+    await new Promise((r) => setTimeout(r, 1000));
+  }, 10000);
 
   return servers;
 }
