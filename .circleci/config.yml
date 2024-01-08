@@ -106,8 +106,8 @@ workflows:
   build-and-test:
     jobs:
       - run-tests:
+          name: test-node<< matrix.node-version >>
           matrix:
-            name: test-node<< parameters.node-version >>
             parameters:
               node-version: ["14", "16", "18"]
           filters:
