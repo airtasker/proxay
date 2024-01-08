@@ -19,6 +19,12 @@ executors:
     resource_class: small
     working_directory: ~/repo
 
+  node20:
+    docker:
+      - image: cimg/node:20.10.0
+    resource_class: small
+    working_directory: ~/repo
+
 
 commands:
   install-dependencies:
@@ -109,7 +115,7 @@ workflows:
           name: test-node<< matrix.node-version >>
           matrix:
             parameters:
-              node-version: ["14", "16", "18"]
+              node-version: ["14", "16", "18", "20"]
           filters:
             tags:
               only: /^v[0-9]+\.[0-9]+\.[0-9]+$/
