@@ -53,18 +53,12 @@ commands:
 
 
 jobs:
-  test-node14:
-    executor: node14
-    steps:
-      - run-tests
-
-  test-node16:
-    executor: node16
-    steps:
-      - run-tests
-
-  test-node18:
-    executor: node18
+  run-tests:
+    parameters:
+      node-version:
+        type: string
+        description: The major version of NodeJS to use.
+    executor: node<< parameters.node-version >>
     steps:
       - run-tests
 
@@ -111,15 +105,11 @@ jobs:
 workflows:
   build-and-test:
     jobs:
-      - test-node14:
-          filters:
-            tags:
-              only: /^v[0-9]+\.[0-9]+\.[0-9]+$/
-      - test-node16:
-          filters:
-            tags:
-              only: /^v[0-9]+\.[0-9]+\.[0-9]+$/
-      - test-node18:
+      - run-tests:
+          name: test-node<< matrix.node-version >>
+          matrix:
+            parameters:
+              node-version: ["14", "16", "18"]
           filters:
             tags:
               only: /^v[0-9]+\.[0-9]+\.[0-9]+$/
@@ -133,9 +123,7 @@ workflows:
               only: /^v[0-9]+\.[0-9]+\.[0-9]+$/
       - publish:
           requires:
-            - test-node14
-            - test-node16
-            - test-node18
+            - run-tests
             - build-and-run
             - lint-check
           filters:
