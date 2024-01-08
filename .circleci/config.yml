@@ -1,19 +1,19 @@
 version: 2.1
 
 executors:
-  node-14:
+  node14:
     docker:
       - image: cimg/node:14.21.3
     resource_class: small
     working_directory: ~/repo
 
-  node-16:
+  node16:
     docker:
       - image: cimg/node:16.20.1
     resource_class: small
     working_directory: ~/repo
 
-  node-18:
+  node18:
     docker:
       - image: cimg/node:18.18.1
     resource_class: small
@@ -58,12 +58,12 @@ jobs:
       node-version:
         type: string
         description: The major version of NodeJS to use.
-    executor: node-<< parameters.node-version >>
+    executor: node<< parameters.node-version >>
     steps:
       - run-tests
 
   build-and-run:
-    executor: node-14
+    executor: node14
     steps:
       - checkout
       - install-dependencies
@@ -80,7 +80,7 @@ jobs:
           done
 
   lint-check:
-    executor: node-14
+    executor: node14
     steps:
       - checkout
       - install-dependencies
@@ -89,7 +89,7 @@ jobs:
           command: yarn lint:check
 
   publish:
-    executor: node-14
+    executor: node14
     steps:
       - checkout
       - install-dependencies
@@ -107,6 +107,7 @@ workflows:
     jobs:
       - run-tests:
           matrix:
+            name: test-node<< parameters.node-version >>
             parameters:
               node-version: ["14", "16", "18"]
           filters:
