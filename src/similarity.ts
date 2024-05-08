@@ -27,6 +27,7 @@ export function computeSimilarity(
   request: HttpRequest,
   compareTo: TapeRecord,
   rewriteBeforeDiffRules: RewriteRules,
+  ignoreHeaders: string[],
 ): number {
   // If the HTTP method is different, no match.
   if (request.method !== compareTo.request.method) {
@@ -53,9 +54,10 @@ export function computeSimilarity(
   );
 
   // Compare the cleaned headers.
-  const cleanedHeaders = stripExtraneousHeaders(request.headers);
+  const cleanedHeaders = stripExtraneousHeaders(request.headers, ignoreHeaders);
   const cleanedCompareToHeaders = stripExtraneousHeaders(
     compareTo.request.headers,
+    ignoreHeaders,
   );
   const differencesHeaders = countObjectDifferences(
     cleanedHeaders,
@@ -317,7 +319,10 @@ function parseQueryParameters(path: string): ParsedUrlQuery {
 /**
  * Strips out headers that are likely to result in false negatives.
  */
-function stripExtraneousHeaders(headers: HttpHeaders): HttpHeaders {
+function stripExtraneousHeaders(
+  headers: HttpHeaders,
+  ignoreHeaders: string[],
+): HttpHeaders {
   const safeHeaders: HttpHeaders = {};
   for (const key of Object.keys(headers)) {
     switch (key) {
@@ -345,7 +350,9 @@ function stripExtraneousHeaders(headers: HttpHeaders): HttpHeaders {
         // Ignore.
         continue;
       default:
-        safeHeaders[key] = headers[key];
+        if (!ignoreHeaders.find((header) => header === key)) {
+          safeHeaders[key] = headers[key];
+        }
     }
   }
   return safeHeaders;

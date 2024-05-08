@@ -63,7 +63,7 @@ async function main(argv: string[]) {
     )
     .option(
       "-r, --redact-headers <headers>",
-      "Request headers to redact",
+      "Request headers to redact (values will be replaced by XXXX)",
       commaSeparatedList,
     )
     .option(
@@ -88,6 +88,11 @@ async function main(argv: string[]) {
       rewriteRule,
       new RewriteRules(),
     )
+    .option(
+      "--ignore-headers <headers>",
+      "Save headers to be ignored for the matching algorithm",
+      commaSeparatedList,
+    )
     .parse(argv);
 
   const options = program.opts();
@@ -103,6 +108,7 @@ async function main(argv: string[]) {
   const httpsKey: string = options.httpsKey;
   const httpsCert: string = options.httpsCert;
   const rewriteBeforeDiffRules: RewriteRules = options.rewriteBeforeDiff;
+  const ignoreHeaders: string[] = options.ignoreHeaders;
   const exactRequestMatching: boolean =
     options.exactRequestMatching === undefined
       ? false
@@ -158,6 +164,7 @@ async function main(argv: string[]) {
     httpsKey,
     httpsCert,
     rewriteBeforeDiffRules,
+    ignoreHeaders,
     exactRequestMatching,
   });
   await server.start(port);

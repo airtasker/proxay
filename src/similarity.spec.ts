@@ -31,6 +31,7 @@ describe("similarity", () => {
           response: DUMMY_RESPONSE,
         },
         new RewriteRules(),
+        [],
       ),
     ).toBe(0);
   });
@@ -54,6 +55,7 @@ describe("similarity", () => {
           response: DUMMY_RESPONSE,
         },
         new RewriteRules(),
+        [],
       ),
     ).toBe(Infinity);
   });
@@ -77,6 +79,7 @@ describe("similarity", () => {
           response: DUMMY_RESPONSE,
         },
         new RewriteRules(),
+        [],
       ),
     ).toBe(Infinity);
   });
@@ -100,6 +103,7 @@ describe("similarity", () => {
           response: DUMMY_RESPONSE,
         },
         new RewriteRules(),
+        [],
       ),
     ).toBe(1);
     expect(
@@ -120,6 +124,7 @@ describe("similarity", () => {
           response: DUMMY_RESPONSE,
         },
         new RewriteRules(),
+        [],
       ),
     ).toBe(1);
     expect(
@@ -140,6 +145,7 @@ describe("similarity", () => {
           response: DUMMY_RESPONSE,
         },
         new RewriteRules(),
+        [],
       ),
     ).toBe(2);
     expect(
@@ -160,6 +166,7 @@ describe("similarity", () => {
           response: DUMMY_RESPONSE,
         },
         new RewriteRules(),
+        [],
       ),
     ).toBe(0);
     expect(
@@ -180,6 +187,7 @@ describe("similarity", () => {
           response: DUMMY_RESPONSE,
         },
         new RewriteRules(),
+        [],
       ),
     ).toBe(1);
   });
@@ -214,6 +222,7 @@ describe("similarity", () => {
           response: DUMMY_RESPONSE,
         },
         new RewriteRules(),
+        [],
       ),
     ).toBe(0);
     expect(
@@ -244,6 +253,7 @@ describe("similarity", () => {
           response: DUMMY_RESPONSE,
         },
         new RewriteRules(),
+        [],
       ),
     ).toBe(1);
     expect(
@@ -275,6 +285,7 @@ describe("similarity", () => {
           response: DUMMY_RESPONSE,
         },
         new RewriteRules(),
+        [],
       ),
     ).toBe(1);
   });
@@ -312,6 +323,7 @@ describe("similarity", () => {
             response: DUMMY_RESPONSE,
           },
           new RewriteRules(),
+          [],
         ),
       ).toBe(0);
     });
@@ -351,6 +363,7 @@ describe("similarity", () => {
             response: DUMMY_RESPONSE,
           },
           new RewriteRules(),
+          [],
         ),
       ).toBe(1);
 
@@ -385,6 +398,7 @@ describe("similarity", () => {
             response: DUMMY_RESPONSE,
           },
           new RewriteRules(),
+          [],
         ),
       ).toBe(6);
 
@@ -425,6 +439,7 @@ describe("similarity", () => {
               "$1",
             ),
           ),
+          [],
         ),
       ).toBe(0);
     });
@@ -454,6 +469,7 @@ describe("similarity", () => {
             response: DUMMY_RESPONSE,
           },
           new RewriteRules(),
+          [],
         ),
       ).toBe(0);
     });
@@ -481,6 +497,7 @@ describe("similarity", () => {
             response: DUMMY_RESPONSE,
           },
           new RewriteRules(),
+          [],
         ),
       ).toBe(6);
     });
@@ -517,6 +534,7 @@ describe("similarity", () => {
             response: DUMMY_RESPONSE,
           },
           new RewriteRules(),
+          [],
         ),
       ).toBe(0);
     });
@@ -544,6 +562,7 @@ describe("similarity", () => {
             response: DUMMY_RESPONSE,
           },
           new RewriteRules(),
+          [],
         ),
       ).toBe(5149);
     });
@@ -591,6 +610,7 @@ describe("similarity", () => {
             response: DUMMY_RESPONSE,
           },
           new RewriteRules(),
+          [],
         ),
       ).toBe(0);
     });
@@ -655,6 +675,7 @@ describe("similarity", () => {
             response: DUMMY_RESPONSE,
           },
           new RewriteRules(),
+          [],
         ),
       ).toBe(1);
     });
@@ -724,6 +745,7 @@ describe("similarity", () => {
               "$1",
             ),
           ),
+          [],
         ),
       ).toBe(0);
     });
@@ -756,6 +778,7 @@ describe("similarity", () => {
             response: DUMMY_RESPONSE,
           },
           new RewriteRules(),
+          [],
         ),
       ).toBe(0);
     });
@@ -788,6 +811,7 @@ describe("similarity", () => {
             response: DUMMY_RESPONSE,
           },
           new RewriteRules(),
+          [],
         ),
       ).toBe(1);
     });
@@ -825,6 +849,7 @@ describe("similarity", () => {
               "$1",
             ),
           ),
+          [],
         ),
       ).toBe(0);
     });

@@ -30,6 +30,7 @@ export class RecordReplayServer {
   private replayedTapes: Set<TapeRecord> = new Set();
   private preventConditionalRequests?: boolean;
   private rewriteBeforeDiffRules: RewriteRules;
+  private ignoreHeaders: string[];
   private exactRequestMatching: boolean;
 
   constructor(options: {
@@ -45,6 +46,7 @@ export class RecordReplayServer {
     httpsKey?: string;
     httpsCert?: string;
     rewriteBeforeDiffRules?: RewriteRules;
+    ignoreHeaders?: string[];
     exactRequestMatching?: boolean;
   }) {
     this.currentTapeRecords = [];
@@ -58,6 +60,7 @@ export class RecordReplayServer {
     this.preventConditionalRequests = options.preventConditionalRequests;
     this.rewriteBeforeDiffRules =
       options.rewriteBeforeDiffRules || new RewriteRules();
+    this.ignoreHeaders = options.ignoreHeaders || [];
     this.exactRequestMatching =
       options.exactRequestMatching === undefined
         ? false
@@ -291,6 +294,7 @@ export class RecordReplayServer {
         this.currentTapeRecords,
         this.rewriteBeforeDiffRules,
         this.exactRequestMatching,
+        this.ignoreHeaders,
       ),
       this.replayedTapes,
     );
@@ -352,6 +356,7 @@ export class RecordReplayServer {
         this.currentTapeRecords,
         this.rewriteBeforeDiffRules,
         this.exactRequestMatching,
+        this.ignoreHeaders,
       ),
       this.replayedTapes,
     );
