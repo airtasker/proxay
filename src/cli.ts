@@ -62,6 +62,10 @@ async function main(argv: string[]) {
       "Perform exact request matching instead of best-effort request matching during replay.",
     )
     .option(
+      "--dump-matcher-fails",
+      "In exact request matching mode, dumps information about failed matches for headers and queries.",
+    )
+    .option(
       "-r, --redact-headers <headers>",
       "Request headers to redact (values will be replaced by XXXX)",
       commaSeparatedList,
@@ -113,6 +117,8 @@ async function main(argv: string[]) {
     options.exactRequestMatching === undefined
       ? false
       : options.exactRequestMatching;
+  const dumpMatcherFails: boolean =
+    options.dumpMatcherFails === undefined ? false : options.dumpMatcherFails;
 
   switch (initialMode) {
     case "record":
@@ -152,6 +158,12 @@ async function main(argv: string[]) {
     }
   }
 
+  if (dumpMatcherFails && !exactRequestMatching) {
+    panic(
+      "The --dump-matcher-fails flag can only be used with the --exact-request-matching flag.",
+    );
+  }
+
   const server = new RecordReplayServer({
     initialMode,
     tapeDir,
@@ -166,6 +178,7 @@ async function main(argv: string[]) {
     rewriteBeforeDiffRules,
     ignoreHeaders,
     exactRequestMatching,
+    dumpMatcherFails,
   });
   await server.start(port);
   console.log(chalk.green(`Proxying in ${initialMode} mode on port ${port}.`));

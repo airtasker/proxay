@@ -28,6 +28,7 @@ export function computeSimilarity(
   compareTo: TapeRecord,
   rewriteBeforeDiffRules: RewriteRules,
   ignoreHeaders: string[],
+  dumpMatcherFails: boolean = false,
 ): number {
   // If the HTTP method is different, no match.
   if (request.method !== compareTo.request.method) {
@@ -51,6 +52,7 @@ export function computeSimilarity(
     parsedQueryParameters,
     parsedCompareToQueryParameters,
     rewriteBeforeDiffRules,
+    dumpMatcherFails,
   );
 
   // Compare the cleaned headers.
@@ -63,6 +65,7 @@ export function computeSimilarity(
     cleanedHeaders,
     cleanedCompareToHeaders,
     rewriteBeforeDiffRules,
+    dumpMatcherFails,
   );
 
   // Compare the bodies.
@@ -71,6 +74,9 @@ export function computeSimilarity(
     compareTo.request,
     rewriteBeforeDiffRules,
   );
+  if (dumpMatcherFails && differencesBody > 0) {
+    console.log(`dump: body is different`);
+  }
 
   return differencesQueryParameters + differencesHeaders + differencesBody;
 }
@@ -269,11 +275,18 @@ function countObjectDifferences(
   a: object,
   b: object,
   rewriteRules: RewriteRules,
+  dumpMatcherFails: boolean = false,
 ): number {
   a = rewriteRules.apply(a);
   b = rewriteRules.apply(b);
 
-  return (diff(a, b) || []).length;
+  const result = (diff(a, b) || []).length;
+
+  if (dumpMatcherFails && result > 0) {
+    console.log(`dump: a: ${JSON.stringify(a)} / b: ${JSON.stringify(b)}`);
+  }
+
+  return result;
 }
 
 /**
