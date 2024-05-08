@@ -58,6 +58,10 @@ async function main(argv: string[]) {
     .option("-h, --host <host>", "Host to proxy (not required in replay mode)")
     .option("-p, --port <port>", "Local port to serve on", "3000")
     .option(
+      "--send-proxy-port",
+      "Sends the proxays port to the proxied host (helps for redirect issues)",
+    )
+    .option(
       "--exact-request-matching",
       "Perform exact request matching instead of best-effort request matching during replay.",
     )
@@ -105,6 +109,8 @@ async function main(argv: string[]) {
   const defaultTapeName: string = options.defaultTape;
   const host: string = options.host;
   const port = parseInt(options.port, 10);
+  const sendProxyPort: boolean =
+    options.sendProxyPort === undefined ? false : options.sendProxyPort;
   const redactHeaders: string[] = options.redactHeaders;
   const preventConditionalRequests: boolean =
     !!options.dropConditionalRequestHeaders;
@@ -168,6 +174,7 @@ async function main(argv: string[]) {
     initialMode,
     tapeDir,
     host,
+    proxyPortToSend: sendProxyPort ? port : undefined,
     defaultTapeName,
     enableLogging: true,
     redactHeaders,

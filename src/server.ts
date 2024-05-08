@@ -22,6 +22,7 @@ export class RecordReplayServer {
 
   private mode: Mode;
   private proxiedHost?: string;
+  private proxyPortToSend?: number;
   private timeout: number;
   private currentTapeRecords: TapeRecord[] = [];
   private currentTape!: string;
@@ -39,6 +40,7 @@ export class RecordReplayServer {
     tapeDir: string;
     defaultTapeName: string;
     host?: string;
+    proxyPortToSend?: number;
     timeout?: number;
     enableLogging?: boolean;
     redactHeaders?: string[];
@@ -54,6 +56,7 @@ export class RecordReplayServer {
     this.currentTapeRecords = [];
     this.mode = options.initialMode;
     this.proxiedHost = options.host;
+    this.proxyPortToSend = options.proxyPortToSend;
     this.timeout = options.timeout || 5000;
     this.loggingEnabled = options.enableLogging || false;
     const redactHeaders = options.redactHeaders || [];
@@ -340,6 +343,7 @@ export class RecordReplayServer {
       {
         loggingEnabled: this.loggingEnabled,
         timeout: this.timeout,
+        proxyPortToSend: this.proxyPortToSend,
       },
     );
     this.addRecordToTape(record);
@@ -386,6 +390,7 @@ export class RecordReplayServer {
         {
           loggingEnabled: this.loggingEnabled,
           timeout: this.timeout,
+          proxyPortToSend: this.proxyPortToSend,
         },
       );
       this.addRecordToTape(record);
@@ -416,6 +421,7 @@ export class RecordReplayServer {
       {
         loggingEnabled: this.loggingEnabled,
         timeout: this.timeout,
+        proxyPortToSend: this.proxyPortToSend,
       },
     );
     if (this.loggingEnabled) {
