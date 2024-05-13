@@ -290,6 +290,71 @@ describe("similarity", () => {
     ).toBe(1);
   });
 
+  it("counts headers differences (ignoring specified ones)", () => {
+    expect(
+      computeSimilarity(
+        {
+          method: "POST",
+          path: "/test",
+          headers: {
+            one: "one",
+            two: "two",
+            three: "three",
+            four: "four",
+          },
+          body: Buffer.from([]),
+        },
+        {
+          request: {
+            method: "POST",
+            path: "/test",
+            headers: {
+              // one is missing
+              two: "different two",
+              three: "different three",
+              four: "four", // four is the same
+            },
+            body: Buffer.from([]),
+          },
+          response: DUMMY_RESPONSE,
+        },
+        new RewriteRules(),
+        ["one", "two", "three"],
+      ),
+    ).toBe(0);
+    expect(
+      computeSimilarity(
+        {
+          method: "POST",
+          path: "/test",
+          headers: {
+            one: "one",
+            two: "two",
+            three: "three",
+            four: "four",
+          },
+          body: Buffer.from([]),
+        },
+        {
+          request: {
+            method: "POST",
+            path: "/test",
+            headers: {
+              // one is missing
+              two: "different two",
+              three: "different three",
+              four: "different four",
+            },
+            body: Buffer.from([]),
+          },
+          response: DUMMY_RESPONSE,
+        },
+        new RewriteRules(),
+        ["one", "two", "three"],
+      ),
+    ).toBe(1);
+  });
+
   describe("JSON payload types", () => {
     it("reports no differences when the paylods are the same", () => {
       // The following payloads are identical, but formatted differently.
