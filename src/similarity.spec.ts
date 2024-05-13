@@ -355,6 +355,84 @@ describe("similarity", () => {
     ).toBe(1);
   });
 
+  it("dumps headers if non equal", () => {
+    const logSpy = jest.spyOn(console, "log");
+
+    computeSimilarity(
+      {
+        method: "POST",
+        path: "/test",
+        headers: {
+          ignore: "ignore",
+          one: "one",
+          two: "two",
+          three: "three",
+          four: "four",
+        },
+        body: Buffer.from([]),
+      },
+      {
+        request: {
+          method: "POST",
+          path: "/test",
+          headers: {
+            ignore: "different ignore",
+            one: "one",
+            two: "two",
+            three: "three",
+            four: "four",
+          },
+          body: Buffer.from([]),
+        },
+        response: DUMMY_RESPONSE,
+      },
+      new RewriteRules(),
+      ["ignore"],
+      true,
+    );
+
+    expect(logSpy).not.toHaveBeenCalled();
+
+    computeSimilarity(
+      {
+        method: "POST",
+        path: "/test",
+        headers: {
+          ignore: "ignore",
+          one: "one",
+          two: "two",
+          three: "three",
+          four: "four",
+        },
+        body: Buffer.from([]),
+      },
+      {
+        request: {
+          method: "POST",
+          path: "/test",
+          headers: {
+            ignore: "different ignore",
+            // one is missing
+            two: "different two",
+            three: "different three",
+            four: "four", // four is the same
+          },
+          body: Buffer.from([]),
+        },
+        response: DUMMY_RESPONSE,
+      },
+      new RewriteRules(),
+      ["ignore"],
+      true,
+    );
+
+    expect(logSpy).toHaveBeenCalledWith(
+      'dump: a: {"one":"one","two":"two","three":"three","four":"four"} / b: {"two":"different two","three":"different three","four":"four"}',
+    );
+
+    logSpy.mockRestore();
+  });
+
   describe("JSON payload types", () => {
     it("reports no differences when the paylods are the same", () => {
       // The following payloads are identical, but formatted differently.
