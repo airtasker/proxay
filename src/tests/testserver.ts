@@ -41,7 +41,11 @@ export class TestServer {
       res.send(BINARY_RESPONSE);
     });
     this.app.get(JSON_IDENTITY_PATH, (req, res) => {
-      res.json({ data: req.path, requestCount: this.requestCount });
+      res.json({
+        data: req.path,
+        requestCount: this.requestCount,
+        hostname: req.header("host"),
+      });
     });
     this.app.post(JSON_IDENTITY_PATH, (req, res) => {
       res.json({ ...req.body, requestCount: this.requestCount });
