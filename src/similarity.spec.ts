@@ -31,6 +31,7 @@ describe("similarity", () => {
           response: DUMMY_RESPONSE,
         },
         new RewriteRules(),
+        [],
       ),
     ).toBe(0);
   });
@@ -54,6 +55,7 @@ describe("similarity", () => {
           response: DUMMY_RESPONSE,
         },
         new RewriteRules(),
+        [],
       ),
     ).toBe(Infinity);
   });
@@ -77,6 +79,7 @@ describe("similarity", () => {
           response: DUMMY_RESPONSE,
         },
         new RewriteRules(),
+        [],
       ),
     ).toBe(Infinity);
   });
@@ -100,6 +103,7 @@ describe("similarity", () => {
           response: DUMMY_RESPONSE,
         },
         new RewriteRules(),
+        [],
       ),
     ).toBe(1);
     expect(
@@ -120,6 +124,7 @@ describe("similarity", () => {
           response: DUMMY_RESPONSE,
         },
         new RewriteRules(),
+        [],
       ),
     ).toBe(1);
     expect(
@@ -140,6 +145,7 @@ describe("similarity", () => {
           response: DUMMY_RESPONSE,
         },
         new RewriteRules(),
+        [],
       ),
     ).toBe(2);
     expect(
@@ -160,6 +166,7 @@ describe("similarity", () => {
           response: DUMMY_RESPONSE,
         },
         new RewriteRules(),
+        [],
       ),
     ).toBe(0);
     expect(
@@ -180,6 +187,7 @@ describe("similarity", () => {
           response: DUMMY_RESPONSE,
         },
         new RewriteRules(),
+        [],
       ),
     ).toBe(1);
   });
@@ -214,6 +222,7 @@ describe("similarity", () => {
           response: DUMMY_RESPONSE,
         },
         new RewriteRules(),
+        [],
       ),
     ).toBe(0);
     expect(
@@ -244,6 +253,7 @@ describe("similarity", () => {
           response: DUMMY_RESPONSE,
         },
         new RewriteRules(),
+        [],
       ),
     ).toBe(1);
     expect(
@@ -275,8 +285,152 @@ describe("similarity", () => {
           response: DUMMY_RESPONSE,
         },
         new RewriteRules(),
+        [],
       ),
     ).toBe(1);
+  });
+
+  it("counts headers differences (ignoring specified ones)", () => {
+    expect(
+      computeSimilarity(
+        {
+          method: "POST",
+          path: "/test",
+          headers: {
+            one: "one",
+            two: "two",
+            three: "three",
+            four: "four",
+          },
+          body: Buffer.from([]),
+        },
+        {
+          request: {
+            method: "POST",
+            path: "/test",
+            headers: {
+              // one is missing
+              two: "different two",
+              three: "different three",
+              four: "four", // four is the same
+            },
+            body: Buffer.from([]),
+          },
+          response: DUMMY_RESPONSE,
+        },
+        new RewriteRules(),
+        ["one", "two", "three"],
+      ),
+    ).toBe(0);
+    expect(
+      computeSimilarity(
+        {
+          method: "POST",
+          path: "/test",
+          headers: {
+            one: "one",
+            two: "two",
+            three: "three",
+            four: "four",
+          },
+          body: Buffer.from([]),
+        },
+        {
+          request: {
+            method: "POST",
+            path: "/test",
+            headers: {
+              // one is missing
+              two: "different two",
+              three: "different three",
+              four: "different four",
+            },
+            body: Buffer.from([]),
+          },
+          response: DUMMY_RESPONSE,
+        },
+        new RewriteRules(),
+        ["one", "two", "three"],
+      ),
+    ).toBe(1);
+  });
+
+  it("dumps headers if non equal", () => {
+    const logSpy = jest.spyOn(console, "log");
+
+    computeSimilarity(
+      {
+        method: "POST",
+        path: "/test",
+        headers: {
+          ignore: "ignore",
+          one: "one",
+          two: "two",
+          three: "three",
+          four: "four",
+        },
+        body: Buffer.from([]),
+      },
+      {
+        request: {
+          method: "POST",
+          path: "/test",
+          headers: {
+            ignore: "different ignore",
+            one: "one",
+            two: "two",
+            three: "three",
+            four: "four",
+          },
+          body: Buffer.from([]),
+        },
+        response: DUMMY_RESPONSE,
+      },
+      new RewriteRules(),
+      ["ignore"],
+      true,
+    );
+
+    expect(logSpy).not.toHaveBeenCalled();
+
+    computeSimilarity(
+      {
+        method: "POST",
+        path: "/test",
+        headers: {
+          ignore: "ignore",
+          one: "one",
+          two: "two",
+          three: "three",
+          four: "four",
+        },
+        body: Buffer.from([]),
+      },
+      {
+        request: {
+          method: "POST",
+          path: "/test",
+          headers: {
+            ignore: "different ignore",
+            // one is missing
+            two: "different two",
+            three: "different three",
+            four: "four", // four is the same
+          },
+          body: Buffer.from([]),
+        },
+        response: DUMMY_RESPONSE,
+      },
+      new RewriteRules(),
+      ["ignore"],
+      true,
+    );
+
+    expect(logSpy).toHaveBeenCalledWith(
+      'debug: a: {"one":"one","two":"two","three":"three","four":"four"} / b: {"two":"different two","three":"different three","four":"four"}',
+    );
+
+    logSpy.mockRestore();
   });
 
   describe("JSON payload types", () => {
@@ -312,6 +466,7 @@ describe("similarity", () => {
             response: DUMMY_RESPONSE,
           },
           new RewriteRules(),
+          [],
         ),
       ).toBe(0);
     });
@@ -351,6 +506,7 @@ describe("similarity", () => {
             response: DUMMY_RESPONSE,
           },
           new RewriteRules(),
+          [],
         ),
       ).toBe(1);
 
@@ -385,6 +541,7 @@ describe("similarity", () => {
             response: DUMMY_RESPONSE,
           },
           new RewriteRules(),
+          [],
         ),
       ).toBe(6);
 
@@ -425,6 +582,7 @@ describe("similarity", () => {
               "$1",
             ),
           ),
+          [],
         ),
       ).toBe(0);
     });
@@ -454,6 +612,7 @@ describe("similarity", () => {
             response: DUMMY_RESPONSE,
           },
           new RewriteRules(),
+          [],
         ),
       ).toBe(0);
     });
@@ -481,6 +640,7 @@ describe("similarity", () => {
             response: DUMMY_RESPONSE,
           },
           new RewriteRules(),
+          [],
         ),
       ).toBe(6);
     });
@@ -517,6 +677,7 @@ describe("similarity", () => {
             response: DUMMY_RESPONSE,
           },
           new RewriteRules(),
+          [],
         ),
       ).toBe(0);
     });
@@ -544,6 +705,7 @@ describe("similarity", () => {
             response: DUMMY_RESPONSE,
           },
           new RewriteRules(),
+          [],
         ),
       ).toBe(5149);
     });
@@ -591,6 +753,7 @@ describe("similarity", () => {
             response: DUMMY_RESPONSE,
           },
           new RewriteRules(),
+          [],
         ),
       ).toBe(0);
     });
@@ -655,6 +818,7 @@ describe("similarity", () => {
             response: DUMMY_RESPONSE,
           },
           new RewriteRules(),
+          [],
         ),
       ).toBe(1);
     });
@@ -724,6 +888,7 @@ describe("similarity", () => {
               "$1",
             ),
           ),
+          [],
         ),
       ).toBe(0);
     });
@@ -756,6 +921,7 @@ describe("similarity", () => {
             response: DUMMY_RESPONSE,
           },
           new RewriteRules(),
+          [],
         ),
       ).toBe(0);
     });
@@ -788,6 +954,7 @@ describe("similarity", () => {
             response: DUMMY_RESPONSE,
           },
           new RewriteRules(),
+          [],
         ),
       ).toBe(1);
     });
@@ -825,6 +992,7 @@ describe("similarity", () => {
               "$1",
             ),
           ),
+          [],
         ),
       ).toBe(0);
     });

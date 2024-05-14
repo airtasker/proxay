@@ -27,6 +27,8 @@ export function computeSimilarity(
   request: HttpRequest,
   compareTo: TapeRecord,
   rewriteBeforeDiffRules: RewriteRules,
+  ignoreHeaders: string[],
+  debugMatcherFails: boolean = false,
 ): number {
   // If the HTTP method is different, no match.
   if (request.method !== compareTo.request.method) {
@@ -50,17 +52,20 @@ export function computeSimilarity(
     parsedQueryParameters,
     parsedCompareToQueryParameters,
     rewriteBeforeDiffRules,
+    debugMatcherFails,
   );
 
   // Compare the cleaned headers.
-  const cleanedHeaders = stripExtraneousHeaders(request.headers);
+  const cleanedHeaders = stripExtraneousHeaders(request.headers, ignoreHeaders);
   const cleanedCompareToHeaders = stripExtraneousHeaders(
     compareTo.request.headers,
+    ignoreHeaders,
   );
   const differencesHeaders = countObjectDifferences(
     cleanedHeaders,
     cleanedCompareToHeaders,
     rewriteBeforeDiffRules,
+    debugMatcherFails,
   );
 
   // Compare the bodies.
@@ -69,6 +74,9 @@ export function computeSimilarity(
     compareTo.request,
     rewriteBeforeDiffRules,
   );
+  if (debugMatcherFails && differencesBody > 0) {
+    console.log(`debug: body is different`);
+  }
 
   return differencesQueryParameters + differencesHeaders + differencesBody;
 }
@@ -267,11 +275,18 @@ function countObjectDifferences(
   a: object,
   b: object,
   rewriteRules: RewriteRules,
+  debugMatcherFails: boolean = false,
 ): number {
   a = rewriteRules.apply(a);
   b = rewriteRules.apply(b);
 
-  return (diff(a, b) || []).length;
+  const result = (diff(a, b) || []).length;
+
+  if (debugMatcherFails && result > 0) {
+    console.log(`debug: a: ${JSON.stringify(a)} / b: ${JSON.stringify(b)}`);
+  }
+
+  return result;
 }
 
 /**
@@ -317,7 +332,10 @@ function parseQueryParameters(path: string): ParsedUrlQuery {
 /**
  * Strips out headers that are likely to result in false negatives.
  */
-function stripExtraneousHeaders(headers: HttpHeaders): HttpHeaders {
+function stripExtraneousHeaders(
+  headers: HttpHeaders,
+  ignoreHeaders: string[],
+): HttpHeaders {
   const safeHeaders: HttpHeaders = {};
   for (const key of Object.keys(headers)) {
     switch (key) {
@@ -345,7 +363,9 @@ function stripExtraneousHeaders(headers: HttpHeaders): HttpHeaders {
         // Ignore.
         continue;
       default:
-        safeHeaders[key] = headers[key];
+        if (!ignoreHeaders.find((header) => header === key)) {
+          safeHeaders[key] = headers[key];
+        }
     }
   }
   return safeHeaders;

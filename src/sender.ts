@@ -13,6 +13,7 @@ export async function send(
   options: {
     loggingEnabled?: boolean;
     timeout?: number;
+    proxyPortToSend?: number;
   },
 ): Promise<TapeRecord> {
   try {
@@ -27,7 +28,9 @@ export async function send(
           port,
           headers: {
             ...request.headers,
-            host: hostname,
+            host:
+              hostname +
+              (options.proxyPortToSend ? `:${options.proxyPortToSend}` : ""),
           },
           timeout: options.timeout,
         };

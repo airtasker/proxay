@@ -22,6 +22,7 @@ export class RecordReplayServer {
 
   private mode: Mode;
   private proxiedHost?: string;
+  private proxyPortToSend?: number;
   private timeout: number;
   private currentTapeRecords: TapeRecord[] = [];
   private currentTape!: string;
@@ -30,13 +31,16 @@ export class RecordReplayServer {
   private replayedTapes: Set<TapeRecord> = new Set();
   private preventConditionalRequests?: boolean;
   private rewriteBeforeDiffRules: RewriteRules;
+  private ignoreHeaders: string[];
   private exactRequestMatching: boolean;
+  private debugMatcherFails: boolean;
 
   constructor(options: {
     initialMode: Mode;
     tapeDir: string;
     defaultTapeName: string;
     host?: string;
+    proxyPortToSend?: number;
     timeout?: number;
     enableLogging?: boolean;
     redactHeaders?: string[];
@@ -45,11 +49,14 @@ export class RecordReplayServer {
     httpsKey?: string;
     httpsCert?: string;
     rewriteBeforeDiffRules?: RewriteRules;
+    ignoreHeaders?: string[];
     exactRequestMatching?: boolean;
+    debugMatcherFails?: boolean;
   }) {
     this.currentTapeRecords = [];
     this.mode = options.initialMode;
     this.proxiedHost = options.host;
+    this.proxyPortToSend = options.proxyPortToSend;
     this.timeout = options.timeout || 5000;
     this.loggingEnabled = options.enableLogging || false;
     const redactHeaders = options.redactHeaders || [];
@@ -58,10 +65,15 @@ export class RecordReplayServer {
     this.preventConditionalRequests = options.preventConditionalRequests;
     this.rewriteBeforeDiffRules =
       options.rewriteBeforeDiffRules || new RewriteRules();
+    this.ignoreHeaders = options.ignoreHeaders || [];
     this.exactRequestMatching =
       options.exactRequestMatching === undefined
         ? false
         : options.exactRequestMatching;
+    this.debugMatcherFails =
+      options.debugMatcherFails === undefined
+        ? false
+        : options.debugMatcherFails;
     this.loadTape(this.defaultTape);
 
     const handler = async (
@@ -291,6 +303,8 @@ export class RecordReplayServer {
         this.currentTapeRecords,
         this.rewriteBeforeDiffRules,
         this.exactRequestMatching,
+        this.debugMatcherFails,
+        this.ignoreHeaders,
       ),
       this.replayedTapes,
     );
@@ -331,6 +345,7 @@ export class RecordReplayServer {
       {
         loggingEnabled: this.loggingEnabled,
         timeout: this.timeout,
+        proxyPortToSend: this.proxyPortToSend,
       },
     );
     this.addRecordToTape(record);
@@ -352,6 +367,8 @@ export class RecordReplayServer {
         this.currentTapeRecords,
         this.rewriteBeforeDiffRules,
         this.exactRequestMatching,
+        this.debugMatcherFails,
+        this.ignoreHeaders,
       ),
       this.replayedTapes,
     );
@@ -375,6 +392,7 @@ export class RecordReplayServer {
         {
           loggingEnabled: this.loggingEnabled,
           timeout: this.timeout,
+          proxyPortToSend: this.proxyPortToSend,
         },
       );
       this.addRecordToTape(record);
@@ -405,6 +423,7 @@ export class RecordReplayServer {
       {
         loggingEnabled: this.loggingEnabled,
         timeout: this.timeout,
+        proxyPortToSend: this.proxyPortToSend,
       },
     );
     if (this.loggingEnabled) {

@@ -58,12 +58,20 @@ async function main(argv: string[]) {
     .option("-h, --host <host>", "Host to proxy (not required in replay mode)")
     .option("-p, --port <port>", "Local port to serve on", "3000")
     .option(
+      "--send-proxy-port",
+      "Sends the proxays port to the proxied host (helps for redirect issues)",
+    )
+    .option(
       "--exact-request-matching",
       "Perform exact request matching instead of best-effort request matching during replay.",
     )
     .option(
+      "--debug-matcher-fails",
+      "In exact request matching mode, shows debug information about failed matches for headers and queries.",
+    )
+    .option(
       "-r, --redact-headers <headers>",
-      "Request headers to redact",
+      "Request headers to redact (values will be replaced by XXXX)",
       commaSeparatedList,
     )
     .option(
@@ -88,6 +96,11 @@ async function main(argv: string[]) {
       rewriteRule,
       new RewriteRules(),
     )
+    .option(
+      "--ignore-headers <headers>",
+      "Save headers to be ignored for the matching algorithm",
+      commaSeparatedList,
+    )
     .parse(argv);
 
   const options = program.opts();
@@ -96,6 +109,8 @@ async function main(argv: string[]) {
   const defaultTapeName: string = options.defaultTape;
   const host: string = options.host;
   const port = parseInt(options.port, 10);
+  const sendProxyPort: boolean =
+    options.sendProxyPort === undefined ? false : options.sendProxyPort;
   const redactHeaders: string[] = options.redactHeaders;
   const preventConditionalRequests: boolean =
     !!options.dropConditionalRequestHeaders;
@@ -103,10 +118,13 @@ async function main(argv: string[]) {
   const httpsKey: string = options.httpsKey;
   const httpsCert: string = options.httpsCert;
   const rewriteBeforeDiffRules: RewriteRules = options.rewriteBeforeDiff;
+  const ignoreHeaders: string[] = options.ignoreHeaders;
   const exactRequestMatching: boolean =
     options.exactRequestMatching === undefined
       ? false
       : options.exactRequestMatching;
+  const debugMatcherFails: boolean =
+    options.debugMatcherFails === undefined ? false : options.debugMatcherFails;
 
   switch (initialMode) {
     case "record":
@@ -146,10 +164,17 @@ async function main(argv: string[]) {
     }
   }
 
+  if (debugMatcherFails && !exactRequestMatching) {
+    panic(
+      "The --debug-matcher-fails flag can only be used with the --exact-request-matching flag.",
+    );
+  }
+
   const server = new RecordReplayServer({
     initialMode,
     tapeDir,
     host,
+    proxyPortToSend: sendProxyPort ? port : undefined,
     defaultTapeName,
     enableLogging: true,
     redactHeaders,
@@ -158,7 +183,9 @@ async function main(argv: string[]) {
     httpsKey,
     httpsCert,
     rewriteBeforeDiffRules,
+    ignoreHeaders,
     exactRequestMatching,
+    debugMatcherFails,
   });
   await server.start(port);
   console.log(chalk.green(`Proxying in ${initialMode} mode on port ${port}.`));

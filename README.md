@@ -65,6 +65,23 @@ In replay mode, this same file will be read from your tapes directory.
 You can leverage this by picking a tape based on the current test's name in the `beforeEach`
 block of your test suite.
 
+## (Some) Options
+
+`--send-proxy-port`: This flag enables the forwarding of the Proxay's local port number to the proxied host in the host header. It is particularly useful for handling redirect issues where the proxied host needs to be aware of the port on which Proxay is running to construct accurate redirect URLs. This is similar to nginx' `proxy_set_header Host $host:$server_port;`.
+
+
+`--ignore-headers <headers>`: Allows users to specify a list of headers that should be ignored by Proxay's matching algorithm during request comparison. This is useful for bypassing headers that do not influence the behavior of the request but may cause mismatches, such as `x-forwarded-for` or `x-real-ip`. The headers should be provided as a comma-separated list.
+
+Note: there is already a hardcoded list of headers that get ignored:
+`accept`, `accept-encoding`, `age`, `cache-control`, `clear-site-data`, `connection`, `expires`, `from`, `host`, `postman-token`, `pragma`, `referer`, `referer-policy`, `te`, `trailer`, `transfer-encoding`, `user-agent`, `warning`, `x-datadog-trace-id`, `x-datadog-parent-id`, `traceparent`
+
+
+`-r, --redact-headers <headers>`: This option enables the redaction of specific HTTP header values, which are replaced by `XXXX` to maintain privacy or confidentiality during the recording of network interactions. The headers should be provided as a comma-separated list.
+
+
+`--debug-matcher-fails`: When exact request matching is enabled, this flag provides some debug information on why a request did not match any recorded tape. It is useful for troubleshooting and refining the conditions under which requests are considered equivalent, focusing on differences in headers and query parameters.
+
+
 ## Typical use case
 
 Let's say you're writing tests for your client. You want your tests to run as
