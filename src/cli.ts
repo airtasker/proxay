@@ -66,8 +66,8 @@ async function main(argv: string[]) {
       "Perform exact request matching instead of best-effort request matching during replay.",
     )
     .option(
-      "--dump-matcher-fails",
-      "In exact request matching mode, dumps information about failed matches for headers and queries.",
+      "--debug-matcher-fails",
+      "In exact request matching mode, shows debug information about failed matches for headers and queries.",
     )
     .option(
       "-r, --redact-headers <headers>",
@@ -123,8 +123,8 @@ async function main(argv: string[]) {
     options.exactRequestMatching === undefined
       ? false
       : options.exactRequestMatching;
-  const dumpMatcherFails: boolean =
-    options.dumpMatcherFails === undefined ? false : options.dumpMatcherFails;
+  const debugMatcherFails: boolean =
+    options.debugMatcherFails === undefined ? false : options.debugMatcherFails;
 
   switch (initialMode) {
     case "record":
@@ -164,9 +164,9 @@ async function main(argv: string[]) {
     }
   }
 
-  if (dumpMatcherFails && !exactRequestMatching) {
+  if (debugMatcherFails && !exactRequestMatching) {
     panic(
-      "The --dump-matcher-fails flag can only be used with the --exact-request-matching flag.",
+      "The --debug-matcher-fails flag can only be used with the --exact-request-matching flag.",
     );
   }
 
@@ -185,7 +185,7 @@ async function main(argv: string[]) {
     rewriteBeforeDiffRules,
     ignoreHeaders,
     exactRequestMatching,
-    dumpMatcherFails,
+    debugMatcherFails,
   });
   await server.start(port);
   console.log(chalk.green(`Proxying in ${initialMode} mode on port ${port}.`));

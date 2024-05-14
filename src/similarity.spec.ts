@@ -427,7 +427,7 @@ describe("similarity", () => {
     );
 
     expect(logSpy).toHaveBeenCalledWith(
-      'dump: a: {"one":"one","two":"two","three":"three","four":"four"} / b: {"two":"different two","three":"different three","four":"four"}',
+      'debug: a: {"one":"one","two":"two","three":"three","four":"four"} / b: {"two":"different two","three":"different three","four":"four"}',
     );
 
     logSpy.mockRestore();

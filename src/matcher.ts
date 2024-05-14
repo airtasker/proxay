@@ -48,7 +48,7 @@ export function findRecordMatches(
   tapeRecords: TapeRecord[],
   rewriteBeforeDiffRules: RewriteRules,
   exactRequestMatching: boolean,
-  dumpMatcherFails: boolean,
+  debugMatcherFails: boolean,
   ignoreHeaders: string[],
 ): TapeRecord[] {
   let bestSimilarityScore = +Infinity;
@@ -62,7 +62,7 @@ export function findRecordMatches(
       potentialMatch,
       rewriteBeforeDiffRules,
       ignoreHeaders,
-      dumpMatcherFails,
+      debugMatcherFails,
     );
 
     if (similarityScore < bestSimilarityScore) {

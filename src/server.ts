@@ -33,7 +33,7 @@ export class RecordReplayServer {
   private rewriteBeforeDiffRules: RewriteRules;
   private ignoreHeaders: string[];
   private exactRequestMatching: boolean;
-  private dumpMatcherFails: boolean;
+  private debugMatcherFails: boolean;
 
   constructor(options: {
     initialMode: Mode;
@@ -51,7 +51,7 @@ export class RecordReplayServer {
     rewriteBeforeDiffRules?: RewriteRules;
     ignoreHeaders?: string[];
     exactRequestMatching?: boolean;
-    dumpMatcherFails?: boolean;
+    debugMatcherFails?: boolean;
   }) {
     this.currentTapeRecords = [];
     this.mode = options.initialMode;
@@ -70,8 +70,10 @@ export class RecordReplayServer {
       options.exactRequestMatching === undefined
         ? false
         : options.exactRequestMatching;
-    this.dumpMatcherFails =
-      options.dumpMatcherFails === undefined ? false : options.dumpMatcherFails;
+    this.debugMatcherFails =
+      options.debugMatcherFails === undefined
+        ? false
+        : options.debugMatcherFails;
     this.loadTape(this.defaultTape);
 
     const handler = async (
@@ -301,7 +303,7 @@ export class RecordReplayServer {
         this.currentTapeRecords,
         this.rewriteBeforeDiffRules,
         this.exactRequestMatching,
-        this.dumpMatcherFails,
+        this.debugMatcherFails,
         this.ignoreHeaders,
       ),
       this.replayedTapes,
@@ -365,7 +367,7 @@ export class RecordReplayServer {
         this.currentTapeRecords,
         this.rewriteBeforeDiffRules,
         this.exactRequestMatching,
-        this.dumpMatcherFails,
+        this.debugMatcherFails,
         this.ignoreHeaders,
       ),
       this.replayedTapes,

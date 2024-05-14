@@ -79,7 +79,7 @@ Note: there is already a hardcoded list of headers that get ignored:
 `-r, --redact-headers <headers>`: This option enables the redaction of specific HTTP header values, which are replaced by `XXXX` to maintain privacy or confidentiality during the recording of network interactions. The headers should be provided as a comma-separated list.
 
 
-`--dump-matcher-fails`: When exact request matching is enabled, this flag provides some debug information on why a request did not match any recorded tape. It is useful for troubleshooting and refining the conditions under which requests are considered equivalent, focusing on differences in headers and query parameters.
+`--debug-matcher-fails`: When exact request matching is enabled, this flag provides some debug information on why a request did not match any recorded tape. It is useful for troubleshooting and refining the conditions under which requests are considered equivalent, focusing on differences in headers and query parameters.
 
 
 ## Typical use case
