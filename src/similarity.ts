@@ -363,7 +363,7 @@ function stripExtraneousHeaders(
         // Ignore.
         continue;
       default:
-        if (!ignoreHeaders.find((header) => header === key)) {
+        if (!ignoreHeaders.includes(key))
           safeHeaders[key] = headers[key];
         }
     }
