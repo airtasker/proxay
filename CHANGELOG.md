@@ -1,3 +1,9 @@
+# 1.9.0
+
+* Added support for ignoring additional headers during comparison (#604).
+* Added support for dumping mismatch debugging information to the console (#604).
+* Added support for forwarding the port of the proxy server on the `Host` header (#604).
+
 # 1.8.0
 
 * Removed support for unframing `application/grpc-web+json` requests (#567).
