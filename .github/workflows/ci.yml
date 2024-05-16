@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [14, 16, 18, 20]
+        node-version: [14.21, 16.20, 18.18, 20.10]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -47,3 +47,77 @@ jobs:
         uses: test-summary/action@v2
         with:
           paths: ./test-reports/jest/results.xml
+
+  lint:
+    name: "lint"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup NodeJS
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Run prettier
+        run: yarn lint:check
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup NodeJS
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - run: yarn build
+      - run: npm link
+      - run: npx proxay --help
+      - run: |
+          npx proxay -m record -h https://www.google.com -t tapes/ &
+          # Wait until it loads.
+          until (curl http://localhost:3000 2>&1 | grep Google &>/dev/null)
+          do
+            echo "Waiting until server ready..."
+            sleep 5
+          done
+
+  publish:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    needs:
+      - test
+      - build
+      - lint
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup NodeJS
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - run: yarn build
+
+      - name: Authenticate with npm registry
+        run: echo "//registry.npmjs.org/:_authToken=$NPM_PUBLISH_TOKEN" > ~/.npmrc
+
+      - name: Publish to npm registry
+        run: npm publish --access=public

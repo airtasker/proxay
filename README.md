@@ -156,7 +156,7 @@ To release a new version of Proxay, follow the following two steps:
 
 1. Visit the [releases page](https://github.com/airtasker/proxay/releases) to see what was last announced.
 2. Draft a new release:
-    - Tag = `v[version]` (e.g. `v2.1.1`). **Do not forget the `v`, which is required to trigger the NPM publish on CircleCI.**
+    - Tag = `v[version]` (e.g. `v2.1.1`). **Do not forget the `v`, which is required to trigger the NPM publish in GitHub Actions.**
     - Title = `Release v[version]` (e.g. `Release v2.1.1`)
 3. Make sure to announce major changes since the last version in the description.
 4. Once published, [check CircleCI](https://circleci.com/gh/airtasker/proxay) to ensure publication was successful.
