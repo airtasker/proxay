@@ -9,3 +9,11 @@ updates:
     time: "05:00"
     timezone: Australia/Sydney
   open-pull-requests-limit: 99
+- package-ecosystem: github-actions
+  directory: "/"
+  schedule:
+    interval: weekly
+    day: monday
+    time: "05:00"
+    timezone: Australia/Sydney
+  open-pull-requests-limit: 5
