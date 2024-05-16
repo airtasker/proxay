@@ -117,7 +117,7 @@ jobs:
       - run: yarn build
 
       - name: Authenticate with npm registry
-        run: echo "//registry.npmjs.org/:_authToken=$NPM_PUBLISH_TOKEN" > ~/.npmrc
+        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPMJS_PUBLISH_TOKEN }}" > ~/.npmrc
 
       - name: Publish to npm registry
         run: npm publish --access=public
