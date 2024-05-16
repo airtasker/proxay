@@ -12,6 +12,7 @@ on:
 
 jobs:
   test:
+    name: "test-node-${{ matrix.node-version }}"
     runs-on: ubuntu-latest
     strategy:
       matrix:
