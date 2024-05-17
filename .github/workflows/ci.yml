@@ -7,14 +7,15 @@ on:
   push:
     branches:
       - master
-    tags:
-      - 'v*.*.*'
+  release:
+    types: [published]
 
 jobs:
   test:
     name: "test-node-${{ matrix.node-version }}"
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         node-version: [14, 16, 18, 20]
     steps:
@@ -25,7 +26,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'yarn'
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile
@@ -47,3 +47,78 @@ jobs:
         uses: test-summary/action@v2
         with:
           paths: ./test-reports/jest/results.xml
+
+  lint:
+    name: "lint"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup NodeJS
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Run prettier
+        run: yarn lint:check
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup NodeJS
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - run: yarn build
+      - run: npm link
+      - run: npx proxay --help
+      - run: |
+          npx proxay -m record -h https://www.google.com -t tapes/ &
+          # Wait until it loads.
+          until (curl http://localhost:3000 2>&1 | grep Google &>/dev/null)
+          do
+            echo "Waiting until server ready..."
+            sleep 5
+          done
+
+  publish:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release'
+    needs:
+      - test
+      - build
+      - lint
+    env:
+      # Used in setup-node and publish steps
+      NODE_AUTH_TOKEN: ${{ secrets.NPMJS_PUBLISH_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup NodeJS
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: 'yarn'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - run: yarn build
+
+      - name: Publish to npm registry
+        run: npm publish --provenance --access public
