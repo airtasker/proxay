@@ -55,7 +55,7 @@
     "commander": "^10.0.1",
     "content-type": "^1.0.5",
     "deep-diff": "^1.0.2",
-    "fs-extra": "^11.2.0",
+    "fs-extra": "^11.3.2",
     "js-yaml": "^4.1.0",
     "string-similarity": "^4.0.4",
     "unicode-properties": "^1.4.1"
