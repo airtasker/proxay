@@ -44,6 +44,7 @@ export class RecordReplayServer {
     timeout?: number;
     enableLogging?: boolean;
     redactHeaders?: string[];
+    redactBodyFields?: string[];
     preventConditionalRequests?: boolean;
     httpsCA?: string;
     httpsKey?: string;
@@ -60,7 +61,8 @@ export class RecordReplayServer {
     this.timeout = options.timeout || 5000;
     this.loggingEnabled = options.enableLogging || false;
     const redactHeaders = options.redactHeaders || [];
-    this.persistence = new Persistence(options.tapeDir, redactHeaders);
+    const redactBodyFields = options.redactBodyFields || [];
+    this.persistence = new Persistence(options.tapeDir, redactHeaders, redactBodyFields);
     this.defaultTape = options.defaultTapeName;
     this.preventConditionalRequests = options.preventConditionalRequests;
     this.rewriteBeforeDiffRules =

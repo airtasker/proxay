@@ -75,6 +75,11 @@ async function main(argv: string[]) {
       commaSeparatedList,
     )
     .option(
+      "--redact-body-fields <fields>",
+      "JSON body fields to redact in request and response bodies (values will be replaced by XXXX)",
+      commaSeparatedList,
+    )
+    .option(
       "--no-drop-conditional-request-headers",
       "When running in record mode, by default, `If-*` headers from outgoing requests are dropped in an attempt to prevent the suite of conditional responses being returned (e.g. 304). Supplying this flag disables this default behaviour",
     )
@@ -112,6 +117,7 @@ async function main(argv: string[]) {
   const sendProxyPort: boolean =
     options.sendProxyPort === undefined ? false : options.sendProxyPort;
   const redactHeaders: string[] = options.redactHeaders;
+  const redactBodyFields: string[] = options.redactBodyFields;
   const preventConditionalRequests: boolean =
     !!options.dropConditionalRequestHeaders;
   const httpsCA: string = options.httpsCa || "";
@@ -178,6 +184,7 @@ async function main(argv: string[]) {
     defaultTapeName,
     enableLogging: true,
     redactHeaders,
+    redactBodyFields,
     preventConditionalRequests,
     httpsCA,
     httpsKey,
