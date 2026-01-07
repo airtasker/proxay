@@ -62,7 +62,11 @@ export class RecordReplayServer {
     this.loggingEnabled = options.enableLogging || false;
     const redactHeaders = options.redactHeaders || [];
     const redactBodyFields = options.redactBodyFields || [];
-    this.persistence = new Persistence(options.tapeDir, redactHeaders, redactBodyFields);
+    this.persistence = new Persistence(
+      options.tapeDir,
+      redactHeaders,
+      redactBodyFields,
+    );
     this.defaultTape = options.defaultTapeName;
     this.preventConditionalRequests = options.preventConditionalRequests;
     this.rewriteBeforeDiffRules =

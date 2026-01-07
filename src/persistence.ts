@@ -46,7 +46,7 @@ export class Persistence {
    */
   private redact(record: TapeRecord): TapeRecord {
     redactRequestHeaders(record, this.redactHeaders);
-    redactBodyFields(record, this.redactBodyFields);
+    redactRecordBodyFields(record, this.redactBodyFields);
     return record;
   }
 
@@ -95,7 +95,7 @@ export function redactRequestHeaders(
 /**
  * Redacts JSON body fields in request and response bodies
  */
-export function redactBodyFields(
+export function redactRecordBodyFields(
   record: TapeRecord,
   redactFields: string[],
 ) {
