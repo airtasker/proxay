@@ -3,7 +3,7 @@ import {
   persistTape,
   reviveTape,
   redactRequestHeaders,
-  redactBodyFields,
+  redactRecordBodyFields,
 } from "./persistence";
 
 // Note the repetition. This is necessary otherwise Brotli compression
@@ -532,7 +532,7 @@ describe("Body Field Redaction", () => {
       },
     };
 
-    redactBodyFields(record, ["password"]);
+    redactRecordBodyFields(record, ["password"]);
 
     const redactedRequest = JSON.parse(record.request.body.toString("utf8"));
     expect(redactedRequest.email).toEqual("user@example.com");
@@ -560,7 +560,7 @@ describe("Body Field Redaction", () => {
       },
     };
 
-    redactBodyFields(record, ["password", "access_token"]);
+    redactRecordBodyFields(record, ["password", "access_token"]);
 
     const redactedRequest = JSON.parse(record.request.body.toString("utf8"));
     expect(redactedRequest.Password).toEqual("XXXX");
@@ -592,7 +592,7 @@ describe("Body Field Redaction", () => {
       },
     };
 
-    redactBodyFields(record, ["password", "api_key"]);
+    redactRecordBodyFields(record, ["password", "api_key"]);
 
     const redactedRequest = JSON.parse(record.request.body.toString("utf8"));
     expect(redactedRequest.user.email).toEqual("user@example.com");
@@ -622,7 +622,7 @@ describe("Body Field Redaction", () => {
       },
     };
 
-    redactBodyFields(record, ["password"]);
+    redactRecordBodyFields(record, ["password"]);
 
     const redactedRequest = JSON.parse(record.request.body.toString("utf8"));
     expect(redactedRequest.users[0].username).toEqual("user1");
@@ -654,7 +654,7 @@ describe("Body Field Redaction", () => {
       },
     };
 
-    redactBodyFields(record, ["access_token", "refresh_token"]);
+    redactRecordBodyFields(record, ["access_token", "refresh_token"]);
 
     const redactedResponse = JSON.parse(record.response.body.toString("utf8"));
     expect(redactedResponse.user.id).toEqual(123);
@@ -679,7 +679,7 @@ describe("Body Field Redaction", () => {
       },
     };
 
-    redactBodyFields(record, ["password"]);
+    redactRecordBodyFields(record, ["password"]);
 
     expect(record.request.body.toString("utf8")).toEqual(plainText);
     expect(record.response.body.toString("utf8")).toEqual("OK");
@@ -703,7 +703,7 @@ describe("Body Field Redaction", () => {
     const originalRequest = Buffer.from(BINARY_REQUEST);
     const originalResponse = Buffer.from(BINARY_RESPONSE);
 
-    redactBodyFields(record, ["password"]);
+    redactRecordBodyFields(record, ["password"]);
 
     expect(record.request.body).toEqual(originalRequest);
     expect(record.response.body).toEqual(originalResponse);
@@ -724,7 +724,7 @@ describe("Body Field Redaction", () => {
       },
     };
 
-    redactBodyFields(record, ["password"]);
+    redactRecordBodyFields(record, ["password"]);
 
     expect(record.request.body.toString("utf8")).toEqual("");
     expect(record.response.body.toString("utf8")).toEqual("");
@@ -750,7 +750,7 @@ describe("Body Field Redaction", () => {
       },
     };
 
-    redactBodyFields(record, []);
+    redactRecordBodyFields(record, []);
 
     const redactedRequest = JSON.parse(record.request.body.toString("utf8"));
     expect(redactedRequest.email).toEqual("user@example.com");
