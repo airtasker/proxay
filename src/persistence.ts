@@ -20,6 +20,7 @@ export class Persistence {
   constructor(
     private readonly tapeDir: string,
     private readonly redactHeaders: string[],
+    private readonly redactBodyFields: string[],
   ) {}
 
   /**
@@ -41,10 +42,11 @@ export class Persistence {
   }
 
   /**
-   * Redacts the request headers of the given record, depending on the redactHeaders array
+   * Redacts the request headers and body fields of the given record
    */
   private redact(record: TapeRecord): TapeRecord {
     redactRequestHeaders(record, this.redactHeaders);
+    redactRecordBodyFields(record, this.redactBodyFields);
     return record;
   }
 
@@ -88,6 +90,76 @@ export function redactRequestHeaders(
       record.request.headers[header] = "XXXX";
     }
   });
+}
+
+/**
+ * Redacts JSON body fields in request and response bodies
+ */
+export function redactRecordBodyFields(
+  record: TapeRecord,
+  redactFields: string[],
+) {
+  if (redactFields.length === 0) {
+    return;
+  }
+
+  // Redact request body
+  record.request.body = redactBufferFields(record.request.body, redactFields);
+
+  // Redact response body
+  record.response.body = redactBufferFields(record.response.body, redactFields);
+}
+
+/**
+ * Redacts fields in a Buffer by parsing as JSON if possible
+ */
+function redactBufferFields(buffer: Buffer, redactFields: string[]): Buffer {
+  if (!buffer || buffer.length === 0) {
+    return buffer;
+  }
+
+  try {
+    const bodyString = buffer.toString("utf8");
+    const parsed = JSON.parse(bodyString);
+
+    // Recursively redact fields
+    redactObjectFields(parsed, redactFields);
+
+    // Convert back to buffer
+    return Buffer.from(JSON.stringify(parsed), "utf8");
+  } catch (e) {
+    // If not JSON or can't parse, return original buffer
+    return buffer;
+  }
+}
+
+/**
+ * Recursively redacts fields in an object or array
+ */
+function redactObjectFields(obj: any, redactFields: string[]): void {
+  if (typeof obj !== "object" || obj === null) {
+    return;
+  }
+
+  if (Array.isArray(obj)) {
+    // Handle arrays
+    obj.forEach((item) => redactObjectFields(item, redactFields));
+  } else {
+    // Handle objects
+    Object.keys(obj).forEach((key) => {
+      // Check if this key should be redacted (case-insensitive)
+      const shouldRedact = redactFields.some(
+        (field) => field.toLowerCase() === key.toLowerCase(),
+      );
+
+      if (shouldRedact) {
+        obj[key] = "XXXX";
+      } else if (typeof obj[key] === "object" && obj[key] !== null) {
+        // Recursively redact nested objects/arrays
+        redactObjectFields(obj[key], redactFields);
+      }
+    });
+  }
 }
 
 export function persistTape(record: TapeRecord): PersistedTapeRecord {

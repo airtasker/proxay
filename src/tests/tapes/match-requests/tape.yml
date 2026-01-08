@@ -3,12 +3,13 @@ http_interactions:
       method: POST
       path: /json/identity
       headers:
-        accept: 'application/json, text/plain, */*'
-        content-type: application/json;charset=utf-8
-        user-agent: axios/0.18.1
+        accept: application/json, text/plain, */*
+        content-type: application/json
+        user-agent: axios/1.7.2
         content-length: '12'
-        host: 'localhost:4000'
-        connection: close
+        accept-encoding: gzip, compress, deflate, br
+        host: localhost:4000
+        connection: keep-alive
       body:
         encoding: utf8
         data: '{"field3":1}'
@@ -21,8 +22,9 @@ http_interactions:
         content-type: application/json; charset=utf-8
         content-length: '29'
         etag: W/"1d-VScr985hiId2x6Go7UQU+rhoiH4"
-        date: 'Wed, 10 Jul 2019 06:19:13 GMT'
-        connection: close
+        date: Wed, 07 Jan 2026 14:21:52 GMT
+        connection: keep-alive
+        keep-alive: timeout=5
       body:
         encoding: utf8
         data: '{"field3":1,"requestCount":8}'
@@ -31,12 +33,13 @@ http_interactions:
       method: POST
       path: /json/identity
       headers:
-        accept: 'application/json, text/plain, */*'
-        content-type: application/json;charset=utf-8
-        user-agent: axios/0.18.1
+        accept: application/json, text/plain, */*
+        content-type: application/json
+        user-agent: axios/1.7.2
         content-length: '12'
-        host: 'localhost:4000'
-        connection: close
+        accept-encoding: gzip, compress, deflate, br
+        host: localhost:4000
+        connection: keep-alive
       body:
         encoding: utf8
         data: '{"field3":1}'
@@ -49,8 +52,9 @@ http_interactions:
         content-type: application/json; charset=utf-8
         content-length: '29'
         etag: W/"1d-0K0LkiFwFoK7E4ko+TIPXZRaod4"
-        date: 'Wed, 10 Jul 2019 06:19:13 GMT'
-        connection: close
+        date: Wed, 07 Jan 2026 14:21:52 GMT
+        connection: keep-alive
+        keep-alive: timeout=5
       body:
         encoding: utf8
         data: '{"field3":1,"requestCount":9}'

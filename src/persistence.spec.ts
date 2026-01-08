@@ -1,5 +1,10 @@
 import { brotliCompressSync, gzipSync } from "zlib";
-import { persistTape, reviveTape, redactRequestHeaders } from "./persistence";
+import {
+  persistTape,
+  reviveTape,
+  redactRequestHeaders,
+  redactRecordBodyFields,
+} from "./persistence";
 
 // Note the repetition. This is necessary otherwise Brotli compression
 // will be null.
@@ -502,5 +507,253 @@ describe("Persistence", () => {
         body: UTF8_RESPONSE_GZIP,
       },
     });
+  });
+});
+
+describe("Body Field Redaction", () => {
+  it("redacts simple JSON fields in request body", () => {
+    const requestJson = JSON.stringify({
+      email: "user@example.com",
+      password: "secret123",
+      username: "testuser",
+    });
+
+    const record = {
+      request: {
+        method: "POST",
+        path: "/login",
+        headers: {},
+        body: Buffer.from(requestJson, "utf8"),
+      },
+      response: {
+        status: { code: 200 },
+        headers: {},
+        body: Buffer.from("{}", "utf8"),
+      },
+    };
+
+    redactRecordBodyFields(record, ["password"]);
+
+    const redactedRequest = JSON.parse(record.request.body.toString("utf8"));
+    expect(redactedRequest.email).toEqual("user@example.com");
+    expect(redactedRequest.password).toEqual("XXXX");
+    expect(redactedRequest.username).toEqual("testuser");
+  });
+
+  it("redacts fields case-insensitively", () => {
+    const requestJson = JSON.stringify({
+      Password: "secret123",
+      ACCESS_TOKEN: "token456",
+    });
+
+    const record = {
+      request: {
+        method: "POST",
+        path: "/login",
+        headers: {},
+        body: Buffer.from(requestJson, "utf8"),
+      },
+      response: {
+        status: { code: 200 },
+        headers: {},
+        body: Buffer.from("{}", "utf8"),
+      },
+    };
+
+    redactRecordBodyFields(record, ["password", "access_token"]);
+
+    const redactedRequest = JSON.parse(record.request.body.toString("utf8"));
+    expect(redactedRequest.Password).toEqual("XXXX");
+    expect(redactedRequest.ACCESS_TOKEN).toEqual("XXXX");
+  });
+
+  it("redacts nested JSON fields", () => {
+    const requestJson = JSON.stringify({
+      user: {
+        email: "user@example.com",
+        credentials: {
+          password: "secret123",
+          api_key: "key789",
+        },
+      },
+    });
+
+    const record = {
+      request: {
+        method: "POST",
+        path: "/api/user",
+        headers: {},
+        body: Buffer.from(requestJson, "utf8"),
+      },
+      response: {
+        status: { code: 200 },
+        headers: {},
+        body: Buffer.from("{}", "utf8"),
+      },
+    };
+
+    redactRecordBodyFields(record, ["password", "api_key"]);
+
+    const redactedRequest = JSON.parse(record.request.body.toString("utf8"));
+    expect(redactedRequest.user.email).toEqual("user@example.com");
+    expect(redactedRequest.user.credentials.password).toEqual("XXXX");
+    expect(redactedRequest.user.credentials.api_key).toEqual("XXXX");
+  });
+
+  it("redacts fields in arrays", () => {
+    const requestJson = JSON.stringify({
+      users: [
+        { username: "user1", password: "pass1" },
+        { username: "user2", password: "pass2" },
+      ],
+    });
+
+    const record = {
+      request: {
+        method: "POST",
+        path: "/api/users",
+        headers: {},
+        body: Buffer.from(requestJson, "utf8"),
+      },
+      response: {
+        status: { code: 200 },
+        headers: {},
+        body: Buffer.from("{}", "utf8"),
+      },
+    };
+
+    redactRecordBodyFields(record, ["password"]);
+
+    const redactedRequest = JSON.parse(record.request.body.toString("utf8"));
+    expect(redactedRequest.users[0].username).toEqual("user1");
+    expect(redactedRequest.users[0].password).toEqual("XXXX");
+    expect(redactedRequest.users[1].username).toEqual("user2");
+    expect(redactedRequest.users[1].password).toEqual("XXXX");
+  });
+
+  it("redacts fields in response body", () => {
+    const responseJson = JSON.stringify({
+      user: {
+        id: 123,
+        access_token: "token123",
+        refresh_token: "refresh456",
+      },
+    });
+
+    const record = {
+      request: {
+        method: "POST",
+        path: "/login",
+        headers: {},
+        body: Buffer.from("{}", "utf8"),
+      },
+      response: {
+        status: { code: 200 },
+        headers: {},
+        body: Buffer.from(responseJson, "utf8"),
+      },
+    };
+
+    redactRecordBodyFields(record, ["access_token", "refresh_token"]);
+
+    const redactedResponse = JSON.parse(record.response.body.toString("utf8"));
+    expect(redactedResponse.user.id).toEqual(123);
+    expect(redactedResponse.user.access_token).toEqual("XXXX");
+    expect(redactedResponse.user.refresh_token).toEqual("XXXX");
+  });
+
+  it("does not modify non-JSON bodies", () => {
+    const plainText = "This is plain text, not JSON";
+
+    const record = {
+      request: {
+        method: "POST",
+        path: "/text",
+        headers: {},
+        body: Buffer.from(plainText, "utf8"),
+      },
+      response: {
+        status: { code: 200 },
+        headers: {},
+        body: Buffer.from("OK", "utf8"),
+      },
+    };
+
+    redactRecordBodyFields(record, ["password"]);
+
+    expect(record.request.body.toString("utf8")).toEqual(plainText);
+    expect(record.response.body.toString("utf8")).toEqual("OK");
+  });
+
+  it("does not modify binary bodies", () => {
+    const record = {
+      request: {
+        method: "POST",
+        path: "/binary",
+        headers: {},
+        body: BINARY_REQUEST,
+      },
+      response: {
+        status: { code: 200 },
+        headers: {},
+        body: BINARY_RESPONSE,
+      },
+    };
+
+    const originalRequest = Buffer.from(BINARY_REQUEST);
+    const originalResponse = Buffer.from(BINARY_RESPONSE);
+
+    redactRecordBodyFields(record, ["password"]);
+
+    expect(record.request.body).toEqual(originalRequest);
+    expect(record.response.body).toEqual(originalResponse);
+  });
+
+  it("handles empty body gracefully", () => {
+    const record = {
+      request: {
+        method: "GET",
+        path: "/empty",
+        headers: {},
+        body: Buffer.from("", "utf8"),
+      },
+      response: {
+        status: { code: 200 },
+        headers: {},
+        body: Buffer.from("", "utf8"),
+      },
+    };
+
+    redactRecordBodyFields(record, ["password"]);
+
+    expect(record.request.body.toString("utf8")).toEqual("");
+    expect(record.response.body.toString("utf8")).toEqual("");
+  });
+
+  it("does nothing when no fields to redact", () => {
+    const requestJson = JSON.stringify({
+      email: "user@example.com",
+      password: "secret123",
+    });
+
+    const record = {
+      request: {
+        method: "POST",
+        path: "/login",
+        headers: {},
+        body: Buffer.from(requestJson, "utf8"),
+      },
+      response: {
+        status: { code: 200 },
+        headers: {},
+        body: Buffer.from("{}", "utf8"),
+      },
+    };
+
+    redactRecordBodyFields(record, []);
+
+    const redactedRequest = JSON.parse(record.request.body.toString("utf8"));
+    expect(redactedRequest.email).toEqual("user@example.com");
+    expect(redactedRequest.password).toEqual("secret123");
   });
 });
