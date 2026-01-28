@@ -22,20 +22,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - uses: pnpm/action-setup@v4
+
       - name: Setup NodeJS ${{ matrix.node-version }}
         uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node-version }}
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: pnpm install --frozen-lockfile
 
       - name: Run tests
         env:
           JEST_JUNIT_OUTPUT_DIR: ./test-reports/jest
           JEST_JUNIT_OUTPUT_NAME: results.xml
           JEST_JUNIT_CLASSNAME: "{filepath}"
-        run: yarn ci:test
+        run: pnpm ci:test
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
@@ -55,17 +57,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - uses: pnpm/action-setup@v4
+
       - name: Setup NodeJS
         uses: actions/setup-node@v6
         with:
           node-version-file: .nvmrc
-          cache: 'yarn'
+          cache: 'pnpm'
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: pnpm install --frozen-lockfile
 
       - name: Run prettier
-        run: yarn lint:check
+        run: pnpm lint:check
 
   build:
     runs-on: ubuntu-latest
@@ -73,16 +77,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - uses: pnpm/action-setup@v4
+
       - name: Setup NodeJS
         uses: actions/setup-node@v6
         with:
           node-version-file: .nvmrc
-          cache: 'yarn'
+          cache: 'pnpm'
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: pnpm install --frozen-lockfile
 
-      - run: yarn build
+      - run: pnpm build
       - run: npm link
       - run: npx proxay --help
       - run: |
@@ -108,17 +114,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - uses: pnpm/action-setup@v4
+
       - name: Setup NodeJS
         uses: actions/setup-node@v6
         with:
           node-version-file: .nvmrc
-          cache: 'yarn'
+          cache: 'pnpm'
           registry-url: 'https://registry.npmjs.org'
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: pnpm install --frozen-lockfile
 
-      - run: yarn build
+      - run: pnpm build
 
       - name: Publish to npm registry
         run: npm publish --provenance --access public
