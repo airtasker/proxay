@@ -1,6 +1,6 @@
 {
   "name": "proxay",
-  "version": "1.9.0",
+  "version": "2.0.0",
   "author": {
     "name": "François Wouts",
     "email": "f@zenc.io"
@@ -10,16 +10,19 @@
     "url": "https://github.com/airtasker/proxay"
   },
   "license": "MIT",
+  "engines": {
+    "node": ">=18.12.0"
+  },
   "scripts": {
     "start": "ts-node src/cli.ts",
     "start:hot": "ts-node-dev --respawn src/cli.ts",
     "test": "jest --runInBand",
     "ci:test": "jest --runInBand --ci",
     "build": "rm -rf dist && tsc",
-    "lint:check": "yarn prettier:check && yarn tslint:check",
+    "lint:check": "pnpm prettier:check && pnpm tslint:check",
     "tslint:check": "tslint -p .",
     "prettier:check": "prettier --list-different \"**/*.ts\"",
-    "lint:fix": "yarn prettier:fix && yarn tslint:fix",
+    "lint:fix": "pnpm prettier:fix && pnpm tslint:fix",
     "tslint:fix": "tslint -p . --fix",
     "prettier:fix": "prettier --write \"**/*.ts\""
   },
@@ -83,5 +86,6 @@
     "tslint": "^6.1.3",
     "tslint-config-prettier": "^1.18.0",
     "typescript": "^4.9.5"
-  }
+  },
+  "packageManager": "pnpm@10.28.1"
 }

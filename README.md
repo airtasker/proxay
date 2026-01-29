@@ -21,12 +21,12 @@ Proxay is language-agnostic: it's just a server. Your code doesn't need to be wr
 
 ## Installing
 
-Make sure you have [NPM](https://www.npmjs.com) installed, then run:
+Make sure you have [pnpm](https://pnpm.io/) installed, then run:
 ```sh
-npm install --global proxay
+pnpm install --global proxay
 
-# or if you're using Yarn
-yarn global add proxay
+# or if you're using npm
+npm global add proxay
 ```
 
 ## Running
