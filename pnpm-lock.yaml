@@ -79,8 +79,8 @@ importers:
         specifier: ^16.0.0
         version: 16.0.0
       prettier:
-        specifier: ^3.3.2
-        version: 3.3.2
+        specifier: ^3.8.1
+        version: 3.8.1
       rimraf:
         specifier: ^5.0.7
         version: 5.0.7
@@ -1472,8 +1472,8 @@ packages:
     resolution: {integrity: sha512-HRDzbaKjC+AOWVXxAU/x54COGeIv9eb+6CkDSQoNTt4XyWoIJvuPsXizxu/Fr23EiekbtZwmh1IcIG/l/a10GQ==}
     engines: {node: '>=8'}
 
-  prettier@3.3.2:
-    resolution: {integrity: sha512-rAVeHYMcv8ATV5d508CFdn+8/pHPpXeIid1DdrPwXnaAdH7cqjVbpJaT5eq4yRAFU/lsbwYwSF/n5iNrdJHPQA==}
+  prettier@3.8.1:
+    resolution: {integrity: sha512-UOnG6LftzbdaHZcKoPFtOcCKztrQ57WkHDeRD9t/PTQtmT0NHSeWWepj6pS0z/N7+08BHFDQVUrfmfMRcZwbMg==}
     engines: {node: '>=14'}
     hasBin: true
 
@@ -3572,7 +3572,7 @@ snapshots:
     dependencies:
       find-up: 4.1.0
 
-  prettier@3.3.2: {}
+  prettier@3.8.1: {}
 
   pretty-format@29.7.0:
     dependencies:
