@@ -59,7 +59,7 @@
     "content-type": "^1.0.5",
     "deep-diff": "^1.0.2",
     "fs-extra": "^11.3.3",
-    "js-yaml": "^4.1.0",
+    "js-yaml": "^4.1.1",
     "string-similarity": "^4.0.4",
     "unicode-properties": "^1.4.1"
   },
