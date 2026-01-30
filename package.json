@@ -80,7 +80,7 @@
     "jest-junit": "^16.0.0",
     "prettier": "^3.8.1",
     "rimraf": "^5.0.7",
-    "ts-jest": "^29.1.5",
+    "ts-jest": "^29.4.6",
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
     "tslint": "^6.1.3",
