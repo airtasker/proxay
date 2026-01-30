@@ -50,7 +50,7 @@ export class TestServer {
     this.app.post(JSON_IDENTITY_PATH, (req, res) => {
       res.json({ ...req.body, requestCount: this.requestCount });
     });
-    this.app.get("/*", (req, res) => {
+    this.app.get("/*path", (req, res) => {
       res.send(req.path);
     });
   }
