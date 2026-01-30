@@ -64,7 +64,7 @@
     "unicode-properties": "^1.4.1"
   },
   "devDependencies": {
-    "@types/content-type": "^1.1.8",
+    "@types/content-type": "^1.1.9",
     "@types/deep-diff": "^1.0.5",
     "@types/express": "^4.17.21",
     "@types/fs-extra": "^11.0.4",

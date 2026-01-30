@@ -37,8 +37,8 @@ importers:
         version: 1.4.1
     devDependencies:
       '@types/content-type':
-        specifier: ^1.1.8
-        version: 1.1.8
+        specifier: ^1.1.9
+        version: 1.1.9
       '@types/deep-diff':
         specifier: ^1.0.5
         version: 1.0.5
@@ -422,8 +422,8 @@ packages:
   '@types/connect@3.4.37':
     resolution: {integrity: sha512-zBUSRqkfZ59OcwXon4HVxhx5oWCJmc0OtBTK05M+p0dYjgN6iTwIL2T/WbsQZrEsdnwaF9cWQ+azOnpPvIqY3Q==}
 
-  '@types/content-type@1.1.8':
-    resolution: {integrity: sha512-1tBhmVUeso3+ahfyaKluXe38p+94lovUZdoVfQ3OnJo9uJC42JT7CBoN3k9HYhAae+GwiBYmHu+N9FZhOG+2Pg==}
+  '@types/content-type@1.1.9':
+    resolution: {integrity: sha512-Hq9IMnfekuOCsEmYl4QX2HBrT+XsfXiupfrLLY8Dcf3Puf4BkBOxSbWYTITSOQAhJoYPBez+b4MJRpIYL65z8A==}
 
   '@types/deep-diff@1.0.5':
     resolution: {integrity: sha512-PQyNSy1YMZU1hgZA5tTYfHPpUAo9Dorn1PZho2/budQLfqLu3JIP37JAavnwYpR1S2yFZTXa3hxaE4ifGW5jaA==}
@@ -2407,7 +2407,7 @@ snapshots:
     dependencies:
       '@types/node': 20.11.0
 
-  '@types/content-type@1.1.8': {}
+  '@types/content-type@1.1.9': {}
 
   '@types/deep-diff@1.0.5': {}
 
