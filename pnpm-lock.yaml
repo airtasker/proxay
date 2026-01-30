@@ -24,8 +24,8 @@ importers:
         specifier: ^1.0.2
         version: 1.0.2
       fs-extra:
-        specifier: ^11.2.0
-        version: 11.2.0
+        specifier: ^11.3.3
+        version: 11.3.3
       js-yaml:
         specifier: ^4.1.0
         version: 4.1.0
@@ -951,8 +951,8 @@ packages:
     resolution: {integrity: sha512-zJ2mQYM18rEFOudeV4GShTGIQ7RbzA7ozbU9I/XBpm7kqgMywgmylMwXHxZJmkVoYkna9d2pVXVXPdYTP9ej8Q==}
     engines: {node: '>= 0.6'}
 
-  fs-extra@11.2.0:
-    resolution: {integrity: sha512-PmDi3uwK5nFuXh7XDTlVnS17xJS7vW36is2+w3xcv8SVxiB4NyATf4ctkVY5bkSjX0Y4nbvZCq1/EjtEyr9ktw==}
+  fs-extra@11.3.3:
+    resolution: {integrity: sha512-VWSRii4t0AFm6ixFFmLLx1t7wS1gh+ckoa84aOeapGum0h+EZd1EhEumSB+ZdDLnEPuucsVB9oB7cxJHap6Afg==}
     engines: {node: '>=14.14'}
 
   fs.realpath@1.0.0:
@@ -1305,8 +1305,8 @@ packages:
     engines: {node: '>=6'}
     hasBin: true
 
-  jsonfile@6.1.0:
-    resolution: {integrity: sha512-5dgndWOriYSm5cnYaJNhalLNDKOqFwyDB/rr1E9ZsGciGvKPs8R2xYGCacuf3z6K1YKDz182fd+fY3cn3pMqXQ==}
+  jsonfile@6.2.0:
+    resolution: {integrity: sha512-FGuPw30AdOIUTRMC2OMRtQV+jkVj2cfPqSeWXv1NEAJ1qZ5zb1X6z1mFhbfOB/iy3ssJCD+3KuZ8r8C3uVFlAg==}
 
   kleur@3.0.3:
     resolution: {integrity: sha512-eTIzlVOSUR+JxdDFepEYcBMtZ9Qqdef+rnzWdRZuMbOywu5tO2w2N7rqjoANZ5k9vywhL6Br1VRjUIgTQx4E8w==}
@@ -1854,8 +1854,8 @@ packages:
   unicode-trie@2.0.0:
     resolution: {integrity: sha512-x7bc76x0bm4prf1VLg79uhAzKw8DVboClSN5VxJuQ+LKDOVEW9CdH+VY7SP+vX7xCYQqzzgQpFqz15zeLvAtZQ==}
 
-  universalify@2.0.0:
-    resolution: {integrity: sha512-hAZsKq7Yy11Zu1DE0OzWjw7nnLZmJZYTDZZyEFHZdUhV8FkH5MCfoU1XMaxXovpyW5nq5scPqq0ZDP9Zyl04oQ==}
+  universalify@2.0.1:
+    resolution: {integrity: sha512-gptHNQghINnc/vTGIk0SOFGFNXw7JVrlRUtConJRlvaw6DuX0wO5Jeko9sWrMBhh+PsYAZ7oXAiOnf/UKogyiw==}
     engines: {node: '>= 10.0.0'}
 
   unpipe@1.0.0:
@@ -2971,11 +2971,11 @@ snapshots:
 
   fresh@0.5.2: {}
 
-  fs-extra@11.2.0:
+  fs-extra@11.3.3:
     dependencies:
       graceful-fs: 4.2.11
-      jsonfile: 6.1.0
-      universalify: 2.0.0
+      jsonfile: 6.2.0
+      universalify: 2.0.1
 
   fs.realpath@1.0.0: {}
 
@@ -3504,9 +3504,9 @@ snapshots:
 
   json5@2.2.3: {}
 
-  jsonfile@6.1.0:
+  jsonfile@6.2.0:
     dependencies:
-      universalify: 2.0.0
+      universalify: 2.0.1
     optionalDependencies:
       graceful-fs: 4.2.11
 
@@ -4003,7 +4003,7 @@ snapshots:
       pako: 0.2.9
       tiny-inflate: 1.0.3
 
-  universalify@2.0.0: {}
+  universalify@2.0.1: {}
 
   unpipe@1.0.0: {}
 
