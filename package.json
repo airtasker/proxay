@@ -55,7 +55,7 @@
   "dependencies": {
     "assert-never": "^1.4.0",
     "chalk": "^4.1.0",
-    "commander": "^10.0.1",
+    "commander": "^14.0.3",
     "content-type": "^1.0.5",
     "deep-diff": "^1.0.2",
     "fs-extra": "^11.3.3",
