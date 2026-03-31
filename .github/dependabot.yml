@@ -10,6 +10,12 @@ updates:
   open-pull-requests-limit: 99
   cooldown:
     default-days: 7
+  ignore:
+  # Security: axios 1.14.1 contains a malicious RAT payload (supply chain attack, March 2026).
+  # The attacker compromised the lead maintainer's npm account and published a poisoned release.
+  # pnpm.overrides in package.json blocks the bad version as a defence-in-depth measure.
+  # Remove this ignore once a verified clean release above 1.14.1 is confirmed.
+  - dependency-name: axios
 - package-ecosystem: github-actions
   directory: /
   schedule:
