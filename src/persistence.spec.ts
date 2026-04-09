@@ -630,6 +630,103 @@ describe("Tape append and load round-trip", () => {
   });
 });
 
+describe("Redaction does not mutate in-memory records", () => {
+  let tmpDir: string;
+
+  beforeEach(async () => {
+    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "proxay-redact-test-"));
+  });
+
+  afterEach(async () => {
+    await fs.remove(tmpDir);
+  });
+
+  it("appendRecordToDisk does not mutate the original record's headers", async () => {
+    const persistence = new Persistence(tmpDir, ["x-auth-token"], []);
+
+    const record = {
+      request: {
+        method: "POST",
+        path: "/api",
+        headers: { "x-auth-token": "secret-value", host: "example.com" },
+        body: Buffer.from("request", "utf8"),
+      },
+      response: {
+        status: { code: 200 },
+        headers: {},
+        body: Buffer.from("response", "utf8"),
+      },
+    };
+
+    await persistence.initTapeOnDisk("test");
+    await persistence.appendRecordToDisk("test", record);
+
+    // The in-memory record must remain unredacted
+    expect(record.request.headers["x-auth-token"]).toEqual("secret-value");
+    expect(record.request.headers.host).toEqual("example.com");
+
+    // The on-disk record must be redacted
+    const loaded = await persistence.loadTapeFromDisk("test");
+    expect(loaded[0].request.headers["x-auth-token"]).toEqual("XXXX");
+  });
+
+  it("appendRecordToDisk does not mutate the original record's body", async () => {
+    const persistence = new Persistence(tmpDir, [], ["password"]);
+
+    const bodyJson = JSON.stringify({ username: "user", password: "secret123" });
+    const record = {
+      request: {
+        method: "POST",
+        path: "/login",
+        headers: {},
+        body: Buffer.from(bodyJson, "utf8"),
+      },
+      response: {
+        status: { code: 200 },
+        headers: {},
+        body: Buffer.from("{}", "utf8"),
+      },
+    };
+
+    await persistence.initTapeOnDisk("test");
+    await persistence.appendRecordToDisk("test", record);
+
+    // The in-memory body must remain unredacted
+    const inMemoryBody = JSON.parse(record.request.body.toString("utf8"));
+    expect(inMemoryBody.password).toEqual("secret123");
+
+    // The on-disk body must be redacted
+    const loaded = await persistence.loadTapeFromDisk("test");
+    const onDiskBody = JSON.parse(loaded[0].request.body.toString("utf8"));
+    expect(onDiskBody.password).toEqual("XXXX");
+  });
+
+  it("saveTapeToDisk does not mutate the original records", async () => {
+    const persistence = new Persistence(tmpDir, ["x-secret"], ["token"]);
+
+    const record = {
+      request: {
+        method: "GET",
+        path: "/data",
+        headers: { "x-secret": "my-secret" },
+        body: Buffer.from(JSON.stringify({ token: "abc123" }), "utf8"),
+      },
+      response: {
+        status: { code: 200 },
+        headers: {},
+        body: Buffer.from("{}", "utf8"),
+      },
+    };
+
+    await persistence.saveTapeToDisk("test", [record]);
+
+    // In-memory must remain unredacted
+    expect(record.request.headers["x-secret"]).toEqual("my-secret");
+    const body = JSON.parse(record.request.body.toString("utf8"));
+    expect(body.token).toEqual("abc123");
+  });
+});
+
 describe("Body Field Redaction", () => {
   it("redacts simple JSON fields in request body", () => {
     const requestJson = JSON.stringify({

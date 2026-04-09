@@ -105,9 +105,21 @@ export class Persistence {
    * Redacts the request headers and body fields of the given record
    */
   private redact(record: TapeRecord): TapeRecord {
-    redactRequestHeaders(record, this.redactHeaders);
-    redactRecordBodyFields(record, this.redactBodyFields);
-    return record;
+    const copy: TapeRecord = {
+      request: {
+        ...record.request,
+        headers: { ...record.request.headers },
+        body: Buffer.from(record.request.body),
+      },
+      response: {
+        ...record.response,
+        headers: { ...record.response.headers },
+        body: Buffer.from(record.response.body),
+      },
+    };
+    redactRequestHeaders(copy, this.redactHeaders);
+    redactRecordBodyFields(copy, this.redactBodyFields);
+    return copy;
   }
 
   /**
