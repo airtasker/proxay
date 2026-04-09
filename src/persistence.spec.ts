@@ -1,5 +1,9 @@
 import { brotliCompressSync, gzipSync } from "zlib";
+import fs from "fs-extra";
+import path from "path";
+import os from "os";
 import {
+  Persistence,
   persistTape,
   reviveTape,
   redactRequestHeaders,
@@ -507,6 +511,122 @@ describe("Persistence", () => {
         body: UTF8_RESPONSE_GZIP,
       },
     });
+  });
+});
+
+describe("Tape append and load round-trip", () => {
+  let tmpDir: string;
+  let persistence: Persistence;
+
+  beforeEach(async () => {
+    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "proxay-test-"));
+    persistence = new Persistence(tmpDir, [], []);
+  });
+
+  afterEach(async () => {
+    await fs.remove(tmpDir);
+  });
+
+  it("appends records incrementally and loads them back", async () => {
+    const records = [
+      {
+        request: {
+          method: "GET",
+          path: "/first",
+          headers: {},
+          body: Buffer.from("request1", "utf8"),
+        },
+        response: {
+          status: { code: 200 },
+          headers: {},
+          body: Buffer.from("response1", "utf8"),
+        },
+      },
+      {
+        request: {
+          method: "POST",
+          path: "/second",
+          headers: { "content-type": "application/json" },
+          body: Buffer.from('{"key":"value"}', "utf8"),
+        },
+        response: {
+          status: { code: 201 },
+          headers: {},
+          body: Buffer.from('{"id":1}', "utf8"),
+        },
+      },
+      {
+        request: {
+          method: "GET",
+          path: "/third",
+          headers: {},
+          body: BINARY_REQUEST,
+        },
+        response: {
+          status: { code: 200 },
+          headers: {},
+          body: BINARY_RESPONSE,
+        },
+      },
+    ];
+
+    await persistence.initTapeOnDisk("test");
+    for (const record of records) {
+      await persistence.appendRecordToDisk("test", record);
+    }
+
+    const loaded = await persistence.loadTapeFromDisk("test");
+    expect(loaded).toHaveLength(3);
+
+    // UTF-8 records
+    expect(loaded[0].request.method).toEqual("GET");
+    expect(loaded[0].request.path).toEqual("/first");
+    expect(loaded[0].request.body.toString("utf8")).toEqual("request1");
+    expect(loaded[0].response.status.code).toEqual(200);
+    expect(loaded[0].response.body.toString("utf8")).toEqual("response1");
+
+    expect(loaded[1].request.method).toEqual("POST");
+    expect(loaded[1].request.path).toEqual("/second");
+    expect(loaded[1].response.status.code).toEqual(201);
+
+    // Binary record (base64 encoded, bodies should match original)
+    expect(loaded[2].request.method).toEqual("GET");
+    expect(loaded[2].request.path).toEqual("/third");
+    expect(Buffer.compare(loaded[2].request.body, BINARY_REQUEST)).toEqual(0);
+    expect(Buffer.compare(loaded[2].response.body, BINARY_RESPONSE)).toEqual(0);
+  });
+
+  it("produces the same result as saveTapeToDisk", async () => {
+    const record = {
+      request: {
+        method: "GET",
+        path: "/path",
+        headers: {},
+        body: Buffer.from(UTF8_REQUEST, "utf8"),
+      },
+      response: {
+        status: { code: 200 },
+        headers: {},
+        body: Buffer.from(UTF8_RESPONSE, "utf8"),
+      },
+    };
+
+    // Write using append
+    await persistence.initTapeOnDisk("append");
+    await persistence.appendRecordToDisk("append", record);
+    const appendLoaded = await persistence.loadTapeFromDisk("append");
+
+    // Write using full save
+    await persistence.saveTapeToDisk("full", [record]);
+    const fullLoaded = await persistence.loadTapeFromDisk("full");
+
+    expect(appendLoaded).toEqual(fullLoaded);
+  });
+
+  it("loads empty tape after init", async () => {
+    await persistence.initTapeOnDisk("empty");
+    const loaded = await persistence.loadTapeFromDisk("empty");
+    expect(loaded).toHaveLength(0);
   });
 });
 
