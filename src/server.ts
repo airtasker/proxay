@@ -6,7 +6,7 @@ import https from "https";
 import net from "net";
 import { ensureBuffer } from "./buffer";
 import { HttpRequest } from "./http";
-import { findNextRecordToReplay, findRecordMatches } from "./matcher";
+import { addToTapeIndex, buildTapeIndex, findNextRecordToReplay, findRecordMatches, TapeIndex } from "./matcher";
 import { Mode } from "./modes";
 import { Persistence } from "./persistence";
 import { RewriteRules } from "./rewrite";
@@ -25,6 +25,7 @@ export class RecordReplayServer {
   private proxyPortToSend?: number;
   private timeout: number;
   private currentTapeRecords: TapeRecord[] = [];
+  private currentTapeIndex: TapeIndex = new Map();
   private currentTape!: string;
   private loggingEnabled: boolean;
   private defaultTape: string;
@@ -310,6 +311,7 @@ export class RecordReplayServer {
         this.exactRequestMatching,
         this.debugMatcherFails,
         this.ignoreHeaders,
+        this.currentTapeIndex,
       ),
       this.replayedTapes,
     );
@@ -374,6 +376,7 @@ export class RecordReplayServer {
         this.exactRequestMatching,
         this.debugMatcherFails,
         this.ignoreHeaders,
+        this.currentTapeIndex,
       ),
       this.replayedTapes,
     );
@@ -447,23 +450,26 @@ export class RecordReplayServer {
     if (this.loggingEnabled) {
       console.log(chalk.blueBright(`Loaded tape: ${tapeName}`));
     }
+    let found: boolean;
     switch (this.mode) {
       case "record":
         this.currentTapeRecords = [];
         await this.persistence.initTapeOnDisk(this.currentTape);
-        return true;
+        found = true;
+        break;
       case "replay":
         try {
           this.currentTapeRecords = await this.persistence.loadTapeFromDisk(
             this.currentTape,
           );
-          return true;
+          found = true;
         } catch (e) {
           if (this.loggingEnabled) {
             console.warn(chalk.yellow((e as Error)?.message));
           }
-          return false;
+          found = false;
         }
+        break;
       case "mimic":
         try {
           this.currentTapeRecords = await this.persistence.loadTapeFromDisk(
@@ -473,13 +479,17 @@ export class RecordReplayServer {
           this.currentTapeRecords = [];
           await this.persistence.initTapeOnDisk(this.currentTape);
         }
-        return true;
+        found = true;
+        break;
       case "passthrough":
         // Do nothing.
-        return true;
+        found = true;
+        break;
       default:
         throw assertNever(this.mode);
     }
+    this.currentTapeIndex = buildTapeIndex(this.currentTapeRecords);
+    return found;
   }
 
   /**
@@ -494,6 +504,7 @@ export class RecordReplayServer {
    */
   private async addRecordToTape(record: TapeRecord) {
     this.currentTapeRecords.push(record);
+    addToTapeIndex(this.currentTapeIndex, record);
     await this.persistence.appendRecordToDisk(this.currentTape, record);
   }
 
