@@ -1,5 +1,9 @@
+import fs from "fs-extra";
+import os from "os";
+import path from "path";
 import { brotliCompressSync, gzipSync } from "zlib";
 import {
+  Persistence,
   persistTape,
   reviveTape,
   redactRequestHeaders,
@@ -756,4 +760,50 @@ describe("Body Field Redaction", () => {
     expect(redactedRequest.email).toEqual("user@example.com");
     expect(redactedRequest.password).toEqual("secret123");
   });
+});
+
+describe("Persistence.saveTapeToDisk", () => {
+  let tmpDir: string;
+
+  beforeEach(() => {
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "proxay-test-"));
+  });
+
+  afterEach(() => {
+    fs.removeSync(tmpDir);
+    jest.restoreAllMocks();
+  });
+
+  it.skip("does not throw an unhandled RangeError when the tape is too large to serialize", () => {
+    const { MAX_STRING_LENGTH } = require("buffer").constants as {
+      MAX_STRING_LENGTH: number;
+    };
+    // Each body is just over half of V8's max string length. Both bodies
+    // are individually serialisable, but together they produce a YAML
+    // document that exceeds MAX_STRING_LENGTH, triggering the real
+    // RangeError from js-yaml's internal string concatenation.
+    const bodySize = Math.floor(MAX_STRING_LENGTH / 2) + 100;
+    const largeBody = Buffer.alloc(bodySize, "x");
+
+    const persistence = new Persistence(tmpDir, [], []);
+    const record = {
+      request: {
+        method: "GET",
+        path: "/path",
+        headers: {},
+        body: largeBody,
+      },
+      response: {
+        status: { code: 200 },
+        headers: {},
+        body: largeBody,
+      },
+    };
+
+    // Should not propagate a raw RangeError — the caller must be able to
+    // handle this situation (e.g. receive a descriptive error or no error).
+    expect(() =>
+      persistence.saveTapeToDisk("large-tape", [record]),
+    ).not.toThrow(RangeError);
+  }, 60_000); // Large allocation — allow extra time
 });
