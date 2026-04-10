@@ -11,83 +11,73 @@ on:
     types: [published]
 
 jobs:
+  config:
+    runs-on: ubuntu-latest
+    outputs:
+      node-versions: ${{ steps.set.outputs.node-versions }}
+      latest-node: ${{ steps.set.outputs.latest-node }}
+    steps:
+      - id: set
+        run: |
+          NODE_VERSIONS='["18","20","22","24"]'
+          echo "node-versions=${NODE_VERSIONS}" >> $GITHUB_OUTPUT
+          echo "latest-node=$(echo "${NODE_VERSIONS}" | jq -r 'last')" >> $GITHUB_OUTPUT
+
   test:
     name: "test-node-${{ matrix.node-version }}"
     runs-on: ubuntu-latest
+    needs: config
     strategy:
       fail-fast: false
       matrix:
-        node-version: [18, 20, 22, 24]
+        node-version: ${{ fromJson(needs.config.outputs.node-versions) }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - uses: pnpm/action-setup@v5
-
-      - name: Setup NodeJS ${{ matrix.node-version }}
-        uses: actions/setup-node@v6
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup
         with:
           node-version: ${{ matrix.node-version }}
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
       - name: Run tests
         env:
           JEST_JUNIT_OUTPUT_DIR: ./test-reports/jest
           JEST_JUNIT_OUTPUT_NAME: results.xml
           JEST_JUNIT_CLASSNAME: "{filepath}"
         run: pnpm ci:test
-
-      - name: Upload test results
-        uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@v7
         with:
           name: test-results-node-${{ matrix.node-version }}
           path: ./test-reports
-
-      - name: Test summary
-        uses: test-summary/action@v2
+      - uses: test-summary/action@v2
         with:
           paths: ./test-reports/jest/results.xml
 
   lint:
-    name: "lint"
+    name: "lint-node-${{ matrix.node-version }}"
     runs-on: ubuntu-latest
+    needs: config
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: ${{ fromJson(needs.config.outputs.node-versions) }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - uses: pnpm/action-setup@v5
-
-      - name: Setup NodeJS
-        uses: actions/setup-node@v6
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup
         with:
-          node-version-file: .tool-versions
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Run prettier
-        run: pnpm lint:check
+          node-version: ${{ matrix.node-version }}
+      - run: pnpm lint:check
 
   build:
+    name: "build-node-${{ matrix.node-version }}"
     runs-on: ubuntu-latest
+    needs: config
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: ${{ fromJson(needs.config.outputs.node-versions) }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - uses: pnpm/action-setup@v5
-
-      - name: Setup NodeJS
-        uses: actions/setup-node@v6
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup
         with:
-          node-version-file: .tool-versions
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
+          node-version: ${{ matrix.node-version }}
       - run: pnpm build
       - run: npm link
       - run: npx proxay --help
@@ -100,33 +90,29 @@ jobs:
             sleep 5
           done
 
+  all-tests-pass:
+    runs-on: ubuntu-latest
+    needs: [test, lint, build]
+    if: always()
+    steps:
+      - name: Check all jobs passed
+        run: |
+          if [[ "${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}" == "true" ]]; then
+            exit 1
+          fi
+
   publish:
     runs-on: ubuntu-latest
     if: github.event_name == 'release'
-    needs:
-      - test
-      - build
-      - lint
+    needs: [config, test, build, lint]
     env:
-      # Used in setup-node and publish steps
       NODE_AUTH_TOKEN: ${{ secrets.NPMJS_PUBLISH_TOKEN }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - uses: pnpm/action-setup@v5
-
-      - name: Setup NodeJS
-        uses: actions/setup-node@v6
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup
         with:
-          node-version-file: .tool-versions
-          cache: 'pnpm'
-          registry-url: 'https://registry.npmjs.org'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
+          node-version: ${{ needs.config.outputs.latest-node }}
+          registry-url: "https://registry.npmjs.org"
       - run: pnpm build
-
       - name: Publish to npm registry
         run: npm publish --provenance --access public

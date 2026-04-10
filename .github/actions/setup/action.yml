@@ -1,0 +1,23 @@
+name: "Job setup"
+author: "proxay"
+
+inputs:
+  node-version:
+    description: "Node.js version to use"
+    required: true
+  registry-url:
+    description: "npm registry URL (optional, only needed for publish)"
+    required: false
+    default: ""
+
+runs:
+  using: "composite"
+  steps:
+    - uses: pnpm/action-setup@v5
+    - uses: actions/setup-node@v6
+      with:
+        node-version: ${{ inputs.node-version }}
+        cache: "pnpm"
+        registry-url: ${{ inputs.registry-url }}
+    - run: pnpm install --frozen-lockfile
+      shell: bash
