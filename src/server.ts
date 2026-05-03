@@ -34,6 +34,7 @@ export class RecordReplayServer {
   private ignoreHeaders: string[];
   private exactRequestMatching: boolean;
   private debugMatcherFails: boolean;
+  private omitEmptyTapes: boolean;
 
   constructor(options: {
     initialMode: Mode;
@@ -53,6 +54,7 @@ export class RecordReplayServer {
     ignoreHeaders?: string[];
     exactRequestMatching?: boolean;
     debugMatcherFails?: boolean;
+    omitEmptyTapes?: boolean;
   }) {
     this.currentTapeRecords = [];
     this.mode = options.initialMode;
@@ -80,6 +82,7 @@ export class RecordReplayServer {
       options.debugMatcherFails === undefined
         ? false
         : options.debugMatcherFails;
+    this.omitEmptyTapes = options.omitEmptyTapes || false;
     this.loadTape(this.defaultTape);
 
     const handler = async (
@@ -451,7 +454,9 @@ export class RecordReplayServer {
     switch (this.mode) {
       case "record":
         this.currentTapeRecords = [];
-        this.persistence.saveTapeToDisk(this.currentTape, []);
+        if (!this.omitEmptyTapes) {
+          this.persistence.saveTapeToDisk(this.currentTape, []);
+        }
         return true;
       case "replay":
         try {
@@ -460,6 +465,17 @@ export class RecordReplayServer {
           );
           return true;
         } catch (e) {
+          if (this.omitEmptyTapes) {
+            this.currentTapeRecords = [];
+            if (this.loggingEnabled) {
+              console.log(
+                chalk.blueBright(
+                  `No tape found for ${this.currentTape}, treating as empty (--omit-empty-tapes).`,
+                ),
+              );
+            }
+            return true;
+          }
           if (this.loggingEnabled) {
             console.warn(chalk.yellow((e as Error)?.message));
           }
@@ -472,7 +488,9 @@ export class RecordReplayServer {
           );
         } catch (e) {
           this.currentTapeRecords = [];
-          this.persistence.saveTapeToDisk(this.currentTape, []);
+          if (!this.omitEmptyTapes) {
+            this.persistence.saveTapeToDisk(this.currentTape, []);
+          }
         }
         return true;
       case "passthrough":
