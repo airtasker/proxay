@@ -8,7 +8,7 @@ describe("CLI — --omit-empty-tapes with missing tapes directory", () => {
     const exitSpy = jest.spyOn(process, "exit").mockImplementation(() => {
       throw new Error("process.exit called");
     });
-    const infoSpy = jest.spyOn(console, "info").mockImplementation(() => {});
+    const infoSpy = jest.spyOn(console, "info").mockImplementation(jest.fn());
     try {
       const server = await main([
         "node",
@@ -39,7 +39,7 @@ describe("CLI — --omit-empty-tapes with missing tapes directory", () => {
     const exitSpy = jest.spyOn(process, "exit").mockImplementation(() => {
       throw new Error("process.exit called");
     });
-    const errorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+    const errorSpy = jest.spyOn(console, "error").mockImplementation(jest.fn());
     try {
       await expect(
         main([

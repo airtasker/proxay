@@ -14,7 +14,9 @@ describe("omitEmptyTapes — record mode", () => {
   });
 
   test("creates a tape file once a request is made", async () => {
-    await axios.post(`${PROXAY_HOST}/__proxay/tape`, { tape: "non-empty-tape" });
+    await axios.post(`${PROXAY_HOST}/__proxay/tape`, {
+      tape: "non-empty-tape",
+    });
     await axios.get(`${PROXAY_HOST}${SIMPLE_TEXT_PATH}`);
     expect(existsSync(join(servers.tapeDir, "non-empty-tape.yml"))).toBe(true);
   });
@@ -33,8 +35,12 @@ describe("omitEmptyTapes — mimic mode", () => {
   const servers = setupServers({ mode: "mimic", omitEmptyTapes: true });
 
   test("does not create a tape file when no requests are made", async () => {
-    await axios.post(`${PROXAY_HOST}/__proxay/tape`, { tape: "empty-mimic-tape" });
-    expect(existsSync(join(servers.tapeDir, "empty-mimic-tape.yml"))).toBe(false);
+    await axios.post(`${PROXAY_HOST}/__proxay/tape`, {
+      tape: "empty-mimic-tape",
+    });
+    expect(existsSync(join(servers.tapeDir, "empty-mimic-tape.yml"))).toBe(
+      false,
+    );
   });
 });
 
@@ -49,8 +55,8 @@ describe("omitEmptyTapes — replay mode", () => {
   });
 
   test("logs an informational message instead of a warning when tape is missing", async () => {
-    const logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
-    const warnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
+    const logSpy = jest.spyOn(console, "log").mockImplementation(jest.fn());
+    const warnSpy = jest.spyOn(console, "warn").mockImplementation(jest.fn());
     try {
       await axios.post(`${PROXAY_HOST}/__proxay/tape`, {
         tape: "does-not-exist-tape",
