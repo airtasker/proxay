@@ -34,6 +34,7 @@ export class RecordReplayServer {
   private ignoreHeaders: string[];
   private exactRequestMatching: boolean;
   private debugMatcherFails: boolean;
+  private omitEmptyTapes: boolean;
 
   constructor(options: {
     initialMode: Mode;
@@ -53,6 +54,7 @@ export class RecordReplayServer {
     ignoreHeaders?: string[];
     exactRequestMatching?: boolean;
     debugMatcherFails?: boolean;
+    omitEmptyTapes?: boolean;
   }) {
     this.currentTapeRecords = [];
     this.mode = options.initialMode;
@@ -80,6 +82,7 @@ export class RecordReplayServer {
       options.debugMatcherFails === undefined
         ? false
         : options.debugMatcherFails;
+    this.omitEmptyTapes = options.omitEmptyTapes || false;
     this.loadTape(this.defaultTape);
 
     const handler = async (
@@ -441,7 +444,8 @@ export class RecordReplayServer {
   /**
    * Loads a specific tape into memory (erasing it in record mode).
    *
-   * @returns Whether the tape was found or not (always true in record/mimic mode).
+   * @returns Whether the tape was found or not (always true in record/mimic/passthrough
+   * modes, and in replay mode when omitEmptyTapes is set).
    */
   private loadTape(tapeName: string): boolean {
     this.currentTape = tapeName;
@@ -451,9 +455,27 @@ export class RecordReplayServer {
     switch (this.mode) {
       case "record":
         this.currentTapeRecords = [];
-        this.persistence.saveTapeToDisk(this.currentTape, []);
+        if (this.omitEmptyTapes) {
+          this.persistence.deleteTapeFromDisk(this.currentTape);
+        } else {
+          this.persistence.saveTapeToDisk(this.currentTape, []);
+        }
         return true;
       case "replay":
+        if (
+          this.omitEmptyTapes &&
+          !this.persistence.tapeExistsOnDisk(this.currentTape)
+        ) {
+          this.currentTapeRecords = [];
+          if (this.loggingEnabled) {
+            console.log(
+              chalk.blueBright(
+                `No tape found for ${this.currentTape}, treating as empty (--omit-empty-tapes).`,
+              ),
+            );
+          }
+          return true;
+        }
         try {
           this.currentTapeRecords = this.persistence.loadTapeFromDisk(
             this.currentTape,
@@ -466,6 +488,13 @@ export class RecordReplayServer {
           return false;
         }
       case "mimic":
+        if (
+          this.omitEmptyTapes &&
+          !this.persistence.tapeExistsOnDisk(this.currentTape)
+        ) {
+          this.currentTapeRecords = [];
+          return true;
+        }
         try {
           this.currentTapeRecords = this.persistence.loadTapeFromDisk(
             this.currentTape,

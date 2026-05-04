@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import chalk from "chalk";
-import { program } from "commander";
+import { Command } from "commander";
 import fs from "fs-extra";
 import { RewriteRule, RewriteRules } from "./rewrite";
 import { RecordReplayServer } from "./server";
@@ -47,8 +47,8 @@ function rewriteRule(value: string, rewriteRules: RewriteRules): RewriteRules {
   return rewriteRules.appendRule(rule);
 }
 
-async function main(argv: string[]) {
-  program
+export async function main(argv: string[]): Promise<RecordReplayServer> {
+  const program = new Command()
     .option("-m, --mode <mode>", "Mode (record, replay or passthrough)")
     .option(
       "-t, --tapes-dir <tapes-dir>",
@@ -106,6 +106,10 @@ async function main(argv: string[]) {
       "Save headers to be ignored for the matching algorithm",
       commaSeparatedList,
     )
+    .option(
+      "--omit-empty-tapes",
+      "Do not write tape files when no interactions were recorded. In replay mode, treat a missing tape as empty rather than an error.",
+    )
     .parse(argv);
 
   const options = program.opts();
@@ -131,6 +135,7 @@ async function main(argv: string[]) {
       : options.exactRequestMatching;
   const debugMatcherFails: boolean =
     options.debugMatcherFails === undefined ? false : options.debugMatcherFails;
+  const omitEmptyTapes: boolean = !!options.omitEmptyTapes;
 
   switch (initialMode) {
     case "record":
@@ -149,9 +154,15 @@ async function main(argv: string[]) {
   }
 
   if (initialMode === "replay" && !fs.existsSync(tapeDir)) {
-    panic(
-      `No tapes found at ${tapeDir}. Did you mean to start in record mode?`,
-    );
+    if (omitEmptyTapes) {
+      console.log(
+        `No tapes directory found at ${tapeDir}, treating all tapes as empty (--omit-empty-tapes).`,
+      );
+    } else {
+      panic(
+        `No tapes found at ${tapeDir}. Did you mean to start in record mode?`,
+      );
+    }
   }
 
   if (preventConditionalRequests && initialMode === "record") {
@@ -193,9 +204,11 @@ async function main(argv: string[]) {
     ignoreHeaders,
     exactRequestMatching,
     debugMatcherFails,
+    omitEmptyTapes,
   });
   await server.start(port);
   console.log(chalk.green(`Proxying in ${initialMode} mode on port ${port}.`));
+  return server;
 }
 
 function panic(message: string) {

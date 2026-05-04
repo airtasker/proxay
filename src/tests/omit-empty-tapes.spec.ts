@@ -1,0 +1,168 @@
+import axios from "axios";
+import { existsSync, writeFileSync } from "fs";
+import { ensureDirSync } from "fs-extra";
+import { join } from "path";
+import { PROXAY_HOST } from "./config";
+import { setupServers } from "./setup";
+import { SIMPLE_TEXT_PATH, SIMPLE_TEXT_RESPONSE } from "./testserver";
+
+describe("omitEmptyTapes — record mode", () => {
+  const servers = setupServers({
+    mode: "record",
+    tapeDirName: "omit-record",
+    omitEmptyTapes: true,
+  });
+
+  test("does not create a tape file when no requests are made", async () => {
+    await axios.post(`${PROXAY_HOST}/__proxay/tape`, { tape: "empty-tape" });
+    expect(existsSync(join(servers.tapeDir, "empty-tape.yml"))).toBe(false);
+  });
+
+  test("creates a tape file once a request is made", async () => {
+    await axios.post(`${PROXAY_HOST}/__proxay/tape`, {
+      tape: "non-empty-tape",
+    });
+    await axios.get(`${PROXAY_HOST}${SIMPLE_TEXT_PATH}`);
+    expect(existsSync(join(servers.tapeDir, "non-empty-tape.yml"))).toBe(true);
+  });
+});
+
+describe("omitEmptyTapes — record mode (default behaviour preserved)", () => {
+  const servers = setupServers({
+    mode: "record",
+    tapeDirName: "omit-record-default",
+  });
+
+  test("creates an empty tape file when no requests are made", async () => {
+    await axios.post(`${PROXAY_HOST}/__proxay/tape`, { tape: "empty-tape" });
+    expect(existsSync(join(servers.tapeDir, "empty-tape.yml"))).toBe(true);
+  });
+});
+
+describe("omitEmptyTapes — mimic mode", () => {
+  const servers = setupServers({ mode: "mimic", omitEmptyTapes: true });
+
+  test("does not create a tape file when no requests are made", async () => {
+    await axios.post(`${PROXAY_HOST}/__proxay/tape`, {
+      tape: "empty-mimic-tape",
+    });
+    expect(existsSync(join(servers.tapeDir, "empty-mimic-tape.yml"))).toBe(
+      false,
+    );
+  });
+
+  test("creates a tape file once a request is made against a missing tape", async () => {
+    await axios.post(`${PROXAY_HOST}/__proxay/tape`, {
+      tape: "mimic-new-tape",
+    });
+    await axios.get(`${PROXAY_HOST}${SIMPLE_TEXT_PATH}`);
+    expect(existsSync(join(servers.tapeDir, "mimic-new-tape.yml"))).toBe(true);
+  });
+});
+
+describe("omitEmptyTapes — replay mode", () => {
+  setupServers({ mode: "replay", omitEmptyTapes: true });
+
+  test("switching to a non-existent tape succeeds (returns 200)", async () => {
+    const response = await axios.post(`${PROXAY_HOST}/__proxay/tape`, {
+      tape: "does-not-exist-tape",
+    });
+    expect(response.status).toBe(200);
+  });
+
+  test("logs an informational message instead of a warning when tape is missing", async () => {
+    const logSpy = jest.spyOn(console, "log").mockImplementation(jest.fn());
+    const warnSpy = jest.spyOn(console, "warn").mockImplementation(jest.fn());
+    try {
+      await axios.post(`${PROXAY_HOST}/__proxay/tape`, {
+        tape: "does-not-exist-tape",
+      });
+      expect(logSpy).toHaveBeenCalledWith(
+        expect.stringContaining("treating as empty (--omit-empty-tapes)"),
+      );
+      expect(warnSpy).not.toHaveBeenCalledWith(
+        expect.stringContaining("No tape found with name"),
+      );
+    } finally {
+      logSpy.mockRestore();
+      warnSpy.mockRestore();
+    }
+  });
+
+  test("requests against an empty (missing) tape return no response (500)", async () => {
+    await axios.post(`${PROXAY_HOST}/__proxay/tape`, {
+      tape: "does-not-exist-tape",
+    });
+    await expect(
+      axios.get(`${PROXAY_HOST}${SIMPLE_TEXT_PATH}`),
+    ).rejects.toEqual(new Error("Request failed with status code 500"));
+  });
+});
+
+describe("omitEmptyTapes — replay mode (default behaviour preserved)", () => {
+  setupServers({ mode: "replay" });
+
+  test("switching to a non-existent tape still returns 404 without the flag", async () => {
+    await expect(
+      axios.post(`${PROXAY_HOST}/__proxay/tape`, {
+        tape: "does-not-exist-tape",
+      }),
+    ).rejects.toEqual(new Error("Request failed with status code 404"));
+  });
+});
+
+describe("omitEmptyTapes — replay mode with existing tape", () => {
+  setupServers({
+    mode: "replay",
+    tapeDirName: "replay",
+    omitEmptyTapes: true,
+  });
+
+  test("still replays from an existing tape correctly", async () => {
+    const response = await axios.get(`${PROXAY_HOST}${SIMPLE_TEXT_PATH}`);
+    expect(response.data).toBe(SIMPLE_TEXT_RESPONSE);
+  });
+});
+
+describe("omitEmptyTapes — stale tape handling on re-record", () => {
+  const servers = setupServers({
+    mode: "record",
+    tapeDirName: "omit-stale",
+    omitEmptyTapes: true,
+  });
+
+  test("deletes a pre-existing tape file when re-recording with no requests", async () => {
+    // Pre-seed a stale tape file
+    ensureDirSync(servers.tapeDir);
+    writeFileSync(
+      join(servers.tapeDir, "stale-tape.yml"),
+      "http_interactions: []",
+      "utf8",
+    );
+
+    // Switch to that tape without making any requests
+    await axios.post(`${PROXAY_HOST}/__proxay/tape`, { tape: "stale-tape" });
+
+    // Stale file should be gone
+    expect(existsSync(join(servers.tapeDir, "stale-tape.yml"))).toBe(false);
+  });
+
+  test("overwrites a pre-existing tape file when re-recording with requests", async () => {
+    // Pre-seed a stale tape with some content
+    ensureDirSync(servers.tapeDir);
+    writeFileSync(
+      join(servers.tapeDir, "overwrite-tape.yml"),
+      "http_interactions: []",
+      "utf8",
+    );
+
+    // Switch to that tape and make a request
+    await axios.post(`${PROXAY_HOST}/__proxay/tape`, {
+      tape: "overwrite-tape",
+    });
+    await axios.get(`${PROXAY_HOST}${SIMPLE_TEXT_PATH}`);
+
+    // File should exist and contain the new interaction
+    expect(existsSync(join(servers.tapeDir, "overwrite-tape.yml"))).toBe(true);
+  });
+});
