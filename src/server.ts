@@ -444,7 +444,8 @@ export class RecordReplayServer {
   /**
    * Loads a specific tape into memory (erasing it in record mode).
    *
-   * @returns Whether the tape was found or not (always true in record/mimic mode).
+   * @returns Whether the tape was found or not (always true in record/mimic/passthrough
+   * modes, and in replay mode when omitEmptyTapes is set).
    */
   private loadTape(tapeName: string): boolean {
     this.currentTape = tapeName;
@@ -454,7 +455,9 @@ export class RecordReplayServer {
     switch (this.mode) {
       case "record":
         this.currentTapeRecords = [];
-        if (!this.omitEmptyTapes) {
+        if (this.omitEmptyTapes) {
+          this.persistence.deleteTapeFromDisk(this.currentTape);
+        } else {
           this.persistence.saveTapeToDisk(this.currentTape, []);
         }
         return true;
@@ -488,7 +491,9 @@ export class RecordReplayServer {
           );
         } catch (e) {
           this.currentTapeRecords = [];
-          if (!this.omitEmptyTapes) {
+          if (this.omitEmptyTapes) {
+            this.persistence.deleteTapeFromDisk(this.currentTape);
+          } else {
             this.persistence.saveTapeToDisk(this.currentTape, []);
           }
         }

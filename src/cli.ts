@@ -47,7 +47,7 @@ function rewriteRule(value: string, rewriteRules: RewriteRules): RewriteRules {
   return rewriteRules.appendRule(rule);
 }
 
-export async function main(argv: string[]) {
+export async function main(argv: string[]): Promise<RecordReplayServer> {
   const program = new Command()
     .option("-m, --mode <mode>", "Mode (record, replay or passthrough)")
     .option(
@@ -155,7 +155,7 @@ export async function main(argv: string[]) {
 
   if (initialMode === "replay" && !fs.existsSync(tapeDir)) {
     if (omitEmptyTapes) {
-      console.info(
+      console.log(
         `No tapes directory found at ${tapeDir}, treating all tapes as empty (--omit-empty-tapes).`,
       );
     } else {

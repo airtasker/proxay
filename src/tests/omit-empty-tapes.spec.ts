@@ -1,5 +1,6 @@
 import axios from "axios";
-import { existsSync } from "fs";
+import { existsSync, writeFileSync } from "fs";
+import { ensureDirSync } from "fs-extra";
 import { join } from "path";
 import { PROXAY_HOST } from "./config";
 import { setupServers } from "./setup";
@@ -41,6 +42,14 @@ describe("omitEmptyTapes — mimic mode", () => {
     expect(existsSync(join(servers.tapeDir, "empty-mimic-tape.yml"))).toBe(
       false,
     );
+  });
+
+  test("creates a tape file once a request is made against a missing tape", async () => {
+    await axios.post(`${PROXAY_HOST}/__proxay/tape`, {
+      tape: "mimic-new-tape",
+    });
+    await axios.get(`${PROXAY_HOST}${SIMPLE_TEXT_PATH}`);
+    expect(existsSync(join(servers.tapeDir, "mimic-new-tape.yml"))).toBe(true);
   });
 });
 
@@ -105,5 +114,44 @@ describe("omitEmptyTapes — replay mode with existing tape", () => {
   test("still replays from an existing tape correctly", async () => {
     const response = await axios.get(`${PROXAY_HOST}${SIMPLE_TEXT_PATH}`);
     expect(response.data).toBe(SIMPLE_TEXT_RESPONSE);
+  });
+});
+
+describe("omitEmptyTapes — stale tape handling on re-record", () => {
+  const servers = setupServers({ mode: "record", omitEmptyTapes: true });
+
+  test("deletes a pre-existing tape file when re-recording with no requests", async () => {
+    // Pre-seed a stale tape file
+    ensureDirSync(servers.tapeDir);
+    writeFileSync(
+      join(servers.tapeDir, "stale-tape.yml"),
+      "http_interactions: []",
+      "utf8",
+    );
+
+    // Switch to that tape without making any requests
+    await axios.post(`${PROXAY_HOST}/__proxay/tape`, { tape: "stale-tape" });
+
+    // Stale file should be gone
+    expect(existsSync(join(servers.tapeDir, "stale-tape.yml"))).toBe(false);
+  });
+
+  test("overwrites a pre-existing tape file when re-recording with requests", async () => {
+    // Pre-seed a stale tape with some content
+    ensureDirSync(servers.tapeDir);
+    writeFileSync(
+      join(servers.tapeDir, "overwrite-tape.yml"),
+      "http_interactions: []",
+      "utf8",
+    );
+
+    // Switch to that tape and make a request
+    await axios.post(`${PROXAY_HOST}/__proxay/tape`, {
+      tape: "overwrite-tape",
+    });
+    await axios.get(`${PROXAY_HOST}${SIMPLE_TEXT_PATH}`);
+
+    // File should exist and contain the new interaction
+    expect(existsSync(join(servers.tapeDir, "overwrite-tape.yml"))).toBe(true);
   });
 });
