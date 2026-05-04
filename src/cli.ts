@@ -48,8 +48,7 @@ function rewriteRule(value: string, rewriteRules: RewriteRules): RewriteRules {
 }
 
 export async function main(argv: string[]) {
-  const program = new Command();
-  program
+  const program = new Command()
     .option("-m, --mode <mode>", "Mode (record, replay or passthrough)")
     .option(
       "-t, --tapes-dir <tapes-dir>",
@@ -156,7 +155,9 @@ export async function main(argv: string[]) {
 
   if (initialMode === "replay" && !fs.existsSync(tapeDir)) {
     if (omitEmptyTapes) {
-      console.info(`No tapes directory found at ${tapeDir}, treating all tapes as empty (--omit-empty-tapes).`);
+      console.info(
+        `No tapes directory found at ${tapeDir}, treating all tapes as empty (--omit-empty-tapes).`,
+      );
     } else {
       panic(
         `No tapes found at ${tapeDir}. Did you mean to start in record mode?`,
