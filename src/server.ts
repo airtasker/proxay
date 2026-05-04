@@ -462,40 +462,46 @@ export class RecordReplayServer {
         }
         return true;
       case "replay":
+        if (
+          this.omitEmptyTapes &&
+          !this.persistence.tapeExistsOnDisk(this.currentTape)
+        ) {
+          this.currentTapeRecords = [];
+          if (this.loggingEnabled) {
+            console.log(
+              chalk.blueBright(
+                `No tape found for ${this.currentTape}, treating as empty (--omit-empty-tapes).`,
+              ),
+            );
+          }
+          return true;
+        }
         try {
           this.currentTapeRecords = this.persistence.loadTapeFromDisk(
             this.currentTape,
           );
           return true;
         } catch (e) {
-          if (this.omitEmptyTapes) {
-            this.currentTapeRecords = [];
-            if (this.loggingEnabled) {
-              console.log(
-                chalk.blueBright(
-                  `No tape found for ${this.currentTape}, treating as empty (--omit-empty-tapes).`,
-                ),
-              );
-            }
-            return true;
-          }
           if (this.loggingEnabled) {
             console.warn(chalk.yellow((e as Error)?.message));
           }
           return false;
         }
       case "mimic":
+        if (
+          this.omitEmptyTapes &&
+          !this.persistence.tapeExistsOnDisk(this.currentTape)
+        ) {
+          this.currentTapeRecords = [];
+          return true;
+        }
         try {
           this.currentTapeRecords = this.persistence.loadTapeFromDisk(
             this.currentTape,
           );
         } catch (e) {
           this.currentTapeRecords = [];
-          if (this.omitEmptyTapes) {
-            this.persistence.deleteTapeFromDisk(this.currentTape);
-          } else {
-            this.persistence.saveTapeToDisk(this.currentTape, []);
-          }
+          this.persistence.saveTapeToDisk(this.currentTape, []);
         }
         return true;
       case "passthrough":

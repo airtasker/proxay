@@ -1,3 +1,6 @@
 /mimic/
 /record/
 /switching-tapes/
+/omit-record/
+/omit-record-default/
+/omit-stale/

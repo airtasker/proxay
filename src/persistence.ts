@@ -65,6 +65,13 @@ export class Persistence {
   }
 
   /**
+   * Returns whether a tape file exists on disk.
+   */
+  tapeExistsOnDisk(tapeName: string): boolean {
+    return fs.existsSync(this.getTapePath(tapeName));
+  }
+
+  /**
    * Deletes the tape file from disk if it exists.
    */
   deleteTapeFromDisk(tapeName: string) {

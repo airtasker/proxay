@@ -7,7 +7,11 @@ import { setupServers } from "./setup";
 import { SIMPLE_TEXT_PATH, SIMPLE_TEXT_RESPONSE } from "./testserver";
 
 describe("omitEmptyTapes — record mode", () => {
-  const servers = setupServers({ mode: "record", omitEmptyTapes: true });
+  const servers = setupServers({
+    mode: "record",
+    tapeDirName: "omit-record",
+    omitEmptyTapes: true,
+  });
 
   test("does not create a tape file when no requests are made", async () => {
     await axios.post(`${PROXAY_HOST}/__proxay/tape`, { tape: "empty-tape" });
@@ -24,7 +28,10 @@ describe("omitEmptyTapes — record mode", () => {
 });
 
 describe("omitEmptyTapes — record mode (default behaviour preserved)", () => {
-  const servers = setupServers({ mode: "record" });
+  const servers = setupServers({
+    mode: "record",
+    tapeDirName: "omit-record-default",
+  });
 
   test("creates an empty tape file when no requests are made", async () => {
     await axios.post(`${PROXAY_HOST}/__proxay/tape`, { tape: "empty-tape" });
@@ -118,7 +125,11 @@ describe("omitEmptyTapes — replay mode with existing tape", () => {
 });
 
 describe("omitEmptyTapes — stale tape handling on re-record", () => {
-  const servers = setupServers({ mode: "record", omitEmptyTapes: true });
+  const servers = setupServers({
+    mode: "record",
+    tapeDirName: "omit-stale",
+    omitEmptyTapes: true,
+  });
 
   test("deletes a pre-existing tape file when re-recording with no requests", async () => {
     // Pre-seed a stale tape file
