@@ -466,6 +466,7 @@ export class RecordReplayServer {
           this.omitEmptyTapes &&
           !this.persistence.tapeExistsOnDisk(this.currentTape)
         ) {
+          // Reset so records from the previous tape don't bleed into this one.
           this.currentTapeRecords = [];
           if (this.loggingEnabled) {
             console.log(
@@ -492,6 +493,7 @@ export class RecordReplayServer {
           this.omitEmptyTapes &&
           !this.persistence.tapeExistsOnDisk(this.currentTape)
         ) {
+          // Reset so records from the previous tape don't bleed into this one.
           this.currentTapeRecords = [];
           return true;
         }
