@@ -64,6 +64,23 @@ export class Persistence {
     return persistedTapeRecords.map(reviveTape);
   }
 
+  /**
+   * Returns whether a tape file exists on disk.
+   */
+  tapeExistsOnDisk(tapeName: string): boolean {
+    return fs.existsSync(this.getTapePath(tapeName));
+  }
+
+  /**
+   * Deletes the tape file from disk if it exists.
+   */
+  deleteTapeFromDisk(tapeName: string) {
+    const tapePath = this.getTapePath(tapeName);
+    if (fs.existsSync(tapePath)) {
+      fs.removeSync(tapePath);
+    }
+  }
+
   isTapeNameValid(tapeName: string): boolean {
     return !path
       .relative(this.tapeDir, path.join(this.tapeDir, tapeName))

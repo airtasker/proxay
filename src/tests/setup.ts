@@ -11,12 +11,14 @@ export function setupServers({
   defaultTapeName = "default",
   exactRequestMatching,
   sendProxyPort = false,
+  omitEmptyTapes,
 }: {
   mode: Mode;
   tapeDirName?: string;
   defaultTapeName?: string;
   exactRequestMatching?: boolean;
   sendProxyPort?: boolean;
+  omitEmptyTapes?: boolean;
 }) {
   const tapeDir = path.join(__dirname, "tapes", tapeDirName);
   const servers = { tapeDir } as {
@@ -42,6 +44,7 @@ export function setupServers({
       enableLogging: true,
       exactRequestMatching,
       proxyPortToSend: sendProxyPort ? PROXAY_PORT : undefined,
+      omitEmptyTapes,
     });
     await Promise.all([
       servers.proxy.start(PROXAY_PORT),
