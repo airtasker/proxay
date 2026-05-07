@@ -84,7 +84,7 @@ Note: there is already a hardcoded list of headers that get ignored:
 
 `--omit-empty-tapes`: When enabled, Proxay will not write tape files that contain no recorded interactions. This is useful when running multiple Proxay instances in parallel (e.g. one per backend service), where many instances may receive no traffic for a given test and would otherwise produce empty `http_interactions: []` files.
 
-In replay mode, a missing tape file is treated as empty rather than an error — the tape is loaded successfully with no interactions, and any requests against it return no response (the same behaviour as a recorded tape with no matching entries). This means you do not need to pre-create tape files for backends that a given test never calls.
+In replay mode, a missing tape file is treated as empty rather than an error — the tape is loaded successfully with no interactions, and any requests against it return an HTTP 500 (the same behaviour as a recorded tape with no matching entries). This means you do not need to pre-create tape files for backends that a given test never calls.
 
 
 ## Typical use case

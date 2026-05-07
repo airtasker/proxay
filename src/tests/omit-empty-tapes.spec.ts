@@ -1,5 +1,5 @@
 import axios from "axios";
-import { existsSync, writeFileSync } from "fs";
+import { existsSync, readFileSync, writeFileSync } from "fs";
 import { ensureDirSync } from "fs-extra";
 import { join } from "path";
 import { PROXAY_HOST } from "./config";
@@ -162,7 +162,11 @@ describe("omitEmptyTapes — stale tape handling on re-record", () => {
     });
     await axios.get(`${PROXAY_HOST}${SIMPLE_TEXT_PATH}`);
 
-    // File should exist and contain the new interaction
-    expect(existsSync(join(servers.tapeDir, "overwrite-tape.yml"))).toBe(true);
+    // File should exist and contain the new interaction (not the seeded empty content)
+    const content = readFileSync(
+      join(servers.tapeDir, "overwrite-tape.yml"),
+      "utf8",
+    );
+    expect(content).toContain(SIMPLE_TEXT_PATH);
   });
 });
