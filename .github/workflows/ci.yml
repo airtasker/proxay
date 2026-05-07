@@ -46,7 +46,7 @@ jobs:
           path: ./test-reports
 
       - name: Test summary
-        uses: test-summary/action@v2.4
+        uses: test-summary/action@v2
         with:
           paths: ./test-reports/jest/results.xml
 
