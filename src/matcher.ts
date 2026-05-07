@@ -3,6 +3,37 @@ import { RewriteRules } from "./rewrite";
 import { computeSimilarity } from "./similarity";
 import { TapeRecord } from "./tape";
 
+export type TapeIndex = Map<string, TapeRecord[]>;
+
+function indexKey(method: string, path: string): string {
+  const qPos = path.indexOf("?");
+  return qPos !== -1 ? `${method} ${path.substring(0, qPos)}` : `${method} ${path}`;
+}
+
+export function buildTapeIndex(records: TapeRecord[]): TapeIndex {
+  const index: TapeIndex = new Map();
+  for (const record of records) {
+    const key = indexKey(record.request.method, record.request.path);
+    let bucket = index.get(key);
+    if (!bucket) {
+      bucket = [];
+      index.set(key, bucket);
+    }
+    bucket.push(record);
+  }
+  return index;
+}
+
+export function addToTapeIndex(index: TapeIndex, record: TapeRecord): void {
+  const key = indexKey(record.request.method, record.request.path);
+  let bucket = index.get(key);
+  if (!bucket) {
+    bucket = [];
+    index.set(key, bucket);
+  }
+  bucket.push(record);
+}
+
 /**
  * Returns the first of a list of records that hasn't been replayed before.
  *
@@ -50,13 +81,19 @@ export function findRecordMatches(
   exactRequestMatching: boolean,
   debugMatcherFails: boolean,
   ignoreHeaders: string[],
+  index?: TapeIndex,
 ): TapeRecord[] {
+  // Use index to narrow candidates by method+path if available
+  const candidates = index
+    ? (index.get(indexKey(request.method, request.path)) ?? [])
+    : tapeRecords;
+
   let bestSimilarityScore = +Infinity;
   if (exactRequestMatching) {
     bestSimilarityScore = 0;
   }
   let bestMatches: TapeRecord[] = [];
-  for (const potentialMatch of tapeRecords) {
+  for (const potentialMatch of candidates) {
     const similarityScore = computeSimilarity(
       request,
       potentialMatch,

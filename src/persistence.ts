@@ -17,6 +17,8 @@ import { PersistedBuffer, PersistedTapeRecord, TapeRecord } from "./tape";
  * Persistence layer to save tapes to disk and read them from disk.
  */
 export class Persistence {
+  private writeQueues = new Map<string, Promise<void>>();
+
   constructor(
     private readonly tapeDir: string,
     private readonly redactHeaders: string[],
@@ -24,20 +26,78 @@ export class Persistence {
   ) {}
 
   /**
-   * Saves the tape to disk.
+   * Enqueues an async write operation for a given tape path,
+   * ensuring writes to the same tape are serialized.
    */
-  saveTapeToDisk(tapeName: string, tapeRecords: TapeRecord[]) {
+  private enqueueWrite(
+    tapePath: string,
+    fn: () => Promise<void>,
+  ): Promise<void> {
+    const prev = this.writeQueues.get(tapePath) ?? Promise.resolve();
+    const next = prev.then(fn, fn);
+    this.writeQueues.set(tapePath, next);
+    return next;
+  }
+
+  /**
+   * Initializes an empty tape on disk with just the YAML header.
+   */
+  async initTapeOnDisk(tapeName: string): Promise<void> {
+    const tapePath = this.getTapePath(tapeName);
+    await fs.ensureDir(path.dirname(tapePath));
+    await this.enqueueWrite(tapePath, () =>
+      fs.writeFile(tapePath, "http_interactions:\n", "utf8"),
+    );
+  }
+
+  /**
+   * Appends a single record to the tape on disk (O(1) per call).
+   */
+  async appendRecordToDisk(
+    tapeName: string,
+    record: TapeRecord,
+  ): Promise<void> {
+    const redacted = this.redact(record);
+    const persisted = persistTape(redacted);
+    const tapePath = this.getTapePath(tapeName);
+
+    // Serialize just this one record as a YAML array item
+    const fragment = yaml.dump([persisted]);
+    // Indent by 2 spaces to nest under "http_interactions:"
+    const indented = fragment.replace(/^(.)/gm, "  $1");
+
+    await this.enqueueWrite(tapePath, async () => {
+      await fs.ensureDir(path.dirname(tapePath));
+      // If the tape file doesn't exist (e.g. directory was cleaned),
+      // recreate the header before appending.
+      const exists = await fs.pathExists(tapePath);
+      if (!exists) {
+        await fs.writeFile(tapePath, "http_interactions:\n", "utf8");
+      }
+      await fs.appendFile(tapePath, indented, "utf8");
+    });
+  }
+
+  /**
+   * Saves the entire tape to disk. Only used for full rewrites (not on the hot path).
+   */
+  async saveTapeToDisk(
+    tapeName: string,
+    tapeRecords: TapeRecord[],
+  ): Promise<void> {
     const persistedTapeRecords = tapeRecords
       .map(this.redact, this)
       .map(persistTape);
     const tapePath = this.getTapePath(tapeName);
-    fs.ensureDirSync(path.dirname(tapePath));
-    fs.writeFileSync(
-      tapePath,
-      yaml.dump({
-        http_interactions: persistedTapeRecords,
-      }),
-      "utf8",
+    await fs.ensureDir(path.dirname(tapePath));
+    await this.enqueueWrite(tapePath, () =>
+      fs.writeFile(
+        tapePath,
+        yaml.dump({
+          http_interactions: persistedTapeRecords,
+        }),
+        "utf8",
+      ),
     );
   }
 
@@ -45,23 +105,38 @@ export class Persistence {
    * Redacts the request headers and body fields of the given record
    */
   private redact(record: TapeRecord): TapeRecord {
-    redactRequestHeaders(record, this.redactHeaders);
-    redactRecordBodyFields(record, this.redactBodyFields);
-    return record;
+    const copy: TapeRecord = {
+      request: {
+        ...record.request,
+        headers: { ...record.request.headers },
+        body: Buffer.from(record.request.body),
+      },
+      response: {
+        ...record.response,
+        headers: { ...record.response.headers },
+        body: Buffer.from(record.response.body),
+      },
+    };
+    redactRequestHeaders(copy, this.redactHeaders);
+    redactRecordBodyFields(copy, this.redactBodyFields);
+    return copy;
   }
 
   /**
    * Loads the tape from disk.
    */
-  loadTapeFromDisk(tapeName: string): TapeRecord[] {
+  async loadTapeFromDisk(tapeName: string): Promise<TapeRecord[]> {
     const tapePath = this.getTapePath(tapeName);
-    if (!fs.existsSync(tapePath)) {
+    const exists = await fs.pathExists(tapePath);
+    if (!exists) {
       throw new Error(`No tape found with name ${tapeName}`);
     }
-    const persistedTapeRecords = (
-      yaml.load(fs.readFileSync(tapePath, "utf8")) as Record<string, any>
-    ).http_interactions as PersistedTapeRecord[];
-    return persistedTapeRecords.map(reviveTape);
+    const content = await fs.readFile(tapePath, "utf8");
+    const parsed = yaml.load(content) as Record<string, any>;
+    const persistedTapeRecords = parsed.http_interactions as
+      | PersistedTapeRecord[]
+      | undefined;
+    return persistedTapeRecords ? persistedTapeRecords.map(reviveTape) : [];
   }
 
   isTapeNameValid(tapeName: string): boolean {
