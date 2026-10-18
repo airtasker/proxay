@@ -61,7 +61,7 @@
     "fs-extra": "^11.3.4",
     "js-yaml": "^4.1.1",
     "string-similarity": "^4.0.4",
-    "unicode-properties": "^1.4.1"
+    "unicode-properties": "^2.0.1"
   },
   "devDependencies": {
     "@types/content-type": "^1.1.9",
